@@ -16,6 +16,7 @@ class Thinkphp
 {
     private static $ignore_dirs = array('public','runtime','theme','view');
     private static $map = array();
+    public static $lineDistance = 0;
     private static $used = array();
     private static $thinkRoot = '';
     private static $functionFiles = array();
@@ -102,6 +103,17 @@ class Thinkphp
     public static function attachDeveloperConstants(){
 
     }
+    private static function distance(){
+        $rawPath = self::getRawFilePath();
+        $runPath = self::getRunFilePath();
+        if(file_exists($rawPath) && file_exists($runPath)){
+            $rawCount = count(file($rawPath));
+            $runCount = count(file($runPath));
+            if(!empty($rawCount) && !empty($runCount)){
+                self::$lineDistance = $runCount - $rawCount;
+            }
+        }
+    }
 
     private static function createRunFile(){
 
@@ -147,6 +159,7 @@ class Thinkphp
             }catch(\Exception $e){
                 exit("can not write run file : {$path} ");
             }
+             self::distance( );
         return self::buildRunName();
     }
     private static function attachThinkClass(){
@@ -206,7 +219,6 @@ class Thinkphp
             if(empty($methods)){
                 exit("read {$use} class methods error");
             }
-           // $extend = empty($parent) ? '' : ' extends '.$parent;
              $extend = '';
             return "class ".$className.$extend."{\r\n".$methods."\r\n}\r\n";
         }
@@ -238,8 +250,59 @@ class Thinkphp
         $pattern ='#(/\*{2}[^/]+/)?\s+(protected|public)\s+function\s+(\w+)\(([^{]+)?\)#';
         if(preg_match_all($pattern,$content,$matches)){
             if(!empty($matches)){
-                foreach($matches[0] as $v){
-                    $methods .= $v.'{}'."\r\n";
+                //函数参数处理
+                $params = array();
+                $_methods = $matches[0];
+                $_params = $matches[4];
+                $_returns = $matches[1];
+                foreach($_params as $k=>$v){
+                        $args = explode(',',$v);
+                        $params[$k]  = $args;
+                }
+                //函数反回值处理
+                $returns = array();
+                foreach($_returns as $k=>$v){
+                    $pattern ='#return\s+(\w+)#';
+                    if(preg_match($pattern,$v,$matches)){
+                        $returns[$k] = $matches[1];
+                    }else{
+                        $returns[$k] = 'void';
+                    }
+                }
+                foreach($_methods as $k=>$v){
+                    //$methods .= $v.'{}'."\r\n";
+                    $methods .= $v.'{'."\r\n";
+                    $params[$k] = array_filter($params[$k]);
+                    if(!empty($params[$k])){
+                        foreach($params[$k] as $param){
+                            if(strpos($param,'array') !== false){
+                                $param = str_replace('array','',$param);
+                            }
+                            if(strpos($param,'=') !== false ){
+                                $param = substr($param,0,strpos($param,'='));
+                            }
+                            $methods .= "\tdump($param);\r\n";
+                        }
+                    }
+                    $returnMap = array(
+                        'int'=>1,
+                        'mixed'=>1,
+                        'string'=>2,
+                        'bool'=>'true',
+                        'boolean'=>'true',
+                        'array'=>'array()',
+                        'object'=>' new stdObject()',
+                        'string[string]'=>'array()',
+                        'string[int]'=>'array()',
+                        'int[int]'=>'array()',
+                        'mixed[]'=>'array()',
+                    );
+                   if($returns[$k] != 'void'){
+                       $return = $returnMap[$returns[$k]];
+                       $methods .= "\treturn $return;\r\n}\r\n";
+                   }else{
+                       $methods .= "\t}\r\n";
+                   }
                 }
             }
         }
@@ -345,17 +408,27 @@ class Thinkphp
 
     private static function buildRunName(){
 
-        return '.'.self::$runName;
+        $path = pathinfo(self::$runName);
+        if($path['dirname'] == '.'){
+            $runPath = '.'.self::$runName;
+        }else{
+            $fileName = '.'.$path['basename'];
+            $runPath =  str_replace($path['basename'],$fileName,self::$runName);
+        }
+        return $runPath;
+
     }
 
 
     private static function getRawFilePath(){
 
-        return  self::$runCwd.DIRECTORY_SEPARATOR.self::$runName;
+ //       return  self::$runCwd.DIRECTORY_SEPARATOR.self::$runName;
+               return  self::$runName;
     }
 
     private static  function getRunFilePath(){
-        return  self::$runCwd.DIRECTORY_SEPARATOR.self::buildRunName();
+        //return  self::$runCwd.DIRECTORY_SEPARATOR.self::buildRunName();
+        return  self::buildRunName();
     }
 
     private static function attachLintModules(){
@@ -378,7 +451,7 @@ class Thinkphp
             'standard','standard_reflection','streams','sybase','sysvmsg','sysvsem','sysvshm',
             'tidy','tokenizer','variant','wddx','xdebug','xml','xmlreader','xmlrpc','xmlwriter',
             'xsl','yp','zip','zlib','thinkfunctions','developer');
-        $modules = array('thinkfunctions','thinkclass','self');
+        $modules = array('thinkfunctions');
         $comment ="/*.\r\n";
         foreach($modules as $module){
             $comment .= "\trequire_module '".$module."';\r\n";

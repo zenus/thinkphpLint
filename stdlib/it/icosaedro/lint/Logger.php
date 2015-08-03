@@ -232,7 +232,11 @@ class Logger {
 			$this->printVerbatim($this->formatFileName($where->getFile()) . ":");
 		
 		if( $where->getLineNo() > 0 )
-			$this->printVerbatim((string)$where->getLineNo());
+			if(isset(Thinkphp::$lineDistance) && !empty(Thinkphp::$lineDistance) && ($where->getLineNo()-Thinkphp::$lineDistance)>0){
+				$this->printVerbatim((string)($where->getLineNo()-Thinkphp::$lineDistance));
+			}else{
+				$this->printVerbatim((string)$where->getLineNo());
+			}
 		else
 			$this->printVerbatim("?");
 		
