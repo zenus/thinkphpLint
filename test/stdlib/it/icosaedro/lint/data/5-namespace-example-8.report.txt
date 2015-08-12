@@ -1,0 +1,38 @@
+BEGIN parsing of 5-namespace-example-8.php
+1:	<?php
+2:	/*. require_module 'spl'; .*/
+3:	
+4:	
+5:	namespace My\Full;
+6:	
+7:	class Classname { }
+8:	
+9:	
+10:	namespace My\Full\NSname\subns;
+11:	
+12:	function func(){}
+13:	
+14:	
+15:	namespace foo;
+16:	use My\Full\Classname as Another;
+17:	
+18:	// this is the same as use My\Full\NSname as NSname
+19:	use My\Full\NSname;
+20:	
+21:	// importing a global class
+22:	use \ArrayObject;
+
+	use \ArrayObject;
+	                \_ HERE
+==== 22: notice: useless leading `\' in path namespace: path namespaces are always absolute
+23:	
+24:	//$obj = new namespace\Another; // instantiates object of class foo\Another
+25:	$obj = new Another; // instantiates object of class My\Full\Classname
+26:	NSname\subns\func(); // calls function My\Full\NSname\subns\func
+27:	$a = new ArrayObject(array(1)); // instantiates object of class ArrayObject
+28:	// without the "use \ArrayObject" we would instantiate an object of class foo\ArrayObject
+29:	?>
+END parsing of 5-namespace-example-8.php
+==== ?:?: notice: required module spl.php
+==== ?:?: notice: required module standard.php
+Overall test results: 0 errors, 0 warnings.

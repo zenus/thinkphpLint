@@ -1,0 +1,110 @@
+BEGIN parsing of 5-foreach.php
+1:	<?php
+2:	
+3:	/*.
+4:		require_module 'standard';
+5:		require_module 'spl';
+6:	.*/
+7:	
+8:	class MyIterator implements Iterator
+9:	{
+10:	    private /*. array[int]string .*/ $a;
+11:	
+12:	    public /*. void .*/ function __construct(/*. array[int]string .*/ $a)
+13:	    {
+14:			$this->a = $a;
+15:	    }
+16:	
+17:	    public /*. void .*/ function rewind() {
+18:	        echo "rewinding\n";
+19:	        reset($this->a);
+20:	    }
+21:	
+22:	    public /*. string .*/ function current() {
+23:	        $e = current($this->a);
+24:	        echo "current: ";
+25:			var_dump($e);
+26:			if($e === FALSE)
+27:				return NULL;
+28:			else
+29:				return (string) $e;
+30:	    }
+31:	
+32:	    public /*. mixed .*/ function key() {
+33:	        $k = key($this->a);
+34:	        echo "key: ";
+35:			var_dump($k);
+36:	        return (int) $k;
+37:	    }
+38:	
+39:	    public /*. void .*/ function next() {
+40:	        $e = next($this->a);
+41:	        echo "next: ";
+42:			var_dump($e);
+43:	    }
+44:	
+45:	    public /*. bool .*/ function valid() {
+46:	        $v = $this->current() !== NULL;
+47:	        echo "valid: ";
+48:			var_dump($v);
+49:	        return $v;
+50:	    }
+51:	}
+52:	
+53:	$values = array("zero", "one", "two");
+54:	
+55:	
+56:	echo "Testing MyIterator:\n";
+57:	$it = new MyIterator($values);
+58:	foreach ($it as $k => $v) {
+59:	    print "found key=$k, value=" . $v ."\n";
+
+	    print "found key=$k, value=" . $v ."\n";
+	                       \_ HERE
+==== 59: ERROR: no suitable implicit conversion to string for mixed
+60:		$i = 10 + $k;
+
+		$i = 10 + $k;
+	                 \_ HERE
+==== 60: ERROR: `... + EXPR': expected number but found mixed
+61:	}
+62:	
+63:	
+64:	class MyIteratorAggregate
+65:	implements IteratorAggregate
+66:	{
+67:	
+68:	    private /*. array[int]string .*/ $a;
+69:	
+70:	    public /*. void .*/ function __construct(/*. array[int]string .*/ $a)
+71:	    {
+72:			$this->a = $a;
+73:	    }
+74:	
+75:	
+76:		/*. MyIterator .*/ function getIterator()
+77:		{
+78:			return new MyIterator($this->a);
+79:		}
+80:	
+81:	}
+82:	
+83:	
+84:	echo "Testing MyIteratorAggregate:\n";
+85:	$ita = new MyIteratorAggregate($values);
+86:	foreach ($ita as $k2 => $v2) {
+87:	    print "found key=$k2, value=" . $v2 ."\n";
+
+	    print "found key=$k2, value=" . $v2 ."\n";
+	                        \_ HERE
+==== 87: ERROR: no suitable implicit conversion to string for mixed
+88:		$i = 10 + $k2;
+
+		$i = 10 + $k2;
+	                 \_ HERE
+==== 88: ERROR: `... + EXPR': expected number but found mixed
+89:	}
+END parsing of 5-foreach.php
+==== ?:?: notice: required module standard.php
+==== ?:?: notice: required module spl.php
+Overall test results: 4 errors, 0 warnings.

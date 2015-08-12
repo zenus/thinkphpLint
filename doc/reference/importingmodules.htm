@@ -1,0 +1,194 @@
+<HTML>
+<HEAD>
+<TITLE>PHPLint Reference Manual</TITLE>
+<META name=description content="PHPLint Reference Manual">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<LINK rel=stylesheet type='text/css' href='../styles.css'>
+</HEAD><BODY>
+
+<h2>Importing modules</h2>
+
+<p>
+Several extension modules come built-in with the base PHP interpreter,
+and many others are available from other sources (mainly from the PECL
+project). These extensions may or may not be available in our PHP
+installation, so PHPLint provides a way to specify which extensions
+our program actually requires.  For example, <code>strlen()</code>
+is provided by the <b>standard</b> module (normally always available),
+<code>session_start()</code> is provided by the module <b>session</b>,
+and <code>preg_match()</code> comes from <b>pcre</b>.  PHPLint checks
+if these modules are actually used, and reports them on the final
+documentation generated automatically.
+</p>
+
+<p>
+The directory <code>modules/</code> contains all the modules currently
+defined, but others can be added. For example, <code>modules/mysqli.php</code>
+describes the well known extension that allows to access a MySQL data base.
+</p>
+
+<p>
+The <i>PHPLint extended syntax</i>, or <i>meta-code</i> for short, lets
+the programmer to give some insight about its code that drive PHPLint to
+an even more strict checking of variables and of functions. Since
+that meta-code isn't valid PHP code, it must be enclosed inside a comment
+<code>/*.&nbsp;.*/</code>. Note that there is exactly one period after
+the first asterisk, and another period before the closing asterisk.
+Since the PHPLint meta-code is enclosed in a comment, it will not interfere
+with the PHP interpreter.
+</p>
+
+<p>
+The first usage of the PHPLint meta-code we'll describe is the meta-code
+statement
+</p>
+
+<div class="code_box"><pre>
+/*. require_module '<i>MODULE</i>'; .*/
+</pre></div>
+
+<p>
+where the MODULE is the name of
+the extension module required. This statement tells to PHPLint
+which extension modules are required by our program.
+The name of the module MUST appear inside a single-quoted string;
+expressions are not allowed. This meta-code statement MUST appear at the
+scope level "zero", i.e. it cannot be inside a function or inside a
+class declaration. This meta-code statement tells to PHPLint that the file
+<code>modules/MODULE.php</code> must be parsed and the items therein defined
+must be made available to the program.
+</p>
+
+<p>
+For example:
+</p>
+
+<div class="code_box">
+<pre>
+&lt;?php
+/*****************************
+ *  My beautiful WEB page.   *
+ *****************************/
+
+<b>/*. require_module 'standard';
+    require_module 'pcre';
+    require_module 'mysql'; .*/</b>
+
+...rest of the program here...
+?&gt;
+</pre>
+</div>
+
+<p>
+PHPLint will parse the files of the modules located in the directory
+<code>modules/</code> of the distributed package. Each module is a
+collection of declarations of constants, functions and classes of the
+corresponding module, as reported by the PHP manual.  Without these
+modules PHPLint would be unaware of which items are available, and it
+would raise an error for any item it don't know, even for a simple
+standard function as <code>strlen()</code>.
+</p>
+
+<p>
+The module <code>'standard'</code> is the library of resources that
+should always be available in every installation of PHP. In this
+module, functions like <code>strlen()</code>, <code>mail()</code> and
+<code>trigger_error()</code> are defined.  The other modules might
+or might not be present in your installation of PHP: the function
+<code>phpinfo()</code> gives the list of the modules currently available
+in your system. As an alternative you can use this simple program to
+display which modules are actually available in your system:
+</p>
+
+<div class="code_box"><pre>
+&lt;?php print_r( get_loaded_extensions() ); ?&gt;
+</pre>
+</div>
+
+For example, on my system this program displays:
+
+<blockquote><pre>
+Array
+(
+    [0] =&gt; tokenizer
+    [1] =&gt; standard
+    [2] =&gt; session
+    [3] =&gt; posix
+    [4] =&gt; pcre
+    [5] =&gt; mbstring
+    [6] =&gt; ftp
+    [7] =&gt; sockets
+    [8] =&gt; pgsql
+)
+</pre></blockquote>
+
+<p>
+The function <code>extension_loaded('MODULE_NAME')</code> returns
+<code>TRUE</code> if the given module is available, so that you may check
+at run-time the environment of your program.
+</p>
+
+<p>
+Recent versions of the PHP 5 CLI or CGI allows to list the compiled-in
+modules simply typing this command from the console:
+</p>
+
+<blockquote><pre>
+$ <b>php -m</b>
+[PHP Modules]
+Core
+date
+dom
+ereg
+libxml
+mbstring
+pcre
+PDO
+posix
+Reflection
+session
+SPL
+standard
+tokenizer
+xml
+
+[Zend Modules]
+</pre></blockquote>
+
+<p>
+Near to the end of its report, PHPLint will list a summary of all the
+modules that are required by the package and the packages it import,
+along the modules imported but actually never used in the package:
+</p>
+
+<blockquote>
+<pre>
+...
+?: notice: required module: pgsql
+?: notice: required module: regex
+?: notice: required module: standard
+?: notice: unused module `xmlreader'
+?: notice: unused module `libxml'
+Overall test results: 3 errors, 10 warnings.
+</pre>
+</blockquote>
+
+<p>
+From this output we learn that the package just
+requires the modules <code>pgsql</code>, <code>regex</code> and
+<code>standard</code>. This information might be very useful in the
+deployment phase of the application, since the program would not work
+if the PHP interpreter on the target system lacks some these modules.
+</p>
+
+<p>
+A package can include other packages through the <code>require_once</code>
+statement (see the next chapter), and in turn these included files might
+require even more modules and packages. Every module and every package
+is always parsed only once, and it is ignored in the following inclusions.
+</p>
+
+</body>
+</html>

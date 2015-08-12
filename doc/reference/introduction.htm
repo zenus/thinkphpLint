@@ -1,0 +1,62 @@
+<HTML>
+<HEAD>
+<TITLE>PHPLint Reference Manual</TITLE>
+<META name=description content="PHPLint Reference Manual">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<LINK rel=stylesheet type='text/css' href='../styles.css'>
+</HEAD><BODY>
+
+<h2>Introduction</h2>
+
+<p>
+<b>PHPLint</b> is a parser and semantic validator for PHP
+programs written in PHP itself. Moreover, <b>PHPLint</b> enhances the syntax
+of the PHP language with transparent extended syntax (or meta-code) that can
+drive the parser to even more strict checking of types handling, checking of
+functions and methods signatures, tracking of errors exceptions detection
+and propagation, and much more. You may think at PHPLint as sub-set of the
+PHP programming language where only the safe and verifiable features are
+retained and all the rest is forbidden or signaled as error.
+</p>
+
+<p>
+The main application of the PHP language is to provide dynamic contents
+to the WEB pages. Most of that pages are really simple from a programmer's point of view, and typically
+involve the parsing of the HTTP request, a connection to the
+data base to retrieve data, and then the presentation of the results to the
+user. These applications cannot really benefit from PHPLint. Rather,
+the applications where PHPLint may reveal to be really useful are the
+complexes one, where much code and included libraries are involved, and
+where it would be difficult to track down formal and conceptual errors.
+In the next chapters we will explain how PHPLint works and how you can
+get the best results programming with it.
+</p>
+
+<p>
+A summary of the implemented features:
+</p>
+
+<ul>
+<li>Support for PHP 4 and PHP 5.</li>
+<li>General syntax check.</li>
+<li>Strict type checking in expressions, assignments and function arguments.</li>
+<li>Structured array declarations.</li>
+<li>Checks functions signature usage.</li>
+<li>Checks methods signature and method inheritance.</li>
+<li>Recursive inclusion of the required packages.</li>
+<li>Meta-code that implement C-style type declarations.</li>
+<li>Check items declared but never used, or used but never declared.</li>
+<li>Documentation generation.</li>
+</ul>
+
+
+<p>
+<b>PHPLint</b> comes in two forms: a stand-alone program you may execute
+on your computer, and a WEB version that allows you to try your code
+on-line.
+</p>
+
+</body>
+</html>

@@ -1,0 +1,169 @@
+BEGIN parsing of 5-cast-magic-function.php
+1:	<?php
+2:	
+3:	require_once __DIR__ . "/../../../../../../stdlib/cast.php";
+4:	
+5:	# Trick: "if(E);" has the only purpouse to raise and error that displays
+6:	# the detected type of E.
+7:	
+8:	/*. mixed .*/ $m = NULL;
+9:	class MyClass {}
+10:	$obj = new MyClass();
+11:	
+12:	if( cast("boolean", $m) );
+13:	if( cast("int", $m) );
+
+	if( cast("int", $m) );
+	                     \_ HERE
+==== 13: ERROR: found expression of type int, expected type is boolean. Remember that 0 evaluates to FALSE, and any other integer value evaluates to TRUE.
+14:	if( cast("float", $m) );
+
+	if( cast("float", $m) );
+	                       \_ HERE
+==== 14: ERROR: found expression of type float, expected type is boolean. Remember that 0.0 evaluates to FALSE and any other value evaluates to TRUE.
+15:	if( cast("string", $m) );
+
+	if( cast("string", $m) );
+	                        \_ HERE
+==== 15: ERROR: found expression of type string, expected type is boolean. Remember that the empty string "", the string "0" and the NULL string all evaluate to FALSE and any other string evaluates to TRUE.
+16:	if( cast("resource", $m) );
+
+	if( cast("resource", $m) );
+	                          \_ HERE
+==== 16: ERROR: found expression of type resource, expected type is boolean. Remember that a resource always evaluates to TRUE, so that this expression is useless. Remember too that some functions, formally declared to return a resource, might return the boolean value FALSE on error; if this is the case, rewrite as (EXPR) !== FALSE.
+17:	if( cast("object", $m) );
+
+	if( cast("object", $m) );
+	                        \_ HERE
+==== 17: ERROR: found expression of type object, expected type is boolean. Remember that an object evaluates to FALSE if it has no properties, and evaluates to TRUE if it has at least one property.
+18:	if( cast("MyClass", $m) );
+
+	if( cast("MyClass", $m) );
+	                         \_ HERE
+==== 18: ERROR: found expression of type MyClass, expected type is boolean. Remember that an object evaluates to FALSE if it has no properties, and evaluates to TRUE if it has at least one property.
+19:	
+20:	if( cast("array", $m) );
+
+	if( cast("array", $m) );
+	                       \_ HERE
+==== 20: ERROR: found expression of type mixed[], expected type is boolean. Remember that an array with zero elements evaluates to FALSE, and an array with one or more elements evaluates to TRUE.
+21:	
+22:	if( cast("array[]", $m) );
+
+	if( cast("array[]", $m) );
+	                         \_ HERE
+==== 22: ERROR: found expression of type mixed[], expected type is boolean. Remember that an array with zero elements evaluates to FALSE, and an array with one or more elements evaluates to TRUE.
+23:	if( cast("array[int]", $m) );
+
+	if( cast("array[int]", $m) );
+	                            \_ HERE
+==== 23: ERROR: found expression of type mixed[int], expected type is boolean. Remember that an array with zero elements evaluates to FALSE, and an array with one or more elements evaluates to TRUE.
+24:	if( cast("array[string]", $m) );
+
+	if( cast("array[string]", $m) );
+	                               \_ HERE
+==== 24: ERROR: found expression of type mixed[string], expected type is boolean. Remember that an array with zero elements evaluates to FALSE, and an array with one or more elements evaluates to TRUE.
+25:	
+26:	if( cast("array[]MyClass", $m) );
+
+	if( cast("array[]MyClass", $m) );
+	                                \_ HERE
+==== 26: ERROR: found expression of type MyClass[], expected type is boolean. Remember that an array with zero elements evaluates to FALSE, and an array with one or more elements evaluates to TRUE.
+27:	if( cast("array[int]MyClass", $m) );
+
+	if( cast("array[int]MyClass", $m) );
+	                                   \_ HERE
+==== 27: ERROR: found expression of type MyClass[int], expected type is boolean. Remember that an array with zero elements evaluates to FALSE, and an array with one or more elements evaluates to TRUE.
+28:	if( cast("array[string]MyClass", $m) );
+
+	if( cast("array[string]MyClass", $m) );
+	                                      \_ HERE
+==== 28: ERROR: found expression of type MyClass[string], expected type is boolean. Remember that an array with zero elements evaluates to FALSE, and an array with one or more elements evaluates to TRUE.
+29:	
+30:	if( cast("array[][]", $m) );
+
+	if( cast("array[][]", $m) );
+	                           \_ HERE
+==== 30: ERROR: found expression of type mixed[][], expected type is boolean. Remember that an array with zero elements evaluates to FALSE, and an array with one or more elements evaluates to TRUE.
+31:	if( cast("array[int][]", $m) );
+
+	if( cast("array[int][]", $m) );
+	                              \_ HERE
+==== 31: ERROR: found expression of type mixed[int][], expected type is boolean. Remember that an array with zero elements evaluates to FALSE, and an array with one or more elements evaluates to TRUE.
+32:	if( cast("array[string][]", $m) );
+
+	if( cast("array[string][]", $m) );
+	                                 \_ HERE
+==== 32: ERROR: found expression of type mixed[string][], expected type is boolean. Remember that an array with zero elements evaluates to FALSE, and an array with one or more elements evaluates to TRUE.
+33:	
+34:	if( cast("array[][]int", $m) );
+
+	if( cast("array[][]int", $m) );
+	                              \_ HERE
+==== 34: ERROR: found expression of type int[][], expected type is boolean. Remember that an array with zero elements evaluates to FALSE, and an array with one or more elements evaluates to TRUE.
+35:	if( cast("array[int][]int", $m) );
+
+	if( cast("array[int][]int", $m) );
+	                                 \_ HERE
+==== 35: ERROR: found expression of type int[int][], expected type is boolean. Remember that an array with zero elements evaluates to FALSE, and an array with one or more elements evaluates to TRUE.
+36:	if( cast("array[string][]int", $m) );
+
+	if( cast("array[string][]int", $m) );
+	                                    \_ HERE
+==== 36: ERROR: found expression of type int[string][], expected type is boolean. Remember that an array with zero elements evaluates to FALSE, and an array with one or more elements evaluates to TRUE.
+37:	
+38:	$ais = array("zero", "one");
+39:	if( cast("array[int]string", $ais) );
+
+	if( cast("array[int]string", $ais) );
+	                                    \_ HERE
+==== 39: ERROR: found expression of type string[int], expected type is boolean. Remember that an array with zero elements evaluates to FALSE, and an array with one or more elements evaluates to TRUE.
+40:	if( cast("array[]string", $ais) );
+
+	if( cast("array[]string", $ais) );
+	                               \_ HERE
+==== 40: ERROR: cast(string[], string[int]): invalid typecast
+
+	if( cast("array[]string", $ais) );
+	                                 \_ HERE
+==== 40: ERROR: found expression of type string[], expected type is boolean. Remember that an array with zero elements evaluates to FALSE, and an array with one or more elements evaluates to TRUE.
+41:	if( cast("array[int]int", $ais) );
+
+	if( cast("array[int]int", $ais) );
+	                               \_ HERE
+==== 41: ERROR: cast(int[int], string[int]): invalid typecast
+
+	if( cast("array[int]int", $ais) );
+	                                 \_ HERE
+==== 41: ERROR: found expression of type int[int], expected type is boolean. Remember that an array with zero elements evaluates to FALSE, and an array with one or more elements evaluates to TRUE.
+42:	if( cast("array[string]string", $ais) );
+
+	if( cast("array[string]string", $ais) );
+	                                     \_ HERE
+==== 42: ERROR: cast(string[string], string[int]): invalid typecast
+
+	if( cast("array[string]string", $ais) );
+	                                       \_ HERE
+==== 42: ERROR: found expression of type string[string], expected type is boolean. Remember that an array with zero elements evaluates to FALSE, and an array with one or more elements evaluates to TRUE.
+END parsing of 5-cast-magic-function.php
+==== ?:?: notice: required package ../../../../../../stdlib/it/icosaedro/phplint/BooleanType.php
+==== ?:?: notice: required module spl.php
+==== ?:?: notice: required module standard.php
+==== ?:?: notice: required package ../../../../../../stdlib/it/icosaedro/phplint/FloatType.php
+==== ?:?: notice: required package ../../../../../../stdlib/it/icosaedro/phplint/Types.php
+==== ?:?: notice: required package ../../../../../../stdlib/it/icosaedro/containers/Printable.php
+==== ?:?: notice: required package ../../../../../../stdlib/AutoloadException.php
+==== ?:?: notice: required package ../../../../../../stdlib/it/icosaedro/phplint/StringType.php
+==== ?:?: notice: required package ../../../../../../stdlib/CastException.php
+==== ?:?: notice: required package ../../../../../../stdlib/it/icosaedro/phplint/ObjectType.php
+==== ?:?: notice: required package ../../../../../../stdlib/it/icosaedro/phplint/ArrayStringType.php
+==== ?:?: notice: required package ../../../../../../stdlib/it/icosaedro/phplint/NullType.php
+==== ?:?: notice: required package ../../../../../../stdlib/it/icosaedro/phplint/TypeInterface.php
+==== ?:?: notice: required package ../../../../../../stdlib/it/icosaedro/phplint/ResourceType.php
+==== ?:?: notice: required package ../../../../../../stdlib/it/icosaedro/phplint/IntType.php
+==== ?:?: notice: required package ../../../../../../stdlib/it/icosaedro/phplint/MixedType.php
+==== ?:?: notice: required package ../../../../../../stdlib/it/icosaedro/phplint/ArrayBothType.php
+==== ?:?: notice: required package ../../../../../../stdlib/it/icosaedro/phplint/ClassType.php
+==== ?:?: notice: required package ../../../../../../stdlib/cast.php
+==== ?:?: notice: required package ../../../../../../stdlib/it/icosaedro/phplint/ArrayIntType.php
+Overall test results: 26 errors, 0 warnings.

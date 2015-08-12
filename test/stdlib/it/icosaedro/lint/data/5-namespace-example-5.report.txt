@@ -1,0 +1,19 @@
+BEGIN parsing of 5-namespace-example-5.php
+1:	<?php
+2:	namespace Foo\Bar\subnamespace;
+3:	
+4:	const FOO = 1;
+5:	function foo() {}
+6:	class foo
+7:	{
+8:	    static function staticmethod() {}
+9:	}
+10:	
+11:	namespace test_package;
+12:	
+13:	echo \Foo\Bar\subnamespace\FOO;
+14:	\Foo\Bar\subnamespace\foo();
+15:	new \Foo\Bar\subnamespace\foo;
+16:	\Foo\Bar\subnamespace\foo::staticmethod();
+END parsing of 5-namespace-example-5.php
+Overall test results: 0 errors, 0 warnings.

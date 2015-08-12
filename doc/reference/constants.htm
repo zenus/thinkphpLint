@@ -1,0 +1,107 @@
+<HTML>
+<HEAD>
+<TITLE>PHPLint Reference Manual</TITLE>
+<META name=description content="PHPLint Reference Manual">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<LINK rel=stylesheet type='text/css' href='../styles.css'>
+</HEAD><BODY>
+
+<h2>Constants</h2>
+
+
+<h3>The define() statement</h3>
+
+
+<p>
+The PHP statements <code>define()</code> allows to define constants,
+that is symbolic names whose value is defined once for all and cannot
+be changed later. The first argument of this function is the name of
+the constant provided as a string; the second argument is its value.
+For example:
+</p>
+
+<div class="code_box"><code>define("PI", 3.141592);</code></div>
+
+<p>
+The <b>name</b> of the constant can be any expression of type
+string, but typically it is simply a literal string like in our example.
+PHPLint raises an error if the name cannot be evaluated statically, so
+it cannot contain variables nor functions, and raises an error if the resulting
+name of the constant is not a valid identifier.  Valid identifiers are those
+composed of letters, digits and the underscore "<code>_</code>"; the first
+character cannot be a digit. The name of a constant is case-sensitive,
+so "<code>Pi</code>" and "<code>pi</code>" are different names.
+</p>
+
+<p>
+The <b>value</b> is an expression of simple type that can be evaluated
+statically: a <b>boolean</b>, an <b>int</b>, a
+<b>float</b> or a <b>string</b>. Also a generic <code>NULL</code> value
+and the <code>NULL</code> string are allowed, for example:
+</p>
+
+<div class="code_box"><code>
+define("UndefinedValue", NULL);<br>
+define("DefaultName", /*. (string) .*/ NULL);
+</code></div>
+
+<p>
+A constant cannot be re-defined.
+</p>
+
+<p>
+A constant can be defined inside a function, but PHPLint raises an error
+because it cannot ensure the correct usage of its definition: the constant
+might be used before the function defining it be called, or the function
+might be called more than once causing a run-time error from the PHP
+interpreter. So, the only remaining place where global constants can be
+declared is the global scope of the package.
+</p>
+
+<p>
+A constant that should not be exported to others packages should
+be declared as "private" to the package where it is defined. To this
+end, PHPLint provides a specific meta-code word:
+</p>
+
+<div class="code_box"><code>/*. private .*/ define("MAX_USERS", 20);</code></div>
+
+<p>
+A private constant cannot be re-defined nor it can be used in any other
+package importing this package.  Private constants are reported by
+the PHPLint Documentator into the list of the <b>Private items</b> of
+the package, since they still occupy their position in the global name-space.
+</p>
+
+
+
+<h3>The const statement</h3>
+
+<p>
+This statement is available since PHP 5.3 and allows to define one or more
+constants:
+</p>
+
+<div class="code_box"><pre>
+const MAX_CONNECTED_USERS = 10,
+      MAX_USER_NAME_LENGTH = 20,
+      ADMIN_ROLE_NAME = "Admin";
+</pre></div>
+
+<p>
+This statement can occur only at global scope, and the expression must be
+static (no simple expressions allowed as in the <code>define()</code>
+statement). Constants so defined are added to the current namespace.
+</p>
+
+<p>
+The <code>/*.private.*/</code> attribute can be prepended to the
+<code>const</code> keyword, and it is intended to mark constants that are
+private to the package and cannot be used outside, neither if in the same
+namespace.
+</p>
+
+</body>
+</html>

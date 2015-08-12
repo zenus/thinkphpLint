@@ -1,0 +1,310 @@
+<HTML>
+<HEAD>
+<TITLE>PHPLint Reference Manual</TITLE>
+<META name=description content="PHPLint Reference Manual">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<LINK rel=stylesheet type='text/css' href='../styles.css'>
+<script type="text/javascript" src="../utils.js"></script>
+</HEAD><BODY onload="buildTOC('toc');">
+
+<h2 id="toc">Errors</h2>
+
+
+<p>
+This chapter explains how errors raised by PHP at runtime can be detected, and
+how PHPLint's error tracking feature works to help programmers being aware of
+any potential error source. This chapter also explains another important
+feature of PHPLint named <i>errors mapping into exceptions</i> that allows to
+handle errors just like any other exception.
+</p>
+
+
+
+<h3>Fully handling of errors</h3>
+
+<p>
+Several functions of the PHP standard library may signal an error of level
+E_WARNING if something goes wrong. These errors are not fatal, in the
+sense that a message is logged and then the program continues,
+badly crashing or causing others unpredictable disasters:
+</p>
+
+<div class="code_box"><pre>
+$fn = "file-that-does-not-exist.txt";
+$f = fopen($fn, "r");
+$data = fread($f, filesize($fn));
+fclose($f);
+</pre></div>
+
+<blockquote>
+<pre>
+<b>==&gt;
+PHP Warning:  fopen(file-that-does-not-exist.txt): failed to open stream: No such file or directory in /home/salsi/src/phplint/stdlib/err-test.php on line 5
+PHP Warning:  filesize(): stat failed for file-that-does-not-exist.txt in /home/salsi/src/phplint/stdlib/err-test.php on line 6
+PHP Warning:  fread() expects parameter 1 to be resource, boolean given in /home/salsi/src/phplint/stdlib/err-test.php on line 6
+PHP Warning:  fclose() expects parameter 1 to be resource, boolean given in /home/salsi/src/phplint/stdlib/err-test.php on line 7
+</b>
+</pre></blockquote>
+
+
+
+<p>
+So, it is
+responsibility of the programmer to check for possible errors and to take
+counter measures appropriate for the case. Usually a simple <tt>die()</tt>
+does the job, as there is nothing else the program can do:
+</p>
+
+<div class="code_box"><pre>
+$fn = "file-that-does-not-exist.txt";
+$f = fopen($fn, "r");
+if( $f === FALSE )
+    die("can't read data file");
+$data = fread($f, filesize($fn));
+fclose($f);
+</pre></div>
+
+<blockquote><pre>
+<b>==&gt;
+PHP Warning:  fopen(file-that-does-not-exist.txt): failed to open stream: No such file or directory in /home/salsi/src/phplint/stdlib/err-test.php on line 5
+can't read data file
+</b>
+</pre></blockquote>
+
+
+<p>
+Note that in the example above if the opening of the file fails, then an error
+message is logged or displayed on the screen depending on the configuration.
+The programmer may also take care to generate meaningful error
+messages prepending the silencer operator <tt>@</tt> to the function that may
+fail, as in the example below:
+</p>
+
+<div class="code_box"><pre>
+$fn = "file-that-does-not-exist.txt";
+$f = <b>@</b>fopen($fn, "r");
+if( $f === FALSE )
+    die("can't read data file: " . $php_errormsg);
+$data = fread($f, filesize($fn));
+fclose($f);
+</pre></div>
+
+<blockquote><pre>
+<b>==&gt;
+can't read data file: fopen(file-that-does-not-exist.txt): failed to open stream: No such file or directory
+</b>
+</pre></blockquote>
+
+<p>
+But, if the programmer omits to performs these checks on the functions that may
+fail, the result may be unpredictable and potentially might compromise the
+safety of the system. PHPLint helps signaling all the functions it knows may
+fail, but PHPLint cannot guarantee these errors are correctly handled by the
+program.
+</p>
+
+
+<h3>Triggering errors and errors inheritance</h3>
+
+<p>
+Not only the functions (and methods) of the standard library may fail. Also the
+user's defined functions (and methods) may fail, either intentionally calling
+the <tt>trigger_error()</tt> function, or omitting to handle errors that may be
+raised by other functions called in their body. PHPLint collects all the errors
+that are triggered inside a function (or method) and all the errors that are not
+silenced, and then PHPLint signals these errors every time that function (or
+method) gets used next, so making aware the programmer that these functions
+generate or inherit errors that should be handled in some way.
+</p>
+
+
+
+<h3>Mapping errors into exceptions</h3>
+
+<p>
+Under PHP 5, PHPLint allows to enable the mapping of errors into
+an exception through the <tt>error_throws_exception</tt> pragma:
+</p>
+
+<div class="code_box"><tt>
+/*. pragma 'error_throws_exception' 'ErrorException'; .*/
+</tt></div>
+
+<p>
+This pragma tells to PHPLint that errors of any level must be handled just like
+an exception of type ErrorException. Then, for example, triggering an error
+with <tt>trigger_error("Message", E_USER_ERROR);</tt> is just like throwing an
+exception with <tt>new&nbsp;ErrorException("Message");</tt>.
+The standard library of PHPLint provides the <tt>errors.php</tt> package
+that takes advantage from this pragma to implement error mapping into
+exceptions using the <tt>set_error_handler()</tt> function. So, simply
+including this package you get two important benefits: unhandled errors
+always causes an immediate interruption of the program, whereas handled errors
+can be detected with the standard <tt>try/catch</tt> statement.
+Here is an example of what happens with an unhandled error:
+</p>
+
+<div class="code_box"><pre>
+require_once "errors.php";
+$fn = "file-that-does-not-exist.txt";
+$f = fopen($fn, "r");
+if( $f === FALSE )
+    die("can't read data file");
+$data = fread($f, filesize($fn));
+fclose($f);
+</pre></div>
+
+<blockquote><pre>
+<b>==&gt;
+Uncaught exception 'ErrorException' with message 'E_WARNING: fopen(file-that-does-not-exist.txt): failed to open stream: No such file or directory in /home/salsi/src/phplint/stdlib/err-test.php:5' in /home/salsi/src/phplint/stdlib/errors.php:49
+Stack trace:
+#0 [internal function]: error_handler(2, 'fopen(file-that...', '/home/salsi/src...', 5, Array)
+#1 /home/salsi/src/phplint/stdlib/err-test.php(5): fopen('file-that-does-...', 'r')
+#2 {main}
+</b>
+</pre></blockquote>
+
+
+<p>
+Errors raised by the functions of the standard library are mapped into
+exceptions too, then we may catch these errors in the standard way:
+</p>
+
+<div class="code_box"><pre>
+require_once "errors.php";
+$fn = "file-that-does-not-exit.txt";
+try {
+    $f = fopen($fn, "r");
+    $data = fread($f, filesize($fn));
+    fclose($f);
+}
+catch( ErrorException $e ){
+    echo "can't access data file: $e\n";
+}
+</pre></div>
+
+<blockquote><pre>
+<b>==&gt;
+can't read data file file-that-does-not-exist.txt: fopen(file-that-does-not-exist.txt): failed to open stream: No such file or directory
+</b>
+</pre>
+</blockquote>
+
+
+<p>
+Since errors cannot be silenced anymore with the <tt>@</tt> operator, the
+programmer now MUST take care to handle errors or leave its program facing its
+destiny, that is abrupt termination on error. And note that "minor" errors that
+normally would produce an (apparently) harmless E_NOTICE, now may interrupt the
+program. This is the case, for example, when an unassigned variable is used:
+</p>
+
+<div class="code_box">
+<pre>
+require_once "errors.php";
+echo $unassigned_variable;
+</pre></div>
+
+<blockquote><pre>
+<b>==&gt;
+Uncaught exception 'ErrorException' with message 'E_NOTICE: Undefined variable: unassigned_variable in /home/salsi/src/phplint/stdlib/err-test.php:4' in /home/salsi/src/phplint/stdlib/errors.php:49
+Stack trace:
+#0 /home/salsi/src/phplint/stdlib/err-test.php(4): error_handler(8, 'Undefined varia...', '/home/salsi/src...', 4, Array)
+#1 {main}
+</b>
+</pre>
+</blockquote>
+
+<p>
+Usage of unassigned variables can be prevented taking seriously the error
+messages signaled by PHPLint as "<i>variable `$xxx' has not been assigned</i>"
+and also "<i>variable $xxx might not have been assigned</i>" in case of
+variables that are not definitely assigned (see chapter "Definite assignment
+analysis").
+</p>
+
+<p>
+Instead, accessing array's elements that do not exit is a bug that can be
+detected only at runtime, and it throws an exception:
+</p>
+
+<div class="code_box">
+<pre>
+require_once "errors.php";
+$a = array("zero", "one", "two");
+echo $a[3];
+</pre></div>
+
+<blockquote><pre>
+<b>==&gt;
+Uncaught exception 'ErrorException' with message 'E_NOTICE: Undefined offset: 3 in /home/salsi/src/phplint/stdlib/err-test.php:5' in /home/salsi/src/phplint/stdlib/errors.php:49
+Stack trace:
+#0 /home/salsi/src/phplint/stdlib/err-test.php(5): error_handler(8, 'Undefined offse...', '/home/salsi/src...', 5, Array)
+#1 {main}
+</b>
+</pre>
+</blockquote>
+
+<p>
+So, you should always check in advance for the existence of an entry in the
+array whenever you are not sure that this entry really exists. This is the
+case, for example, of the arrays like $_GET[], $_POST[], $_FILES[], $_COOKIE,
+$SESSION[], $_ENV[] and any other array whose structure is not under the
+control of our program but comes from an external source. So, always use
+<tt>isset()</tt> before accessing the value:
+</p>
+
+<div class="code_box"><pre>
+require_once "errors.php";
+if( isset($_GET["parameter") and is_string($_GET["parameter"]) )
+    $parameter = $_GET["parameter"];
+else
+    $parameter = "default-value";
+</pre></div>
+
+<p>
+You must pay attention to the <tt>unserialize()</tt> function when applied
+to arbitrary data, as it raises an exception if the data cannot be recognized
+because corrupted, as it may be the case of serialized data retrieved from
+a file:
+</p>
+
+<div class="code_box"><pre>
+require_once "errors.php";
+require_once "autoload.php";
+require_once "cast.php";
+try {
+    $fn = "users-data.bin";
+    $f = fopen($fn, "r");
+    $users_s = fread($f, filesize($fn));
+    fclose($f);
+    $users = cast("array[int]User", unserialize($users_s));
+} 
+catch(ErrorException $e){
+    echo "retrieving users data from $fn: ", $e-&gt;getMessage();
+    exit;
+}
+</pre></div>
+
+<blockquote><pre>
+<b>==&gt;
+retrieving serialized data from users-data.bin: E_NOTICE: unserialize(): Error at offset 650 of 8355 bytes in /home/salsi/src/phplint/stdlib/test-unserialize.php:19
+</b>
+</pre></blockquote>
+
+<p>
+Note that PHP un this case raises a bare E_NOTICE that most PHP programmers
+ignore, although the data retrieved from the file are corrupted and the
+expected object of the class User cannot be reconstructed: this is another
+case in which paying attention also to the "notices" helps making the program
+safer. Note also the usage of the magic function <tt>cast()</tt> described in
+the chapter "PHPLint's Standard Library"; this function checks at runtime that
+the reconstructed object be really of the type we expect, in this case an array
+of User objects; autoloading also guarantees the User class be defined, and then
+all its methods be restored.
+</p>
+
+</body>
+</html>

@@ -1,0 +1,31 @@
+BEGIN parsing of 5-namespace-example-6.php
+1:	<?php
+2:	namespace Foo\Bar;
+3:	require_once __DIR__ . '/5-namespace-example-5.php';
+4:	
+5:	const FOO = 2;
+6:	function foo() {}
+7:	class foo
+8:	{
+9:	    static function staticmethod() {}
+10:	}
+11:	
+12:	/* Unqualified name */
+13:	foo(); // resolves to function Foo\Bar\foo
+14:	foo::staticmethod(); // resolves to class Foo\Bar\foo, method staticmethod
+15:	echo FOO; // resolves to constant Foo\Bar\FOO
+16:	
+17:	/* Qualified name */
+18:	subnamespace\foo(); // resolves to function Foo\Bar\subnamespace\foo
+19:	subnamespace\foo::staticmethod(); // resolves to class Foo\Bar\subnamespace\foo,
+20:	                                  // method staticmethod
+21:	echo subnamespace\FOO; // resolves to constant Foo\Bar\subnamespace\FOO
+22:	
+23:	/* Fully qualified name */
+24:	\Foo\Bar\foo(); // resolves to function Foo\Bar\foo
+25:	\Foo\Bar\foo::staticmethod(); // resolves to class Foo\Bar\foo, method staticmethod
+26:	echo \Foo\Bar\FOO; // resolves to constant Foo\Bar\FOO
+27:	?>
+END parsing of 5-namespace-example-6.php
+==== ?:?: notice: required package 5-namespace-example-5.php
+Overall test results: 0 errors, 0 warnings.

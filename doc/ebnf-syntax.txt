@@ -1,0 +1,297 @@
+# EBNF description of the PHPLint language syntax
+# Copyright 2005 by icosaedro.it di Umberto Salsi
+
+package = {text | code_block | echo_block } [ unclosed_code_block ];
+text = "one or more characters excluding the special sequence <?";
+unclosed_code_block = ("<?" | "<?php") {statement | x_function_proto | x_class_proto};
+code_block = unclosed_code_block "?>";
+echo_block= "<?=" expr {"," expr} [";"] "?>";
+
+namespace_separator = "\\";
+qualified_name = [namespace_separator] id {namespace_separator id};
+constant = qualified_name;
+variable = "$"id;
+func_name = qualified_name;
+class_name = qualified_name;
+class_const = id;
+class_var = "$" id;
+id = (letter | "_") {letter|digit|"_"};
+letter = "a".."z" | "A".."Z" | "\x7F".."\xFF";
+
+static_expr = "FALSE" | "TRUE" | "NULL" | constant
+	| literal_int | literal_float | literal_string
+	| ["+"|"-"] static_expr
+	| static_class_const
+	| static_array
+	| x_formal_typecast static_expr ;
+
+static_class_const = (class_name|"self"|"parent") "::" class_const ;
+
+static_array = "array" "(" [static_array_pair {"," static_array_pair} [","] ] ")" ;
+
+static_array_pair = static_expr [ "=>" static_expr ] ;
+
+expr = expr3 { "or" expr3 };
+expr3 = expr4 { "xor" expr4 };
+expr4 = expr6 { "and" expr6 };
+expr6 = "print" expr6 | expr7 { "?" expr ":" expr };
+expr7 = expr8 { "||" expr8 };
+expr8 = expr9 { "&&" expr9 };
+expr9 = expr10 { "|" expr10 };
+expr10 = expr11 { "^" expr11 };
+expr11 = expr12 { "&" expr12 };
+expr12 = expr13 [ ("==" | "!=" | "<>" | "===" | "!==") expr13 ];
+expr13 = expr14 [ ("<" | "<=" | ">" | ">=") expr14 ];
+expr14 = expr15 [ ("<<"|">>") expr15 ];
+expr15 = expr16 [ ("+"|"-"|".") expr16 ];
+expr16 = expr17 [ ("*"|"/"|"%") expr17 ];
+expr17 = ("!"|"+"|"-"|"~"|"@") expr17 | expr18;
+expr18 = ("++"|"--") term;
+term = "NULL"
+	| "FALSE" | "TRUE"
+	| literal_int
+	| "INF" | "NAN" | literal_float
+	| literal_string
+	| "&" term
+	| variable [dereference_var]
+	| constant
+	| func_call [dereference_object]
+	| class_name dereference_static
+	| "self" dereference_static
+	| "parent" dereference_static
+	| new | clone | list | isset | array
+	| x_formal_typecast term
+	| "(" php_type ")" term
+	| "(" expr ")";
+
+dereference_var = dereference_array | dereference_object | assign_op expr
+	| "++" | "--" | "instanceof" (class_name | "parent" | "self");
+dereference_static = "::" (class_const | class_var [dereference_var]
+    | class_func_call [dereference_object]);
+dereference_array = "[]" "=" expr | "[" expr "]" [dereference_var];
+dereference_object = "->" (class_var [dereference_var] | class_func_call
+	[dereference_object]);
+assign_op = "=" | "+=" | "-=" | "*=" | "%=" | "/=" | ".=" | "&=" | "|="
+	| "^=" | "<<=" | ">>=";
+
+list = "list" "(" [ variable [dereference_var] ]
+	{ "," [ variable [dereference_var] ] } ")" "=" expr;
+isset = "isset" "(" variable [dereference_var]
+	{ "," [variable dereference_var] } ")";
+func_call = func_name actual_args;
+class_func_call = id actual_args;
+new = "new" {class_name | "self" | "parent"} [ actual_args ];
+clone = "clone" term;
+actual_args = "(" [expr {"," expr}] ")";
+php_type = "boolean" | "int" | "integer" | "float" | "double" | "string";
+
+array = "array" "(" [ element {"," element} ] ")";
+element = [ expr "=>" ] expr;
+
+statement = namespace | use
+	| define | global_const5 | global | static | echo | func_decl
+	| class_decl | declare | if | for | foreach | while | do
+	| switch | continue | break | exit | return
+	| x_require_module_statement | require | require_once
+	| include | include_once | expr ";" | try | throw | text_block
+	| empty_statement | compound_statement;
+
+text_block = "?>" {text | echo_block } "<?";
+
+namespace = "namespace" qualified_name (";" | compound_statement);
+
+use = "use" use_alias { "," use_alias} ";";
+use_alias = qualified_name ["as" id];
+
+declare = "declare" "(" directive { "," directive } ")" statement;
+directive = id "=" static_expr;
+
+x_require_module_statement = x_require_module x_single_quoted x_semicolon;
+require = "require" expr ";";
+require_once = "require_once" expr ";";
+include = "include" expr ";";
+include_once = "include_once" expr ";";
+
+define = [x_private] "define" "(" expr "," expr ")";
+
+global_const5 = [x_private] "const" id "=" static_expr
+	{ "," constant "=" static_expr } ";" ;
+
+continue = "continue" [expr] ";";
+
+break = "break" [expr] ";";
+
+switch = "switch" "(" expr ")" "{" {case | default | x_missing_default} "}" ;
+case = "case" static_expr ":" {statement} [x_missing_break] ;
+default = "default" ":" {statement} [x_missing_break] ;
+x_missing_break = x_missing_break x_semicolon ;
+x_missing_default = x_missing_default x_colon ;
+
+try = "try" "{" {statement} "}" catch {catch};
+catch = "catch" "(" {class_name} variable ")" "{" {statement} "}";
+
+throw = "throw" expr ";";
+
+empty_statement = ";";
+
+compound_statement = "{" {statement} "}";
+
+function = signature [x_thrown_exceptions] "{" {statement} "}";
+signature = [ x_type ] "function" [ "&" ] id "(" [ formal_args ] ")";
+formal_args = x_args | arg { "," arg } [ x_comma x_args ] ;
+arg = [x_return] [ x_type | php5_type_hint ] [ "&" ] variable
+	[ "=" static_expr ] ;
+php5_type_hint = "array" [ x_index {x_index} [x_type_name]]
+	| class_name | "self" | "parent" ;
+
+func_decl = [x_private] function;
+
+class_decl = class4 | class5;
+
+class4 = [x_private] [x_final] [x_abstract] "class" id [ "extends" class_name ] "{" { property4 | method4 x_method_proto } "}" ;
+x_private = "private";
+x_final = "final";
+x_abstract = "abstract";
+x_visibility = "public" | "protected" | "private";
+x_static = "static";
+x_unchecked = "unchecked";
+property4 = [ x_visibility ] "var" [ x_type ] variable [ "=" static_expr ]
+	{ "," variable [ "=" static_expr ] } ";" ;
+method4 = { x_abstract | x_visibility | x_static | x_final } function ; 
+
+class5 = class_regular | class_interface;
+
+class_regular = [x_private] [x_unchecked] ["final"] ["abstract"]
+	"class" id class_body;
+
+class_body = [extends] [implements]
+	"{" { const5 | property5 | method5 | x_method_proto | abstract_method } "}" ;
+
+class_interface = [x_private] "interface" id
+	[ "extends" class_name {"," class_name} ]
+	"{" { public_const5 | ["static"] signature [x_thrown_exceptions] ";"} "}";
+
+extends = "extends" class_name;
+implements = "implements" class_name {"," class_name};
+
+visibility = "public" | "protected" | "private";
+public_const5 = "const" id "=" static_expr
+	{ "," constant "=" static_expr } ";" ;
+const5 = [x_visibility] public_const5;
+property5 = [visibility] ["static"] [ x_type ] variable [ "=" static_expr ]
+	{ "," variable [ "=" static_expr ] } ";" ;
+method5 = { visibility | "static" | "final" } function ;
+abstract_method = "abstract" { visibility | "static" } signature
+	[x_thrown_exceptions] ";" ;
+
+
+global = "global" variable { "," variable } ";";
+
+static = "static" [x_type] variable [ "=" static_expr ]
+	{ "," variable [ "=" static_expr ] } ";";
+
+echo = "echo" expr {"," expr} ";";
+
+if = "if" "(" expr ")" statement {elseif} [else];
+elseif = "elseif" "(" expr ")" statement;
+else = "else" statement;
+for = "for" "(" [expr_list] ";" [expr_list] ";" [expr_list] ")" statement;
+expr_list = expr {"," expr};
+foreach = "foreach" "(" expr "as" [ variable "=>" ] ["&"] variable ")" statement;
+while = "while" "(" expr ")" statement;
+do = "do" statement "while" "(" expr ")" ";";
+exit = ("exit"|"die") [ "(" [expr] ")" ] ";";
+return = "return" [expr] ";";
+
+# Prototypes for forward declarations:
+
+x_function_proto = x_forward [x_private] x_signature [x_thrown_exceptions]
+	x_semicolon;
+x_method_proto = x_forward x_method;
+x_method = {x_visibility | x_abstract | x_final | x_static}
+    x_signature [x_thrown_exceptions] x_semicolon;
+x_class_proto = x_forward {x_private | x_abstract | x_unchecked} x_class x_id
+	[x_extends x_qualified_name] [x_implements x_qualified_name {x_comma x_qualified_name}]
+	x_lbrace {x_method} x_rbrace;
+
+x_signature = x_type x_function [x_by_ref] x_id x_lround [ x_formal_args ] x_rround;
+x_formal_args = x_args | x_arg { x_comma x_arg } [ x_comma x_args ] ;
+x_arg = [x_return] x_type [x_by_ref] x_variable [x_eq];
+x_thrown_exceptions = x_throws x_qualified_name { x_comma x_qualified_name };
+
+literal_int = literal_int_8 | literal_int_10 | literal_int_16;
+literal_int_8 = "0" digit8 {digit8};
+literal_int_10 = "1".."9" {digit};
+literal_int_16 = "0x" digit16 {digit16};
+digit8 = "0".."7";
+digit = "0".."9";
+digit16 = digit | "a".."f" | "A".."F";
+digits = digit {digit};
+literal_float = digits (decimals | scale | decimals scale);
+decimals = "." digits;
+scale = ("e"|"E") ["+"|"-"] digits;
+
+literal_string = single_quoted | double_quoted | here_doc;
+
+single_quoted = "'" { "\\\\" | "\\'" | "any char except '\\" } "'";
+
+# EMBEDDED VARS INSIDE DOUBLE QUOTED STRINGS
+# Note that the complex curly braces sysntax for expressions embedded
+# inside double quoted strings is not supported.
+# Note too that only simple variables are allowed inside duoble quoted
+# strings, not array nor class properties.
+# A $ sign not followed by a valid letter, is considered a simple char.
+# A $ sign should be back-slashed to prevent the following chars. to be
+# considered as variable name.
+
+double_quoted = "\"" { escaped_char | escaped_octal | escaped_hex
+	| variable | "any char except \" \\ $" } "\"";
+escaped_char = "\\"("n"|"r"|"t"|"\\"|"$"|"{"|"\"");
+escaped_octal = "\\" digit8 [digit8 [digit8]];
+escaped_hex = "\\" ("x"|"X") digit16 [digit16];
+
+
+# PHPLint meta-code symbols always appear inside /*. .*/
+# but this detail is omitted from this syntax as it is completely
+# resolved at the scan level.
+
+x_forward = "forward";
+x_semicolon = ";";
+x_class = "class";
+x_extends = "extends";
+x_implements = "implements";
+x_lround = "(";
+x_rround = ")";
+x_lsquare = "[";
+x_rsquare = "]";
+x_lbrace = "{";
+x_rbrace = "}";
+x_colon = ":";
+x_function = "function";
+x_return = "return";
+x_by_ref = "&";
+x_throws = "throws";
+x_eq = "=";
+x_args = "args";
+x_comma = ",";
+x_self = "self";
+x_parent = "parent";
+x_id = id;
+x_namespace_separator = "\\";
+x_qualified_name = [x_namespace_separator] x_id {x_namespace_separator x_id};
+x_formal_typecast = x_lround x_type x_rround;
+x_type_name = "void" | "boolean" | "int" | "integer" | "float" | "double"
+	| "string" | "resource" | "mixed"
+	| "object" | x_qualified_name | x_self | x_parent;
+x_type = x_type_name { x_index } | x_array [ x_index {x_index} x_type_name ];
+x_index = x_lsquare [x_int|x_string] x_rsquare;
+x_require_module = "require_module";
+x_int = "int";
+x_string = "string";
+x_array = "array";
+
+x_variable = "$"id;
+x_single_quoted = "'" { "\\\\" | "\\'" | "any char except '\\" } "'";
+
+# PHPLint EBNF syntax ends here.
+

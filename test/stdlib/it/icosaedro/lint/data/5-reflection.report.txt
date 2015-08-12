@@ -1,0 +1,591 @@
+BEGIN parsing of 5-reflection.php
+1:	<?php
+2:	
+3:	/*
+4:		2007-06-02  These examples come from
+5:		www.php.net/manual/en/language.oop5.reflection.php
+6:		They are all about reflection classes. Only minor changes
+7:		made to make IDs different from PHPLint keywords:
+8:	
+9:		String --> String_
+10:		Class  --> Class_
+11:		$class --> $class_
+12:		Object --> Object_
+13:	*/
+14:	
+15:	/*.
+16:		require_module 'standard';
+17:		require_module 'standard_reflection';
+18:	.*/
+19:	
+20:	# Example 19.33. Basic usage of the reflection API
+21:	
+22:	Reflection::export(new ReflectionClass('Exception'));
+23:	
+24:	
+25:	
+26:	
+27:	# Example 19.34. Using the ReflectionFunction class
+28:	
+29:	/**
+30:	 * A simple counter
+31:	 *
+32:	 * @return    int
+33:	 */
+34:	function counter()
+35:	{
+36:	    static $c = 0;
+37:	    return $c++;
+38:	}
+39:	
+40:	// Create an instance of the Reflection_Function class
+41:	$func = new ReflectionFunction('counter');
+42:	
+43:	// Print out basic information
+44:	printf(
+45:	    "===> The %s function '%s'\n".
+46:	    "     declared in %s\n".
+47:	    "     lines %d to %d\n",
+48:	    $func->isInternal() ? 'internal' : 'user-defined',
+49:	    $func->getName(),
+50:	    $func->getFileName(),
+51:	    $func->getStartLine(),
+52:	    $func->getEndline()
+
+	    $func->getEndline()
+	                      \_ HERE
+==== 52: ERROR: method	getEndline
+	was declared as
+		ReflectionFunctionAbstract::getEndLine
+	that differs by upper/lower-case letters only
+53:	);
+54:	
+55:	// Print documentation comment
+56:	printf("---> Documentation:\n %s\n", var_export($func->getDocComment(), 1));
+57:	
+58:	// Print static variables if existant
+59:	if ($statics = $func->getStaticVariables())
+
+	if ($statics = $func->getStaticVariables())
+	                                           \_ HERE
+==== 59: ERROR: found expression of type mixed[string], expected type is boolean. Remember that an array with zero elements evaluates to FALSE, and an array with one or more elements evaluates to TRUE.
+60:	{
+61:	    printf("---> Static variables: %s\n", var_export($statics, 1));
+62:	}
+63:	
+64:	// Invoke the function
+65:	printf("---> Invokation results in: ");
+66:	var_dump($func->invoke());
+67:	
+68:	
+69:	// you may prefer to use the export() method
+70:	echo "\nReflectionFunction::export() results:\n";
+71:	echo ReflectionFunction::export('counter', false);
+
+	echo ReflectionFunction::export('counter', false);
+	                                                  \_ HERE
+==== 71: notice: throwing ReflectionException
+
+	echo ReflectionFunction::export('counter', false);
+	                                                  \_ HERE
+==== 71: Warning: uncaught exception ReflectionException at global scope
+72:	
+73:	
+74:	
+75:	
+76:	
+77:	#### Example 19.35. Using the ReflectionParameter class
+78:	
+79:	function foo($a, $b, $c) { }
+
+	function foo($a, $b, $c) { }
+	                \_ HERE
+==== 79: ERROR: undefined type for argument $a. Hint: you may indicate an explicit type (example: `/*.int.*/ $a') or assign a default value (example: `$a=123') or add a DocBlock line tag (example: `@param int $a').
+
+	function foo($a, $b, $c) { }
+	                    \_ HERE
+==== 79: ERROR: undefined type for argument $b. Hint: you may indicate an explicit type (example: `/*.int.*/ $b') or assign a default value (example: `$b=123') or add a DocBlock line tag (example: `@param int $b').
+
+	function foo($a, $b, $c) { }
+	                        \_ HERE
+==== 79: ERROR: undefined type for argument $c. Hint: you may indicate an explicit type (example: `/*.int.*/ $c') or assign a default value (example: `$c=123') or add a DocBlock line tag (example: `@param int $c').
+80:	function bar(Exception $a, &$b, $c) { }
+
+	function foo($a, $b, $c) { }
+	                       \_ HERE
+==== 79: notice: variable $c assigned but never used
+
+	function foo($a, $b, $c) { }
+	                   \_ HERE
+==== 79: notice: variable $b assigned but never used
+
+	function foo($a, $b, $c) { }
+	               \_ HERE
+==== 79: notice: variable $a assigned but never used
+
+	function bar(Exception $a, &$b, $c) { }
+	                               \_ HERE
+==== 80: ERROR: undefined type for argument $b. Hint: you may indicate an explicit type (example: `/*.int.*/ $b') or assign a default value (example: `$b=123') or add a DocBlock line tag (example: `@param int $b').
+
+	function bar(Exception $a, &$b, $c) { }
+	                                   \_ HERE
+==== 80: ERROR: undefined type for argument $c. Hint: you may indicate an explicit type (example: `/*.int.*/ $c') or assign a default value (example: `$c=123') or add a DocBlock line tag (example: `@param int $c').
+81:	function baz(ReflectionFunction $a, $b = 1, $c = null) { }
+
+	function bar(Exception $a, &$b, $c) { }
+	                                  \_ HERE
+==== 80: notice: variable $c assigned but never used
+
+	function bar(Exception $a, &$b, $c) { }
+	                              \_ HERE
+==== 80: notice: variable $b assigned but never used
+
+	function bar(Exception $a, &$b, $c) { }
+	                         \_ HERE
+==== 80: notice: variable $a assigned but never used
+82:	function abc() { }
+
+	function baz(ReflectionFunction $a, $b = 1, $c = null) { }
+	                                              \_ HERE
+==== 81: notice: variable $c assigned but never used
+
+	function baz(ReflectionFunction $a, $b = 1, $c = null) { }
+	                                      \_ HERE
+==== 81: notice: variable $b assigned but never used
+
+	function baz(ReflectionFunction $a, $b = 1, $c = null) { }
+	                                  \_ HERE
+==== 81: notice: variable $a assigned but never used
+83:	
+84:	// Create an instance of Reflection_Function with the
+85:	// parameter given from the command line.
+86:	$reflect = new ReflectionFunction($argv[1]);
+87:	
+88:	echo $reflect;
+89:	
+90:	foreach ($reflect->getParameters() as $i => $param) {
+91:	    printf(
+92:	        "-- Parameter #%d: %s {\n".
+93:	        "   Class: %s\n".
+94:	        "   Allows NULL: %s\n".
+95:	        "   Passed to by reference: %s\n".
+96:	        "   Is optional?: %s\n".
+97:	        "}\n",
+98:	        $i,
+99:	        $param->getName(),
+100:	        var_export($param->getClass(), 1),
+101:	        var_export($param->allowsNull(), 1),
+102:	        var_export($param->isPassedByReference(), 1),
+103:	        $param->isOptional() ? 'yes' : 'no'
+104:	    );
+105:	}
+106:	
+107:	
+108:	
+109:	#### Example 19.36. Using the ReflectionClass class
+110:	
+111:	interface Serializable
+112:	{
+113:	    // ...
+114:	}
+115:	
+116:	class Object_
+117:	{
+118:	    // ...
+119:	}
+120:	
+121:	/**
+122:	 * A counter class
+123:	 */
+124:	class Counter extends Object_ implements Serializable
+125:	{
+126:	    const START = 0;
+127:	    private static $c = Counter::START;
+128:	
+129:	    /**
+130:	     * Invoke counter
+131:	     *
+132:	     * @access  public
+133:	     * @return  int
+134:	     */
+135:	    public function count() {
+
+	     */
+	       \_ HERE
+==== 134: ERROR: unexpected DocBlock line tag `@access'
+
+	    public function count() {
+	                   \_ HERE
+==== 135: ERROR: invalid meta-code or DocBlock visibility|abstract|static|final modifier, use proper language keywords
+136:	        return self::$c++;
+137:	    }
+138:	}
+139:	
+140:	// Create an instance of the ReflectionClass class
+141:	$class_ = new ReflectionClass('Counter');
+142:	
+143:	// Print out basic information
+144:	printf(
+145:	    "===> The %s%s%s %s '%s' [extends %s]\n" .
+146:	    "     declared in %s\n" .
+147:	    "     lines %d to %d\n" .
+148:	    "     having the modifiers %d [%s]\n",
+149:	        $class_->isInternal() ? 'internal' : 'user-defined',
+150:	        $class_->isAbstract() ? ' abstract' : '',
+151:	        $class_->isFinal() ? ' final' : '',
+152:	        $class_->isInterface() ? 'interface' : 'class',
+153:	        $class_->getName(),
+154:	        var_export($class_->getParentClass(), 1),
+155:	        $class_->getFileName(),
+156:	        $class_->getStartLine(),
+157:	        $class_->getEndline(),
+
+	        $class_->getEndline(),
+	                            \_ HERE
+==== 157: ERROR: method	getEndline
+	was declared as
+		ReflectionClass::getEndLine
+	that differs by upper/lower-case letters only
+158:	        $class_->getModifiers(),
+159:	        implode(' ', Reflection::getModifierNames($class_->getModifiers()))
+160:	);
+161:	
+162:	// Print documentation comment
+163:	printf("---> Documentation:\n %s\n", var_export($class_->getDocComment(), 1));
+164:	
+165:	// Print which interfaces are implemented by this class
+166:	printf("---> Implements:\n %s\n", var_export($class_->getInterfaces(), 1));
+167:	
+168:	// Print class constants
+169:	printf("---> Constants: %s\n", var_export($class_->getConstants(), 1));
+170:	
+171:	// Print class properties
+172:	printf("---> Properties: %s\n", var_export($class_->getProperties(), 1));
+173:	
+174:	// Print class methods
+175:	printf("---> Methods: %s\n", var_export($class_->getMethods(), 1));
+176:	
+177:	// If this class is instantiable, create an instance
+178:	if ($class_->isInstantiable()) {
+179:	    $counter = $class_->newInstance();
+180:	
+181:	    echo '---> $counter is instance? ';
+182:	    echo $class_->isInstance($counter) ? 'yes' : 'no';
+183:	
+184:	    echo "\n---> new Object_() is instance? ";
+185:	    echo $class_->isInstance(new Object_()) ? 'yes' : 'no';
+186:	}
+187:	
+188:	
+189:	
+190:	#### Example 19.37. Using the ReflectionMethod class
+191:	
+192:	class Counter2
+193:	{
+194:	    private static $c = 0;
+195:	
+196:	    /**
+197:	     * Increment counter
+198:	     *
+199:	     * @final
+200:	     * @static
+201:	     * @access  public
+202:	     * @return  int
+203:	     */
+204:	    final public static function increment()
+
+	     */
+	       \_ HERE
+==== 203: ERROR: unexpected DocBlock line tag `@access'
+
+	     */
+	       \_ HERE
+==== 203: ERROR: unexpected DocBlock line tag `@final'
+
+	     */
+	       \_ HERE
+==== 203: ERROR: unexpected DocBlock line tag `@package'
+
+	     */
+	       \_ HERE
+==== 203: ERROR: unexpected DocBlock line tag `@static'
+
+	     */
+	       \_ HERE
+==== 203: ERROR: unexpected DocBlock line tag `@var'
+
+	    final public static function increment()
+	                                \_ HERE
+==== 204: ERROR: invalid meta-code or DocBlock visibility|abstract|static|final modifier, use proper language keywords
+205:	    {
+206:	        return ++self::$c;
+207:	    }
+208:	}
+209:	
+210:	// Create an instance of the Reflection_Method class
+211:	$method = new ReflectionMethod('Counter2', 'increment');
+
+	$method = new ReflectionMethod('Counter2', 'increment');
+	                                                        \_ HERE
+==== 211: notice: throwing ReflectionException
+
+	$method = new ReflectionMethod('Counter2', 'increment');
+	                                                        \_ HERE
+==== 211: Warning: uncaught exception ReflectionException at global scope
+212:	
+213:	// Print out basic information
+214:	printf(
+215:	    "===> The %s%s%s%s%s%s%s method '%s' (which is %s)\n" .
+216:	    "     declared in %s\n" .
+217:	    "     lines %d to %d\n" .
+218:	    "     having the modifiers %d[%s]\n",
+219:	        $method->isInternal() ? 'internal' : 'user-defined',
+220:	        $method->isAbstract() ? ' abstract' : '',
+221:	        $method->isFinal() ? ' final' : '',
+222:	        $method->isPublic() ? ' public' : '',
+223:	        $method->isPrivate() ? ' private' : '',
+224:	        $method->isProtected() ? ' protected' : '',
+225:	        $method->isStatic() ? ' static' : '',
+226:	        $method->getName(),
+227:	        $method->isConstructor() ? 'the constructor' : 'a regular method',
+228:	        $method->getFileName(),
+229:	        $method->getStartLine(),
+230:	        $method->getEndline(),
+
+	        $method->getEndline(),
+	                            \_ HERE
+==== 230: ERROR: method	getEndline
+	was declared as
+		ReflectionFunctionAbstract::getEndLine
+	that differs by upper/lower-case letters only
+231:	        $method->getModifiers(),
+232:	        implode(' ', Reflection::getModifierNames($method->getModifiers()))
+233:	);
+234:	
+235:	// Print documentation comment
+236:	printf("---> Documentation:\n %s\n", var_export($method->getDocComment(), 1));
+237:	
+238:	// Print static variables if existant
+239:	if ($statics= $method->getStaticVariables()) {
+
+	if ($statics= $method->getStaticVariables()) {
+	                                            \_ HERE
+==== 239: ERROR: found expression of type mixed[string], expected type is boolean. Remember that an array with zero elements evaluates to FALSE, and an array with one or more elements evaluates to TRUE.
+240:	    printf("---> Static variables: %s\n", var_export($statics, 1));
+241:	}
+242:	
+243:	// Invoke the method
+244:	printf("---> Invokation results in: ");
+245:	var_dump($method->invoke(NULL));
+
+	var_dump($method->invoke(NULL));
+	                               \_ HERE
+==== 245: notice: throwing ReflectionException
+
+	var_dump($method->invoke(NULL));
+	                               \_ HERE
+==== 245: Warning: uncaught exception ReflectionException at global scope
+246:	
+247:	
+248:	
+249:	#### Example 19.38. Using the ReflectionProperty class
+250:	
+251:	class String_
+252:	{
+253:	    public $length  = 5;
+254:	}
+255:	
+256:	// Create an instance of the ReflectionProperty class
+257:	$prop = new ReflectionProperty('String_', 'length');
+
+	$prop = new ReflectionProperty('String_', 'length');
+	                                                    \_ HERE
+==== 257: notice: throwing ReflectionException
+
+	$prop = new ReflectionProperty('String_', 'length');
+	                                                    \_ HERE
+==== 257: Warning: uncaught exception ReflectionException at global scope
+258:	
+259:	// Print out basic information
+260:	printf(
+261:	    "===> The%s%s%s%s property '%s' (which was %s)\n" .
+262:	    "     having the modifiers %s\n",
+263:	        $prop->isPublic() ? ' public' : '',
+264:	        $prop->isPrivate() ? ' private' : '',
+265:	        $prop->isProtected() ? ' protected' : '',
+266:	        $prop->isStatic() ? ' static' : '',
+267:	        $prop->getName(),
+268:	        $prop->isDefault() ? 'declared at compile-time' : 'created at run-time',
+269:	        var_export(Reflection::getModifierNames($prop->getModifiers()), 1)
+270:	);
+271:	
+272:	// Create an instance of String_
+273:	$obj= new String_();
+274:	
+275:	// Get current value
+276:	printf("---> Value is: ");
+277:	var_dump($prop->getValue($obj));
+
+	var_dump($prop->getValue($obj));
+	                               \_ HERE
+==== 277: notice: throwing ErrorException
+
+	var_dump($prop->getValue($obj));
+	                               \_ HERE
+==== 277: Warning: uncaught exception ErrorException at global scope
+
+	var_dump($prop->getValue($obj));
+	                               \_ HERE
+==== 277: notice: throwing ReflectionException
+
+	var_dump($prop->getValue($obj));
+	                               \_ HERE
+==== 277: Warning: uncaught exception ReflectionException at global scope
+278:	
+279:	// Change value
+280:	$prop->setValue($obj, 10);
+
+	$prop->setValue($obj, 10);
+	                          \_ HERE
+==== 280: notice: throwing ReflectionException
+
+	$prop->setValue($obj, 10);
+	                          \_ HERE
+==== 280: Warning: uncaught exception ReflectionException at global scope
+281:	printf("---> Setting value to 10, new value is: ");
+282:	var_dump($prop->getValue($obj));
+
+	var_dump($prop->getValue($obj));
+	                               \_ HERE
+==== 282: notice: throwing ErrorException
+
+	var_dump($prop->getValue($obj));
+	                               \_ HERE
+==== 282: Warning: uncaught exception ErrorException at global scope
+
+	var_dump($prop->getValue($obj));
+	                               \_ HERE
+==== 282: notice: throwing ReflectionException
+
+	var_dump($prop->getValue($obj));
+	                               \_ HERE
+==== 282: Warning: uncaught exception ReflectionException at global scope
+283:	
+284:	// Dump object
+285:	var_dump($obj);
+286:	
+287:	
+288:	
+289:	#### Example 19.39. Using the ReflectionExtension class
+290:	
+291:	// Create an instance of the ReflectionProperty class
+292:	$ext = new ReflectionExtension('standard');
+
+	$ext = new ReflectionExtension('standard');
+	                                           \_ HERE
+==== 292: notice: throwing ReflectionException
+
+	$ext = new ReflectionExtension('standard');
+	                                           \_ HERE
+==== 292: Warning: uncaught exception ReflectionException at global scope
+293:	
+294:	// Print out basic information
+295:	printf(
+296:	    "Name        : %s\n" .
+297:	    "Version     : %s\n" .
+298:	    "Functions   : [%d] %s\n" .
+299:	    "Constants   : [%d] %s\n" .
+300:	    "INI entries : [%d] %s\n" .
+301:	    "Classes     : [%d] %s\n",
+302:	        $ext->getName(),
+303:	        $ext->getVersion() ? $ext->getVersion() : 'NO_VERSION',
+
+	        $ext->getVersion() ? $ext->getVersion() : 'NO_VERSION',
+	                            \_ HERE
+==== 303: ERROR: found expression of type string, expected type is boolean. Remember that the empty string "", the string "0" and the NULL string all evaluate to FALSE and any other string evaluates to TRUE.
+304:	        sizeof($ext->getFunctions()),
+305:	        var_export($ext->getFunctions(), 1),
+306:	
+307:	        sizeof($ext->getConstants()),
+308:	        var_export($ext->getConstants(), 1),
+309:	
+310:	        sizeof($ext->getINIEntries()),
+311:	        var_export($ext->getINIEntries(), 1),
+312:	
+313:	        sizeof($ext->getClassNames()),
+314:	        var_export($ext->getClassNames(), 1)
+315:	);
+316:	
+317:	
+318:	
+319:	#### Example 19.40. Extending the built-in classes
+320:	
+321:	/**
+322:	 * My Reflection_Method class
+323:	 */
+324:	class My_Reflection_Method extends ReflectionMethod
+325:	{
+326:	    public $visibility = '';
+327:	
+328:	    public function __construct($o, $m)
+
+	    public function __construct($o, $m)
+	                                   \_ HERE
+==== 328: ERROR: undefined type for argument $o. Hint: you may indicate an explicit type (example: `/*.int.*/ $o') or assign a default value (example: `$o=123') or add a DocBlock line tag (example: `@param int $o').
+
+	    public function __construct($o, $m)
+	                                       \_ HERE
+==== 328: ERROR: undefined type for argument $m. Hint: you may indicate an explicit type (example: `/*.int.*/ $m') or assign a default value (example: `$m=123') or add a DocBlock line tag (example: `@param int $m').
+329:	    {
+330:	        parent::__construct($o, $m);
+
+	        parent::__construct($o, $m);
+	                                    \_ HERE
+==== 330: notice: throwing ReflectionException
+
+	        parent::__construct($o, $m);
+	                                    \_ HERE
+==== 330: ERROR: My_Reflection_Method::__construct: exception ReflectionException must be caught or declared to be thrown
+331:	        $this->visibility= Reflection::getModifierNames($this->getModifiers());
+
+	        $this->visibility= Reflection::getModifierNames($this->getModifiers());
+	                                                                               \_ HERE
+==== 331: ERROR: (string) = (string[int]): incompatible types
+332:	    }
+333:	}
+334:	
+335:	/**
+336:	 * Demo class #1
+337:	 *
+338:	 */
+339:	class T {
+340:	    protected function x() {}
+341:	}
+342:	
+343:	/**
+344:	 * Demo class #2
+345:	 *
+346:	 */
+347:	class U extends T {
+348:	    function x() {}
+349:	}
+350:	
+351:	// Print out information
+352:	var_dump(new My_Reflection_Method('U', 'x'));
+353:	
+354:	?>
+==== ?: notice: this package is not a library:
+	Uncaught exception ReflectionException at global scope in line 71.
+	Uncaught exception ReflectionException at global scope in line 211.
+	Uncaught exception ReflectionException at global scope in line 245.
+	Uncaught exception ReflectionException at global scope in line 257.
+	Uncaught exception ErrorException at global scope in line 277.
+	Uncaught exception ReflectionException at global scope in line 277.
+	Uncaught exception ReflectionException at global scope in line 280.
+	Uncaught exception ErrorException at global scope in line 282.
+	Uncaught exception ReflectionException at global scope in line 282.
+	Uncaught exception ReflectionException at global scope in line 292.
+END parsing of 5-reflection.php
+==== ?:?: notice: required module standard.php
+==== ?:?: notice: required module standard_reflection.php
+Overall test results: 23 errors, 10 warnings.

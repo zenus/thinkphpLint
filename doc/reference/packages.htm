@@ -1,0 +1,197 @@
+<HTML>
+<HEAD>
+<TITLE>PHPLint Reference Manual</TITLE>
+<META name=description content="PHPLint Reference Manual">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<LINK rel=stylesheet type='text/css' href='../styles.css'>
+</HEAD><BODY>
+
+<h2>Packages</h2>
+
+
+<p>
+In the PHPLint terminology, a <b>package</b> is simply any PHP file the PHPLint
+program can parse. Since a single PHP source file can define an arbitrary
+number of items (functions, classes, etc.), this name appears to be quite
+justified to indicate a collection of programming tools. "Namespace" is another
+term that indicate a collection of packages more or less related.
+PHPLint packages have nothing to do with the DocBlock
+<code>@package</code> line tag, nor with PHP 5 namespaces, it is only a
+specific name given to a PHP source file.
+
+<p>
+PHPLint distinguishes among three types of packages: modules, libraries and
+programs.
+</p>
+
+
+
+<h3>Modules, libraries and programs</h3>
+
+
+<ul>
+
+<li>
+A <b>module</b> is a stub of PHP source code where the standard extensions of
+the PHP language are described. These modules are available under the
+<code>modules</code> directory. Modules can be imported
+with the special meta-code statement <code>/*. require_module 'MODULENAME';
+.*/</code>. Modules <i>are not actual PHP code</i>, and are not require to
+run the actual PHP program. Modules are read by PHPLint only to know which
+features are provided by a specific PHP extension. For example, <code>standard</code> provides the most commonly used constants, functions and classes like
+<code>strlen()</code> or <code>DateTime</code>.
+</li>
+
+<li>
+A <b>library</b> is an user package intended to provide reusable constants,
+functions and classes to other librares or client programs.
+Each library can define one or more namespaces. Libraries can import
+several modules and can also import other lower-level libraries
+with the <b>require_once</b> statement.
+</li>
+
+<li>
+A <b>program</b> is an user package that can be executed to generate a WEB page
+or any other document. PHP code may be surrounded by textual content, typically
+HTML or XML. Executable CGI scripts are also allowed and the standard
+<i>shabang</i> leading line <code>#!</code> is detected.
+Programs can import modules and libraries, but cannot import other programs.
+</li>
+
+
+</ul>
+
+<div class="note_box">
+<b>IMPORTANT NOTE:</b><br>
+only modules imported with <b>/*.require_module.*/</b> and libraries imported
+with <b>require_once</b> and classes autoload are parsed recursively by
+PHPLint. Sources imported with <b>require</b>, <b>include</b> and
+<b>include_once</b> are not parsed recursively.
+</div>
+
+
+
+<h3>Items PHPLint collects from parsed packages</h3>
+
+<p>
+From a package PHPLint gathers the informations that follow:
+</p>
+
+<ul>
+
+<li>The list of the <b>required PHP built-in modules</b> aka
+<i>extensions</i> (for example, <code>standard</code>, <code>mysql</code>,
+<code>session</code>, etc.). These modules may or may not be present in
+your installation of the PHP interpreter, as their presence depends on how
+the PHP interpreter was built from the sources.
+</li>
+
+<li>The list of the <b>required packages</b> imported with
+<code>require_once</code>.
+</li>
+
+<li>The list of the <b>exported items</b> from this package:<p>
+
+	<ul>
+
+	<li>The list of the non-private constants exported.
+	<p>
+	</li>
+
+	<li>The list of the non-private global variables exported.
+	<p>
+	</li>
+
+	<li>The list of the non-private functions exported.
+	<p>
+	</li>
+
+	<li>The list of the non-private classes exported.
+	<p>
+	</li>
+
+	<li>The list of the non-private items exported by these classes
+	(constants, variables and functions).
+	<p>
+	</li>
+
+	</ul>
+</li>
+
+</ul>
+
+
+
+<h3>General structure of a package</h3>
+
+<p>
+As PHPLint is a single-pass parser, it is very important to define every thing
+before its usage according to the well know <i>bottom-up</i> ordering.
+So if function a() calls b() and b() calls c(), then these functions must be
+declared in the order c, b, a.
+</p>
+
+<p>
+To overcome this strict bottom-up ordering, PHPLint also provides a special
+meta code <i>forward</i> declarations for functions and classes with which
+recursive functions, recursive classes and recursive methods are allowed.
+See the <i>Recursive declarations</i> chapter for more details.
+</p>
+
+<p>
+A <b>project</b>, or <b>application</b>, or <b>WEB application</b>, can consist
+of several packages. The typical structure of a library might look something
+like this:
+</p>
+
+<div class="code_box">
+<pre>
+&lt;?php
+# REQUIRED MODULES:
+/*.
+    require_module 'standard';
+    require_module 'pgsql';
+    require_module 'session';
+.*/
+
+# REQUIRED LIBRARIES:
+require_once __DIR__ . '/SiteConfig.php';
+require_once __DIR__ . '../php-libs/MimeMail.inc';
+
+# PRIVATE ITEMS:
+/*. private .*/ define("MAX_LOGGED_USERS", 20);
+/*. private .*/ class SessionFile { ... }
+/*. private .*/ $current_session = /*. (SessionFile) .*/ NULL;
+
+/*. private SessionFile .*/ function NewSessionFile($max_size = 10000)
+{ ... }
+
+# EXPORTED ITEMS:
+define("MAX_USER_NAME", 20);
+class User { ... }
+$loggedUsers = /*. (User[int]) .*/ array();
+
+/*. void .*/ function UpdateLoggedUsers() { ... }
+
+/*. User .*/ function NewUserSession() { ... }
+
+# INITIALIZATION CODE:
+$current_session = NewSessionFile();
+UpdateLoggedUsers();
+</pre>
+</div>
+
+
+<p>
+The <code>/*. private .*/</code> attribute is an extension of the PHPLint
+meta-code.  The private items of a package can be used only inside the
+package itself.  PHPLint raises an error if a private item of a package
+is used or re-defined inside another package. Private items are listed
+in the documentation generated by the PHPLint Documentator, so to make
+the programmer aware of that global name-space "pollution".
+</p>
+
+</body>
+</html>

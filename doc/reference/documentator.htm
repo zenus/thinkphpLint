@@ -1,0 +1,75 @@
+<HTML>
+<HEAD>
+<TITLE>PHPLint Reference Manual</TITLE>
+<META name=description content="PHPLint Reference Manual">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<LINK rel=stylesheet type='text/css' href='../styles.css'>
+</HEAD><BODY>
+
+<h2>Documentator</h2>
+
+<p>
+PHPLint can generate an HTML document for any package just parsed. This HTML
+document contains:
+</p>
+
+<ul>
+	<li>
+		Version of PHP.
+	</li>
+	<li>
+		Required PHP modules.
+	</li>
+	<li>
+		Required packages.
+	</li>
+	<li>
+		All the constants, variables, functions, classes and their members
+		(<i>items</i>, for short).
+	</li>
+	<li>
+		For each item, its DocBlock with types and in-line tags resolved.
+	</li>
+</ul>
+
+<p>
+	All the references to other modules and packages are made as relative
+	paths, so that all the documents generated can be moved without breaking
+	the references.
+</p>
+
+<p>
+	To enable the generation of the HTML document, the <code>--doc</code>
+	command line option must be given before the name of the package to be
+	parsed. Example:
+</p>
+
+<blockquote><pre>
+C:\phplint><b>phpl --doc MyProgram.php</b>
+</pre></blockquote>
+
+<p>
+will generate the file <code>MyProgram.html</code>.
+</p>
+
+<p>
+	The <code>--doc-help</code> command line option displays all the available
+	options of the PHPLint Documentator:
+</p>
+
+<blockquote><pre>
+C:\phplint><b>phpl --doc-help</b>
+PHPLint Documentator
+
+Options:
+  --doc                 enable documentation generator
+  --doc-extension EXT   extension of the generated documents (def. ".html")
+  --doc-page-header H   header text of the generated HTML page
+  --doc-page-footer F   footer text of the generated HTML page
+  --doc-ref-remap A B   remap HTML anchors references from A* to B*
+</pre></blockquote>
+
+</body>
+</html>

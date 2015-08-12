@@ -1,0 +1,293 @@
+<HTML>
+<HEAD>
+<TITLE>PHPLint Reference Manual</TITLE>
+<META name=description content="PHPLint Reference Manual">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<LINK rel=stylesheet type='text/css' href='../styles.css'>
+</HEAD><BODY>
+
+<h2>How To...</h2>
+
+<p>
+This chapter contains a collections of suggestions to get the best results
+developing with PHPLint.
+</p>
+
+<p>
+<b>The declarations first.</b><br>
+Since PHPLint is a single-pass parser, things MUST be declared before use.
+On a typical WEB application, you might collect all the constants, global
+variables, functions and classes on a file, and then you can include this file
+in any page using the <code>require_once</code> statement.
+</p>
+
+<p>
+<b>Constants should be... constants!</b><br>
+The expression defining a constant should be statically determinable by
+the parser. Don't use variables and functions, but only literals (numbers
+and strings) and other constants. If an expression isn't statically
+computable, PHPLint will complain not to be able to calculate its value
+or its type.
+</p>
+
+<p>
+<b>Assign a value to the global variables.</b><br>
+PHPLint can guess the type of these variables from the result of the
+expression. Isn't required that this expression be statically evaluable,
+since what is of interest to PHPLint is the resulting type, not the value.
+For example:
+</p>
+<div class="code_box"><pre>
+$now = time();           # time() returns an int
+$tout = $now + 100;      # adding two int gives another int
+$today = date("Y-m-d");  # date() returns a string
+</pre></div>
+
+<p>
+<b>Declarations of functions and methods.</b><br>
+Complete the declarations indicating the type of the returned value,
+or void if no value is returned.  For any formal argument, add its type.
+This is particularly recommended for libraries that are used often, but
+it is useful also for ordinary programs to enforce a strict type checking.
+</p>
+
+<p>
+<b>Class properties.</b><br>
+Always assign them a type and/or a value, as a literal or a static
+expression. PHPLint uses the result if the expression to guess the type
+of the property whenever not given explicitly.
+</p>
+
+<p>
+<b>Safe handling of the data coming from the browser.</b><br>
+Remember that the type of the elements of the array $_POST and $_GET
+can be either strings or arrays. Always check for the existence of
+the parameter and its actual type. See the chapter <u>Predefined
+superglobals</u> for examples.
+</p>
+
+<p>
+<b>Don't use the function each().</b><br>
+This function returns a generic array, so loosing the type of the
+elements of the array passed by argument.  The following code
+
+<div class="code_box">
+<pre>
+/* WRONG CODE: */
+$a = array(1, 2, 3);
+reset($a);
+while( list($k, $v) = each($a) ){ echo $k, $v; }
+</pre>
+</div>
+
+<p>
+although valid for the PHP interpreter, raise many error messages because
+the expression inside the <code>while(EXPR)</code> is expected to be of
+the type <b>boolean</b>, and the types of the variable $k and $v cannot
+be determined.  The same code can be rewritten as:
+</p>
+
+<div class="code_box">
+<pre>
+$a = array(1, 2, 3);
+foreach( $a as $k =&gt; $v ){ echo $k, $v; }
+</pre>
+</div>
+
+<p>
+<b>Some functions might return values of different types.</b><br>
+For example, the <code>strpos($str, $substr)</code> function returns an
+integer number that is the position of the string <code>$substr</code>
+inside the string <code>$str</code>, or it returns the boolean value
+<code>FALSE</code> if the sub-string was not found. The right way to
+handle this case is:
+</p>
+
+<div class="code_box">
+<pre>
+$pos = strpos($str, $substr);
+if( $pos === FALSE )
+    # not found
+else
+    # found
+</pre>
+</div>
+
+<p>
+If you are interested only to know if the sub-string is contained inside the
+string, the code can be made shorter:
+</p>
+
+<div class="code_box">
+<pre>
+if( strpos($str, $substr) !== FALSE )
+    # found!
+else
+    # not found.
+</pre>
+</div>
+
+<p>
+Another example is the function <code>ereg()</code>. The code
+</p>
+
+<div class="code_box">
+<code>/* WRONG CODE: */<br>
+if( ereg("^[0-9]+$", $str) ){ }</code>
+</div>
+
+<p>
+is not valid because the <code>if(EXPR)</code> statement requires
+a boolean expression, but the function <code>ereg()</code> formally
+returns an integer number, that is the number of characters of the given
+string that match the regular expression. Even more: the function
+<code>ereg()</code> returns FALSE if the regular expression does not match
+the given string. If you are interested on the value returned by the
+function, you should write something like this:
+</p>
+
+<div class="code_box">
+<pre>
+$n = ereg("^[0-9]+", $str);
+if( $n === FALSE )
+    # does not match at all
+else
+    # $n leading digits found
+</pre>
+</div>
+
+<p>
+If, instead, you are only interested to check if the given string match or
+not the regular expression, this is the right way:
+</p>
+
+<div class="code_box">
+<pre>if( ereg("^[0-9]+$", $str) !== FALSE )
+    # it match
+</pre>
+</div>
+
+<p>
+The function <code>fopen()</code> formally returns a value of the type
+<b>resource</b>, but it might return a <b>boolean</b> <code>FALSE</code>
+value as well if the file cannot be opened. This is the right way
+to use this function:
+</p>
+
+<div class="code_box">
+<pre>
+$f = fopen("xyz", "r");
+if( $f === FALSE )  die("cannot open xyz");
+</pre>
+</div>
+
+<p>
+Invalid ways:
+</p>
+
+<div class="code_box">
+<pre>
+/* WRONG CODE: */
+$f = fopen("xyz", "r") or die("cannot open xyz");
+# the operands of the "or" operator aren't boolean values
+# because fopen() returns a resource, and die() does not
+# return a value at all.
+
+/* WRONG CODE: */
+if( $f = fopen("xyz", "r") ) die("cannot open xyz");
+# the expression inside if(EXPR) isn't of the type boolean.
+
+/* Valid, but confusing: */
+if( ($f = fopen("xyz", "r")) === FALSE ) die("cannot open xyz");
+</pre>
+</div>
+
+<div class="note_box">
+<b>Beware of unsafe string comparisons.</b><br>
+When a string looks like a number, PHP try to compare strings as such,
+so often giving unexpected results.
+</div>
+
+For example, these comparisons give
+TRUE, although a strict character-by-character comparison would give a well
+different result:
+
+<blockquote>
+<code>
+"1.00" == "1"<br>
+"01" &gt;= "1"<br>
+"02" &gt; "1"
+</code>
+</blockquote>
+
+<p>
+That's why PHPLint allows to compare strings only using the strict
+comparison operators <code>===</code> and <code>!==</code> since these
+two operators gives the expected results.  Any other string comparison
+should be done with the <code>strcmp()</code> function. This table should
+help in translating commonly used, unsafe, PHP string comparisons into
+safe, PHPLint-compliant, string comparisons:
+</p>
+
+<pre>
+
+</pre>
+
+<blockquote>
+<table align=center border=1 cellspacing=0 cellpadding=7>
+<tr><th>Invalid:</th><th>Valid:</th></tr>
+
+<tr><td><code>$a == $b</code></td>
+<td><code>$a === $b</code> <center>or</center> <code>strcmp($a, $b) == 0</code>
+<br>but see the note below.</td></tr>
+
+<tr><td><code>$a != $b</code></td>
+<td><code>$a !== $b</code> <center>or</center> <code>strcmp($a, $b) != 0</code>
+<br>but see the note below.</td></tr>
+
+<tr><td><code>$a &lt; $b</code></td>
+<td><code>strcmp($a, $b) &lt; 0</code></td></tr>
+
+<tr><td><code>$a &lt;= $b</code></td>
+<td><code>strcmp($a, $b) &lt;= 0</code></td></tr>
+
+<tr><td><code>$a &gt;= $b</code></td>
+<td><code>strcmp($a, $b) &gt;= 0</code></td></tr>
+
+<tr><td><code>$a &gt; $b</code></td>
+<td><code>strcmp($a, $b) &gt; 0</code></td></tr>
+
+</table>
+</blockquote>
+
+<pre>
+
+</pre>
+
+<p>
+It is interesting to note that introducing the <code>strcmp()</code>
+function, the comparison operator does not change.  Simply, we have mapped
+</p>
+
+<blockquote>
+<code>$a </code><i>operator</i><code> $b</code>
+</blockquote>
+to
+<blockquote>
+<code>strcmp($a, $b) </code><i>operator</i><code> 0</code>
+</blockquote>
+
+<div class="note_box">
+<b>strcmp() and "===" behave differently with NULL or empty strings</b><br>
+There is a subtle difference between the <code>strcmp()</code> function
+and the strict comparison operators when one of the strings being compared
+is <code>NULL</code>. According to the <code>strcmp()</code> function the
+<code>NULL</code> value is equivalent to the empty string <code>""</code>.
+On the contrary, for the strict comparison operators a <code>NULL</code>
+value is different from an empty string.
+</div>
+
+</body>
+</html>

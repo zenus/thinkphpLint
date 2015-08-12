@@ -1,0 +1,72 @@
+
+BEGIN parsing of 5-spl-ArrayAccess.php
+1:	#!/bin/php530 -c.
+2:	<?php
+3:	
+4:	/*.
+5:		require_module 'spl';
+6:	.*/
+7:	
+8:	class TestArrayAccess
+9:	implements ArrayAccess
+10:	{
+11:		private $a = array("zero", "one", "two");
+12:	
+13:	
+14:		/*. bool  .*/ function offsetExists(/*. mixed .*/ $offset)
+15:		{
+16:			if( ! is_int($offset) )
+17:				return FALSE;
+18:			$k = (int) $offset;
+19:			return $k >= 0 && $k < count($this->a);
+20:		}
+21:	
+22:	
+23:		/*. string .*/ function offsetGet(/*. mixed .*/ $offset)
+24:		{
+25:			if( ! is_int($offset) )
+26:				throw new InvalidArgumentException("offset must be int");
+27:			$k = (int) $offset;
+28:			if( $k < 0 || $k >= count($this->a) )
+29:				throw new OutOfRangeException("offset = $k");
+30:			return $this->a[$k];
+31:		}
+32:	
+33:		
+34:		/*. void  .*/ function offsetSet(/*. mixed .*/ $offset,
+35:			/*. string .*/ $value)
+36:		{
+37:			die("unimplemented");
+38:		}
+39:	
+40:	
+41:		/*. void  .*/ function offsetUnset(/*. mixed .*/ $offset)
+==== 34: ERROR: `TestArrayAccess::offsetSet()': the signature `void(mixed, string)' does not match the implemented method `ArrayAccess::offsetSet()' declared in ../../modules/spl:149 with signature `void(mixed, mixed)': incompatible type in overriding argument no. 2
+==== 35: notice: variable `$value' assigned but never used
+==== 34: notice: variable `$offset' assigned but never used
+42:		{
+43:			die("unimplemented");
+44:		}
+45:	
+46:	}
+==== 41: notice: variable `$offset' assigned but never used
+47:	
+48:	
+49:	$x = new TestArrayAccess();
+50:	for( $i = 0; $x->offsetExists($i); $i++ )
+51:		echo $x[$i], "\n";
+52:	
+53:	
+54:	
+55:	$test = new SplFixedArray(4);
+56:	$test[4] = 'test';
+57:	echo (string) $test[1];
+END parsing of 5-spl-ArrayAccess.php
+==== 5-spl-ArrayAccess.php:23: notice: unused method `TestArrayAccess::offsetGet()'
+==== 5-spl-ArrayAccess.php:34: notice: unused method `TestArrayAccess::offsetSet()'
+==== 5-spl-ArrayAccess.php:41: notice: unused method `TestArrayAccess::offsetUnset()'
+==== ?: notice: required module `spl'
+==== ?: notice: required module `simplexml'
+==== ?: notice: required module `dom'
+==== ?: notice: required module `standard'
+Overall test results: 1 errors, 0 warnings.

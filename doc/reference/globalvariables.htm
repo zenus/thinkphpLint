@@ -1,0 +1,64 @@
+<HTML>
+<HEAD>
+<TITLE>PHPLint Reference Manual</TITLE>
+<META name=description content="PHPLint Reference Manual">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<LINK rel=stylesheet type='text/css' href='../styles.css'>
+</HEAD><BODY>
+
+<h2>Global variables</h2>
+
+<p>
+The <b>global variables</b> are those variables defined at the global
+scope of the package. "Defining" a variable simply means assigning it
+a value, like in these examples:
+</p>
+
+<div class="code_box"><pre>
+$n = 123;
+$src = fopen("data.txt", "r");
+$matrix[1][$n] = $n + 1;
+$redColor = "red";
+$colors = array($redColor, "green", "blue");
+$adminName = "admin";
+$userName = /*. (string) .*/ NULL;
+</pre></div>
+
+<p>
+In the last line you can see another example of the PHPLint meta-code:
+since according to the <i>PHPLint types model</i>, a string can be either a
+sequence of characters or the <code>NULL</code> value, and since the
+<code>NULL</code> alone isn't a well defined type, a <i>formal
+type-cast</i> to the <b>string</b> type is required in order to specify
+the type of the expression assigned to the variable <code>$userName</code>
+(more on this argument in the following chapters).
+</p>
+
+<p>
+Global variables private to the package should be declared as "private" using
+the PHPLint meta-code:
+</p>
+
+<div class="code_box"><code>
+/*. private .*/ $dbConn = pg_connect("dbname=SiteDB");
+</code></div>
+
+<p>
+These private variables are reserved by the package and cannot be used
+by client packages. PHPLint raises an error if a private variable is used
+or re-defined in another package.
+</p>
+
+<p>
+The private variables are reported into the list of the <b>Private
+items</b> by the PHPLint Documentator.  Since the private variables still
+occupy space inside the global name-space, the programmer should take
+care to limit their usage, possibly choosing an appropriate naming schema
+that prevent collisions. A common practice is to prefix their name
+with the package name <code>$ThePkg_theVar</code>.
+</p>
+
+</body>
+</html>

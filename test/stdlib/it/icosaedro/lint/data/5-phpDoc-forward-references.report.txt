@@ -1,0 +1,60 @@
+BEGIN parsing of 5-phpDoc-forward-references.php
+1:	<?php
+2:	/**
+3:	 *  Unqualified forward references NOT allowed in PHPLint/PHP 5:
+4:	 *  {@link MY_CONST},
+5:	 *  {@link MyFunc()},
+6:	 *  {@link MyClass},
+7:	 *  {@link MyClass::MyMethod()}.
+8:	 *
+9:	 *  Fully qualified forward references allowed in PHPLint/PHP 5:
+10:	 *  {@link \MY_CONST},
+11:	 *  {@link \MyFunc()},
+12:	 *  {@link \MyClass},
+13:	 *  {@link \MyClass::MyMethod()},
+14:	 *  {@link namespace\MY_CONST},
+15:	 *  {@link namespace\MyFunc()},
+16:	 *  {@link namespace\MyClass},
+17:	 *  {@link namespace\MyClass::MyMethod()}.
+18:	 *
+19:	 *  @package ForwardDeclsTest
+20:	 */
+21:	
+22:	define("MY_CONST", 123);
+23:	
+24:	/**
+25:	 *  @return MyClass $wrongParam  Not resolvable.
+26:	 *  @return \MyClass $wrongParam  Not resolvable.
+27:	 *  @return namespace\MyClass $wrongParam  Not resolvable.
+28:	 */
+
+	@return MyClass $wrongParam  Not resolvable.
+	              \_ HERE
+==== 25: ERROR: unknown type MyClass
+
+	@return \MyClass $wrongParam  Not resolvable.
+	      \_ HERE
+==== 26: ERROR: multiple @return
+
+	@return \MyClass $wrongParam  Not resolvable.
+	               \_ HERE
+==== 26: ERROR: unknown type \MyClass
+
+	@return namespace\MyClass $wrongParam  Not resolvable.
+	      \_ HERE
+==== 27: ERROR: multiple @return
+
+	@return namespace\MyClass $wrongParam  Not resolvable.
+	                        \_ HERE
+==== 27: ERROR: unknown type namespace\MyClass
+29:	function MyFunc(){}
+30:	
+31:	class MyClass {
+
+	function MyFunc(){}
+	               \_ HERE
+==== 29: ERROR: missing `return' in at least one execution path in non-void function MyFunc
+32:		/*. void .*/ function MyMethod(){}
+33:	}
+END parsing of 5-phpDoc-forward-references.php
+Overall test results: 6 errors, 0 warnings.

@@ -1,0 +1,41 @@
+#!/bin/bash
+# Runs the PHPLint program stdlib/it/icosaedro/lint/PHPLint and displays
+# the report on standard output.
+# Syntax of the command:
+#
+#     phpl [OPTIONS] file.php
+#
+# For a complete list of the available options, type
+#
+#     phpl --help
+#
+
+# Gets the directory of this script file, also resolving symlinks:
+# (reference: Dave Dopson, http://stackoverflow.com/questions/59895/can-a-bash-script-tell-what-directory-its-stored-in )
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+	DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+	SOURCE="$(readlink "$SOURCE")"
+	[[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+__DIR__="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+
+
+"$__DIR__/php" \
+	"$__DIR__/stdlib/it/icosaedro/lint/PHPLint.php" \
+	--modules-path "$__DIR__/modules" \
+	--php-version 5 \
+	--print-path relative \
+	--print-errors \
+	--print-warnings \
+	--print-notices \
+	--ascii-ext-check \
+	--ctrl-check \
+	--recursive \
+	--no-print-file-name \
+	--parse-phpdoc \
+	--print-context \
+	--print-source \
+	--print-line-numbers \
+	--report-unused \
+	"$@"

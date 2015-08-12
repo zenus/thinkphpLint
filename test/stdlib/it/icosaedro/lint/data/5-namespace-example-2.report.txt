@@ -1,0 +1,57 @@
+BEGIN parsing of 5-namespace-example-2.php
+1:	<?php
+2:	namespace MyProject {
+3:	
+4:	const CONNECT_OK = 1;
+5:	class Connection { /* ... */ }
+6:	function connect() { /* ... */  }
+7:	}
+8:	
+9:	namespace AnotherProject {
+10:	
+11:	const CONNECT_OK = 1;
+12:	class Connection { /* ... */ }
+13:	function connect() { /* ... */  }
+14:	}
+15:	
+16:	echo MyProject\CONNECT_OK;
+17:	echo MyProject\connect_ok;
+
+	echo MyProject\connect_ok;
+	                          \_ HERE
+==== 17: ERROR: unknown constant MyProject\connect_ok
+18:	echo myproject\CONNECT_OK;
+
+	echo myproject\CONNECT_OK;
+	                          \_ HERE
+==== 18: ERROR: constant
+		myproject\CONNECT_OK
+	was declared as
+		MyProject\CONNECT_OK
+	that differs by upper/lower-case letters only
+19:	
+20:	$o1 = new MyProject\Connection();
+21:	$o1 = new MyProject\connection();
+
+	$o1 = new MyProject\connection();
+	                              \_ HERE
+==== 21: ERROR: class
+		MyProject\connection
+	was declared as
+		MyProject\Connection
+	that differs by upper/lower-case letters only
+22:	$o1 = new myproject\Connection();
+
+	$o1 = new myproject\Connection();
+	                              \_ HERE
+==== 22: ERROR: class
+		myproject\Connection
+	was declared as
+		MyProject\Connection
+	that differs by upper/lower-case letters only
+23:	
+24:	MyProject\connect();
+25:	echo AnotherProject\CONNECT_OK;
+26:	$o2 = new AnotherProject\Connection();
+END parsing of 5-namespace-example-2.php
+Overall test results: 4 errors, 0 warnings.

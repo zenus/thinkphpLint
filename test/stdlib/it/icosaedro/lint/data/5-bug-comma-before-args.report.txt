@@ -1,0 +1,10 @@
+BEGIN parsing of 5-bug-comma-before-args.php
+1:	<?php
+2:	
+3:	# BUG FIX: comma before args must be sym_x_comma:
+4:	/*. void .*/ function bug_comma_before_args($i=0 , /*. args .*/)
+
+	/*. void .*/ function bug_comma_before_args($i=0 , /*. args .*/)
+	                                                           \_ HERE
+==== 4: ERROR: (FATAL) there must be a meta-code comma `,' separating the special symbol args from the other arguments
+Overall test results: 1 errors, 0 warnings.

@@ -1,0 +1,301 @@
+
+BEGIN parsing of 4-class1.php
+1:	<?php
+2:	
+3:	/*. require_module 'standard'; .*/
+4:	
+5:	
+6:	# Testing visibility attributes:
+7:	# ------------------------------
+8:	
+9:	class C1 {
+10:	
+11:		/*. private .*/ var $priv = 1;
+12:		/*. protected .*/ var $prot = 1;
+13:		/*. public .*/ var $publ = 0;
+14:	
+15:		/*. private void .*/ function priv(){}
+16:		/*. protected void .*/ function prot(){}
+17:		/*. public void .*/ function publ(){}
+18:	
+19:	}
+20:	
+21:	class C2 extends C1 {
+22:	
+23:		/*. void .*/ function C2()
+24:		{
+25:			$this->priv = 0;
+
+			$this->priv = 0;
+	                     \_ HERE
+==== 25: ERROR: access forbidden to private property `C2::C1::$priv'
+26:			$this->prot = 0;
+27:			$this->publ = 0;
+28:			$this->priv();
+
+			$this->priv();
+	                    \_ HERE
+==== 28: ERROR: access forbidden to private method C2::C1::priv
+29:			$this->prot();
+30:			$this->publ();
+31:		}
+32:	}
+33:	
+34:	$o1 = new C1();
+35:	$o1->priv = 0;
+
+	$o1->priv = 0;
+	           \_ HERE
+==== 35: ERROR: access forbidden to private property `C1::$priv'
+36:	$o1->prot = 0;
+
+	$o1->prot = 0;
+	           \_ HERE
+==== 36: ERROR: access forbidden to protected property `C1::$prot'
+37:	$o1->publ = 0;
+38:	$o1->priv();
+
+	$o1->priv();
+	          \_ HERE
+==== 38: ERROR: access forbidden to private method C1::priv
+39:	$o1->prot();
+
+	$o1->prot();
+	          \_ HERE
+==== 39: ERROR: access forbidden to protected method C1::prot
+40:	$o1->publ();
+41:	
+42:	
+43:	# Testing final attribute:
+44:	# ------------------------
+45:	
+46:	/*. final .*/ class C3 {
+47:		/*. final void .*/ function f(){}
+48:	}
+49:	
+50:	class C4 extends C3 {
+
+	class C4 extends C3 {
+	                    \_ HERE
+==== 50: ERROR: can't extend final class `C3'
+51:		/*. void .*/ function f(){}
+52:	}
+53:	
+54:	
+55:	# Testing static attribute:
+56:	# -------------------------
+57:	
+58:	class C5 {
+59:	
+60:		/*. public static void .*/ function static_func()
+61:		{
+62:			if( $this === NULL ) ;
+
+			if( $this === NULL ) ;
+	                     \_ HERE
+==== 62: ERROR: using variable `$this' inside static method `static_func'
+63:		}
+64:	
+65:		/*. public void .*/ function non_static_func()
+66:		{
+67:			if( $this === NULL ) ;
+68:		}
+69:	
+70:	}
+71:	
+72:	$o2 = new C5();
+73:	$o2->non_static_func();
+74:	C5::non_static_func();
+
+	C5::non_static_func();
+	                    \_ HERE
+==== 74: ERROR: static access to non-static method C5::non_static_func
+75:	$o2->static_func();
+
+	$o2->static_func();
+	                 \_ HERE
+==== 75: ERROR: non-static access to static method C5::static_func
+76:	C5::static_func();
+77:	
+78:	
+79:	# Testing methods overriding:
+80:	# ---------------------------
+81:	
+82:	class C6 {
+83:		/*. void .*/ function m1(){}
+84:		/*. int  .*/ function m2(){}
+85:		/*. void .*/ function m3(/*. int .*/ $x){}
+==== 84: ERROR: missing `return' in at least one execution path in non-void method m2
+86:		/*. void .*/ function m4(/*. int .*/ $x = 0){}
+==== 85: notice: variable `$x' assigned but never used
+87:		/*. void .*/ function m5(/*. args .*/){}
+==== 86: notice: variable `$x' assigned but never used
+88:	}
+89:	
+90:	class C7 extends C6 {
+91:		# No changes in signatures:
+92:		/*. void .*/ function m1(){}
+93:		/*. int  .*/ function m2(){}
+94:		/*. void .*/ function m3(/*. int .*/ $x){}
+==== 93: ERROR: missing `return' in at least one execution path in non-void method m2
+95:		/*. void .*/ function m4(/*. int .*/ $x = 0){}
+==== 94: notice: variable `$x' assigned but never used
+96:		/*. void .*/ function m5(/*. args .*/){}
+==== 95: notice: variable `$x' assigned but never used
+97:	}
+98:	
+99:	class C8 extends C6 {
+100:		# Allowed changes in signatures:
+101:		/*. void .*/ function m1($x = 0){}
+102:		/*. int  .*/ function m2(/*. args .*/){}
+==== 101: notice: variable `$x' assigned but never used
+103:		/*. void .*/ function m3(/*. int .*/ $x, $y = ""){}
+==== 102: ERROR: missing `return' in at least one execution path in non-void method m2
+104:		/*. void .*/ function m4(/*. int .*/ $x = 0, $y = 0){}
+==== 103: notice: variable `$y' assigned but never used
+==== 103: notice: variable `$x' assigned but never used
+105:		/*. void .*/ function m5(/*. args .*/){}
+==== 104: notice: variable `$y' assigned but never used
+==== 104: notice: variable `$x' assigned but never used
+106:	}
+107:	
+108:	class C9 extends C6 {
+109:		# Invalid changes in signatures:
+110:		/*. int  .*/ function m1(){}
+111:		/*. void .*/ function m2(){}
+==== 110: ERROR: missing `return' in at least one execution path in non-void method m1
+==== 110: ERROR: `C9::m1()': the signature `int()' does not match the overridden method `C6::m1()' declared in line 83 with signature `void()': incompatible return types
+112:		/*. void .*/ function m3(/*. int .*/ $x, /*. int .*/ $y){}
+==== 111: ERROR: `C9::m2()': the signature `void()' does not match the overridden method `C6::m2()' declared in line 84 with signature `int()': incompatible return types
+113:		/*. void .*/ function m4(/*. float .*/ $x = 0.0){}
+==== 112: ERROR: `C9::m3()': the signature `void(int, int)' does not match the overridden method `C6::m3()' declared in line 85 with signature `void(int)': different number of mandatory arguments
+==== 112: notice: variable `$y' assigned but never used
+==== 112: notice: variable `$x' assigned but never used
+114:		/*. void .*/ function m5(){}
+==== 113: ERROR: `C9::m4()': the signature `void([float])' does not match the overridden method `C6::m4()' declared in line 86 with signature `void([int])': incompatible type in overriding argument no. 1
+==== 113: notice: variable `$x' assigned but never used
+115:	}
+==== 114: ERROR: `C9::m5()': the signature `void()' does not match the overridden method `C6::m5()' declared in line 87 with signature `void(...)': required variable number of arguments /*.args.*/
+116:	
+117:	
+118:	# Testing abstract classes:
+119:	# -------------------------
+120:	
+121:	
+122:	/*. abstract .*/ class StringContainer {
+123:	
+124:		/*. abstract void .*/ function set(
+125:			/*. string .*/ $name,
+126:			/*. string .*/ $value){}
+127:		/*. abstract string .*/ function get(/*. string .*/ $name){}
+128:	
+129:		/*. abstract void .*/ function dispose(){}
+130:	}
+131:	
+132:	
+133:	class StringOnFile extends StringContainer {
+134:	
+135:		/*. private .*/ var /*. string .*/ $dir;
+136:	
+137:		/*. void .*/ function StringOnFile()
+138:		{
+139:			do {
+140:				$this->dir = "strings-" . rand();
+141:			} while( file_exists( $this->dir ) );
+142:			mkdir( $this->dir );
+
+			mkdir( $this->dir );
+	              \_ HERE
+==== 142: notice: unhandled error(s): E_WARNING
+143:		}
+144:	
+145:		/*. void .*/ function set(
+146:			/*. string .*/ $name,
+147:			/*. string .*/ $value)
+148:		{
+149:			file_put_contents( $this->dir ."/$name", $value);
+
+			file_put_contents( $this->dir ."/$name", $value);
+	                          \_ HERE
+==== 149: notice: unhandled error(s): E_WARNING
+150:		}
+151:	
+152:		/*. string .*/ function get(/*. string .*/ $name)
+153:		{
+154:			$s = file_get_contents( $this->dir ."/$name" );
+
+			$s = file_get_contents( $this->dir ."/$name" );
+	                               \_ HERE
+==== 154: notice: unhandled error(s): E_WARNING
+155:			return ($s===FALSE)? /*. (string) .*/ NULL : $s;
+156:		}
+157:	
+158:		/*. void .*/ function dispose()
+159:		{
+160:			system( "rm -r ". $this->dir );
+161:		}
+162:	}
+163:	
+164:	
+165:	class StringOnSession extends StringContainer {
+166:	
+167:		/*. private .*/ var /*. string .*/$arr;
+168:	
+169:		/*. void .*/ function StringOnFile()
+170:		{
+171:			do {
+172:				$this->arr = "strings-" . rand();
+173:			} while( isset( $_SESSION[ $this->arr ] ) );
+174:			$_SESSION[ $this->arr ] = array();
+175:		}
+176:	
+177:		/*. void .*/ function set(
+178:			/*. string .*/ $name,
+179:			/*. string .*/ $value)
+180:		{
+181:			$arr = /*.(array[string]string).*/ & $_SESSION[ $this->arr ];
+182:			$arr[$name] = $value;
+183:		}
+184:	
+185:		/*. string .*/ function get(/*. string .*/ $name)
+186:		{
+187:			$arr = /*.(array[string]string).*/ & $_SESSION[ $this->arr ];
+188:			if( ! isset( $arr[$name] ) )
+189:				return (string) NULL;
+190:			return $arr[$name];
+191:		}
+192:	
+193:		/*. void .*/ function dispose()
+194:		{
+195:			unset( $_SESSION[ $this->arr ] );
+196:		}
+197:	}
+198:	
+199:	
+200:	/*. void .*/ function SaveParams(
+201:		/*. array[string]string .*/ & $params,
+202:		/*. StringContainer		.*/ $container)
+203:	{
+204:		foreach($params as $k => $v)
+205:			$container->set($k, $v);
+206:	}
+207:	
+208:	
+209:	?>
+END parsing of 4-class1.php
+==== 4-class1.php:200: notice: unused function `SaveParams()'
+==== 4-class1.php:21: notice: unused class `C2'
+==== 4-class1.php:46: notice: unused class `C3'
+==== 4-class1.php:50: notice: unused class `C4'
+==== 4-class1.php:83: notice: unused method `C6::m1()'
+==== 4-class1.php:84: notice: unused method `C6::m2()'
+==== 4-class1.php:85: notice: unused method `C6::m3()'
+==== 4-class1.php:86: notice: unused method `C6::m4()'
+==== 4-class1.php:87: notice: unused method `C6::m5()'
+==== 4-class1.php:90: notice: unused class `C7'
+==== 4-class1.php:99: notice: unused class `C8'
+==== 4-class1.php:108: notice: unused class `C9'
+==== 4-class1.php:133: notice: unused class `StringOnFile'
+==== 4-class1.php:165: notice: unused class `StringOnSession'
+==== ?: notice: required module `standard'
+Overall test results: 19 errors, 0 warnings.

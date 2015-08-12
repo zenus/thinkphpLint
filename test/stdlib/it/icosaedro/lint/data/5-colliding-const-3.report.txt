@@ -1,0 +1,27 @@
+BEGIN parsing of 5-colliding-const-3.php
+1:	<?php
+2:	
+3:	# class: colliding inherited constants
+4:	
+5:	interface IF1
+6:	{
+7:		const c = 1;
+8:	}
+9:	
+10:	interface IF2
+11:	{
+12:		const c = 1;
+13:	}
+14:	
+15:	class C implements IF1, IF2
+16:	{ }
+
+	class C implements IF1, IF2
+	        \_ HERE
+==== 15: ERROR: colliding inherited constants:
+	IF2::c <---> IF1::c
+17:	
+18:	
+19:	?>
+END parsing of 5-colliding-const-3.php
+Overall test results: 1 errors, 0 warnings.

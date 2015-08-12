@@ -1,0 +1,16 @@
+BEGIN parsing of 5-spl-Traversable-1.php
+1:	<?php
+2:	
+3:		/*. require_module 'spl'; .*/
+4:	
+5:		class Test implements Traversable {
+
+		class Test implements Traversable {
+	                                          \_ HERE
+==== 5: ERROR: cannot implement abstract interface Traversable, use Iterator or IteratorAggregate instead
+6:		}
+7:	
+END parsing of 5-spl-Traversable-1.php
+==== ?:?: notice: unused module spl.php
+==== ?:?: notice: required module standard.php
+Overall test results: 1 errors, 0 warnings.

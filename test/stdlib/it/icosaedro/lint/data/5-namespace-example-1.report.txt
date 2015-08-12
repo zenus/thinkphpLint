@@ -1,0 +1,46 @@
+BEGIN parsing of 5-namespace-example-1.php
+1:	<?php
+2:	/*. require_module 'standard'; .*/
+3:	
+4:	namespace my\name; // see "Defining Namespaces" section
+5:	
+6:	class MyClass {}
+7:	function myfunction() {}
+8:	const MYCONST = 1;
+9:	
+10:	$a = new MyClass;
+11:	$c = new \my\name\MyClass; // see "Global Space" section
+12:	
+13:	$a = strlen('hi'); // see "Using namespaces: fallback to global
+
+	$a = strlen('hi'); // see "Using namespaces: fallback to global
+	                  \_ HERE
+==== 13: ERROR: (my\name\MyClass) = (int): incompatible types
+14:	                   // function/constant" section
+15:	
+16:	$d = namespace\MYCONST; // see "namespace operator and __NAMESPACE__
+17:	                        // constant" section
+18:	$d = __NAMESPACE__ . '\MYCONST';
+
+	$d = __NAMESPACE__ . '\MYCONST';
+	                       \_ HERE
+==== 18: Warning: invalid escape sequence. Hint: allowed escape sequences are only \' \\
+
+	$d = __NAMESPACE__ . '\MYCONST';
+	                                \_ HERE
+==== 18: ERROR: (int) = (string): incompatible types
+19:	echo constant($d); // see "Namespaces and dynamic language features" section
+
+	echo constant($d); // see "Namespaces and dynamic language features" section
+	                 \_ HERE
+==== 19: ERROR: calling constant declared in ../../../../../../modules/standard.php:333, argument no. 1: found type int is not assignment compatible with string
+
+	echo constant($d); // see "Namespaces and dynamic language features" section
+	                  \_ HERE
+==== 19: ERROR: no suitable implicit conversion to string for mixed
+20:	echo \M_PI;
+21:	?>
+22:	
+END parsing of 5-namespace-example-1.php
+==== ?:?: notice: required module standard.php
+Overall test results: 4 errors, 1 warnings.

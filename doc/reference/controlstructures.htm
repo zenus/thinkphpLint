@@ -1,0 +1,274 @@
+<HTML>
+<HEAD>
+<TITLE>PHPLint Reference Manual</TITLE>
+<META name=description content="PHPLint Reference Manual">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<LINK rel=stylesheet type='text/css' href='../styles.css'>
+<script type="text/javascript" src="../utils.js"></script>
+</HEAD><BODY onload="buildTOC('toc');">
+
+<h2 id="toc">Control structures</h2>
+
+<p>
+PHPLint supports all the control structures of the PHP language,
+with the only exception of the old form that the PHP manual title
+<i>Alternative syntax for control structures</i>. In what will follow,
+a <i>statement</i> is either a single statement or the compound statement
+"<code>{...}</code>" that may contain zero or more instructions.
+The empty statement "<code>;</code>" (simply a semicolon) is also allowed
+as statement.
+</p>
+
+
+
+<h3>declare()</h3>
+
+<p>
+<code>declare(<i>identifier</i> = <i>static_expr</i>, <i>identifier</i> = <i>static_expr</i>, </code>...<code>) <i>statement</i></code><br>
+Currently this declaration is parsed by PHPLint but it is otherwise ignored.
+The only identifiers allowed are <code>ticks</code> and <code>encoding</code>.
+</p>
+
+
+
+<h3>namespace</h3>
+
+<p>
+<code>namespace <i>identifier</i>\<i>identifier</i>\</code>...<code>;</code><br>
+<code>namespace <i>identifier</i>\<i>identifier</i>\</code>...<code> { </code>...<code> }</code><br>
+</p>
+
+
+
+<h3>use</h3>
+
+<p>
+<code>use <i>identifier</i>\<i>identifier</i>\</code>...<code>;</code><br>
+<code>use <i>identifier</i>\<i>identifier</i>\</code>...<code> as <i>identifier</i>;</code><br>
+</p>
+
+
+<h3>const</h3>
+
+<p>
+<code>const <i>identifier</i> = <i>static_expr</i>,
+<i>identifier</i> = <i>static_expr</i>, </code>...<code>;</code><br>
+Differently from <code>define()</code>, these constants are added to the
+current namespace.
+</p>
+
+
+
+<h3>if()</h3>
+
+<p>
+<code>if(</code> <i>expr</i> <code>)</code><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<i>statement</i><br>
+<code>elseif(</code> <i>expr</i> <code>)</code><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<i>statement</i><br>
+<code>else</code><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<i>statement</i><br>
+All the <i>expr</i> that appear here must result in a <b>boolean</b> value.
+</p>
+
+
+
+<h3>for()</h3>
+
+<p>
+<code>for(</code> <i>expr_list</i><code>;</code> <i>expr</i><code>;</code> <i>expr_list</i> <code>)</code> <i>statement</i><br>
+The <i>expr_list</i> may be either empty or a list of expressions.
+The <i>expr</i> may be either empty or a <b>boolean</b> expression.
+</p>
+
+
+<h3>while() and do...while()</h3>
+
+<p>
+<code>while(</code><i>expr</i><code>)</code> <i>statement</i><br>
+<code>do</code> <i>statement</i> <code>while(</code><i>expr</i><code>);</code><br>
+No much to say about these statements. As you might guess at this point, the
+expression that controls the execution of the loop must be of the type
+<b>bool</b>.
+</p>
+
+
+
+<h3>foreach()</h3>
+
+<p>
+<code>foreach(</code> <i>expr</i> <code>as</code> <i>[ $key</i> =&gt; <i>] [</i> <code>&amp;</code> <i>]</i> <i>$value</i><code>)</code> <i>statement</i><br>
+Here, <i>expr</i> must be either an expression of the type <b>array</b>
+of any structure, or an object of any class. <i>$key</i> and <i>$value</i>
+must be two variables. The types of the key and of the value are determined
+according to the type of the expression, namely:
+</p>
+
+
+<ul>
+
+<li>
+<p>
+If <i>expr</i> is of the type <b>array</b>, the two variables must be
+compatible by assignment with the type of the key and the type of the
+elements of the array, respectively. If <i>expr</i> is an object, the
+key must be assignment compatible with <b>string</b> and the value must
+be <b>mixed</b>.
+</p>
+</li>
+
+<li>
+<p>
+If <i>expr</i> implements the <b>Iterator</b> standard interface, then the type
+of the key is the return type of the implemented <code>Iterator::key()</code>
+method, and the type of the value is the return type of the implemented
+<code>Iterator::current()</code> method.
+<br>
+Note that since these methods both return <b>mixed</b> in their original
+definition, only <b>string</b>, <b>array</b> of any structure, <b>resource</b>
+and <b>objects</b> of any class are allowed as overriding return types. Then
+<b>boolean</b>, <b>int</b> and <b>float</b> still have to be returned boxed
+inside a <b>mixed</b> object.
+</p>
+</li>
+
+<li>
+<p>
+Finally, if <i>expr</i> implements the <b>IteratorAggregate</b> standard
+interface, then the types of the key and of the value are determined according
+to the implemented <b>Iterator</b> interface as returned by the implemented
+<code>IteratorAggregate::getIterator()</code> method.
+</p>
+</li>
+
+</ul>
+
+
+<h3>switch()</h3>
+
+<p>
+<code>switch(</code> <i>expr</i> <code>) {</code><br>
+	<code>case</code> <i>static_expr1</i><code>:</code> <i>[ statements ]</i><br>
+	<code>case</code> <i>static_expr2</i><code>:</code> <i>[ statements ]</i><br>
+	...<br>
+	<code>default:</code> <i>[ statements ]</i><br>
+<code>}</code><br>
+The value of the selector expression <i>expr</i> must be either <b>int</b> or
+<b>string</b>. Each case selector <i>static_expr1</i>, <i>static_expr2</i>, ...
+must be of the same type of the selector expression <i>expr</i>. But beware to
+the strings: PHP execute the comparison using the weak equality operator
+"<code>==</code>", so you might get unexpected results when a string looks like
+a number. For example, the string <code>"1"</code> will match the string
+<code>"01"</code>.
+<p>
+Each <code>case</code> can be empty (i.e. no statements), or it can contain one
+or more statements. In this latter case, the last statement should be a
+<code>return</code>, a <code>break</code> or the end of the switch() body; if
+none of these three cases occurs, then PHPLint raises a warning message. To
+prevent this message from being displayed, you may add the special meta-code
+statement <code>/*.&nbsp;missing_break;&nbsp;.*/</code>. Note that the
+statement is terminated by a meta-code semicolon character.
+<p>
+The <code>default</code> branch can be empty (i.e. no statements), or it can
+contain one or more statements. In this latter case, the last statement should
+be a <code>return</code>, a <code>break</code> or the end of the switch() body;
+if none of these three cases occurs, then PHPLint raises a warning message. To
+prevent this message from being displayed, you may add the special meta-code
+statement <code>/*.&nbsp;missing_default:;&nbsp;.*/</code>. Note that the
+statement is terminated by a meta-code semicolon character. Note that the
+branch is terminated by a meta-code colon character.
+<p>
+
+Example:
+</p>
+
+
+<div class="code_box">
+<pre>switch( $i ){
+
+    case 0:
+        echo "do case 0";
+        break;
+
+    case 1:
+    case 2:
+        echo "do case 1 and 2";
+        return;
+    
+    case 3:
+        echo "do case 3";
+        /*. missing_break; .*/
+
+    case 4:
+        echo "do case 4 and possibly 3";
+        break;
+
+    /*. missing_default: .*/
+}
+</pre>
+</div>
+
+
+<h3>try...catch...finally</h3>
+
+<p>
+<code>try { <i>protected block</i> }<br>
+catch(ExceptionName1 $e) { <i>handling block</i> }<br>
+catch(ExceptionName2 $e) { <i>handling block</i> }<br>
+...<br>
+finally { ... }</code><br>
+Checked exceptions that may be thrown in the protected block of code
+can be caught in the <code>catch()</code> branches. Checked exceptions that
+are not thrown in the protected block of code cannot be caught.
+<p>
+The catch branches can also catch any unchecked exception.
+<p>
+All the exceptions must appear in the proper order: more specialized ones
+first, ancestor ones next. PHPLint raises and error if you, say, first catch
+<code>Exception</code> and then <code>RuntimeException</code> because the
+second catch() branch will never be executed. In more general terms,
+you must take care to list more specialized exceptions first, then possibly
+their parents.
+<p>
+The variable $e that appear in each <code>catch()</code> branch is assigned
+with the type of the caught exception. It is allowed to use the same variable
+for all the branches. In fact the type of $e changes from a <code>catch()</code>
+to the other. This is the only case in PHPLint in which a variable may change
+its type. Exiting from the <code>try...catch</code> statement, all these
+special variables are deleted.
+</p>
+
+
+<h3>return</h3>
+
+<p>
+<code>return;</code><br>
+<code>return</code> <i>expr</i> <code>;</code><br>
+This statement can be used only inside functions and methods (PHPLint
+restriction; PHP allows to "return" also from included files).  If a return
+value is provided, it must be assignment-compatible with the type of the
+function or method. PHPLint looks at this statement to guess the signature
+of the function or method if not provided as meta-code.
+</p>
+
+<p>
+Moreover, PHPLint uses the fist "return" statement found in the function or
+method to guess the returned type. More on this topic in the chapter
+<u>Functions</u>.
+</p>
+
+
+<h3>break</h3>
+
+<p>
+<code>break;</code><br>
+Prematurely exists from the current loop (for, foreach, while, do...while).
+Also terminates a <code>switch...case</code> branch.
+The <code>break <i>n</i>;</code> for is not supported by PHPLint and
+gives error.
+</p>
+
+</body>
+</html>

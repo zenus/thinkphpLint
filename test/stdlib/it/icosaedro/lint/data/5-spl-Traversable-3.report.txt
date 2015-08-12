@@ -1,0 +1,29 @@
+BEGIN parsing of 5-spl-Traversable-3.php
+1:	<?php
+2:	
+3:		/*. require_module 'spl'; .*/
+4:	
+5:		interface Test1 extends Iterator, IteratorAggregate {
+6:		}
+7:	
+8:		class Test2 implements Test1 {
+
+		class Test2 implements Test1 {
+	                    \_ HERE
+==== 8: ERROR: cannot implement both Iterator and IteratorAggregate
+9:		}
+10:	
+
+		class Test2 implements Test1 {
+	                    \_ HERE
+==== 8: ERROR: missing implementations in Test2:
+	Iterator::rewind
+	Iterator::next
+	Iterator::current
+	Iterator::valid
+	Iterator::key
+	IteratorAggregate::getIterator
+END parsing of 5-spl-Traversable-3.php
+==== ?:?: notice: required module spl.php
+==== ?:?: notice: required module standard.php
+Overall test results: 2 errors, 0 warnings.

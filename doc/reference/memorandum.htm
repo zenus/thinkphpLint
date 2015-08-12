@@ -1,0 +1,253 @@
+<HTML>
+<HEAD>
+<TITLE>PHPLint Reference Manual</TITLE>
+<META name=description content="PHPLint Reference Manual">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<LINK rel=stylesheet type='text/css' href='../styles.css'>
+<script type="text/javascript" src="../utils.js"></script>
+</HEAD><BODY onload="buildTOC('toc');">
+
+<h2 id="toc">Memorandum</h2>
+
+<p>
+A brief summary of the pros/cons of the PHP language.
+All the examples are tested on PHP version 5.0.4 with
+<code>error_reporting</code> set to  <code>E_ALL | E_STRICT</code>.
+</p>
+
+
+
+<h3>Source encoding</h3>
+
+<p>
+The source may be encoded in any of the ISO-8859 charsets, or UTF-8
+or any other encoding that preserves the representation of the ASCII
+charset.  PHP isn't really aware of the encoding of the file, provided
+that its keywords and symbols be recognizable as sequences of ASCII
+characters. For example, the reserved keyword "<code>for</code>" must be
+a sequence of the corresponding three ASCII characters, whatever the encoding
+of the source may be.
+</p>
+
+<p>
+Strings are sequences of bytes without any particular encoding. The
+multi-byte strings library mbstring provides the support for the
+conversions from any encoding to another.  UTF-8 is the preferred encoding
+for internationalized applications.
+</p>
+
+
+<h3>Identifiers</h3>
+
+<p>
+In what will follow, an <b>identifier</b> is any sequence of letters,
+digits and the underscore "_" character. The first character cannot
+be a digit. The letters include the ASCII lower-case characters
+<code>a</code>...<code>z</code>, the ASCII upper-case characters
+<code>a</code>...<code>z</code>, and any other code from 127 to 255, so
+that an ID may be encoded into the charsets ISO-8859, UTF-8, etc.  The ASCII
+control code 127 (DEL) is a valid "letter".  By default, PHPLint raises
+an error if an ID contains this control code or any other non-ASCII character.
+</p>
+
+
+<h3>Constants</h3>
+
+<p>
+The <b>constants</b> (not to be confused with the class constants,
+discussed below) have their name defined by a string ("PI"), but they
+must be used as an unquoted identifier (PI).
+</p>
+
+<p>
+Their name is case-sensitive, but the instruction <code>define()</code>
+has a third optional argument that allows the constant name to be
+used in any combination of upper-case and lower-case letters.  I have
+not tested is this case-insensitiveness works when the constant name
+contain letters of some extended charset, but since PHP is unaware of
+the encoding of the source (it might be either ISO-8859-15 or UTF-8),
+I think this feature be restricted to the ASCII letters only. There is no
+reasons to use this feature, so PHPLint don't allows this third arguments,
+and constants are always case sensitive.
+</p>
+
+<p>
+All this has some strange consequences:
+</p>
+
+<blockquote><pre>
+define("VALID_NAME", 123);
+echo VALID_NAME;
+# ok
+
+define("1nv@lidname", 123);
+# PHPLint: invalid constant name
+# PHP: accepted, but it can't be used because is an invalid ID!
+
+define("foreach", 123);
+# PHPLint: error: the constant name is a keyword
+# PHP: accepted, but it is a reserved word and can't be used!
+</pre></blockquote>
+
+<p>
+The scope of constants is global and they, once defined, can be seen
+everywhere.  Their instance is global too: there is always one and only
+one constant with a given name.
+</p>
+
+<p>
+Constants cannot be re-declared.
+</p>
+
+<p>
+Constants may be declared inside a function, but the scope of the constant
+is still global. So this function cannot be called twice because there
+would be a collision with the previous declaration. PHPLint raises a
+warning if a constant is declared inside a function. The namespace of the
+constants is distinct from that of the functions and that of the classes,
+so that there may be several items sharing the same name but with
+different meaning, depending on the context where these IDs where found.
+In this example, the ID "A" is heavily overridden:
+</p>
+
+<blockquote><pre>
+define("A", 123);
+$A = 456;
+function A(){}
+class A{}
+
+echo A, $A;
+A();
+$a = new A();
+</pre></blockquote>
+
+<p>
+It may be a bit confusing, and in some version in the future PHPLint
+might raise a warning if any of these cases occurs.
+</p>
+
+
+<h3>Variables</h3>
+
+<p>
+Their name is an ID with a leading "<code>$</code>" character.
+The name is case-sensitive.
+</p>
+
+<p>
+The scope may be global or local to a function or method. The variables
+instantiated inside a function are automatically released exiting that
+function.  A variable local to a function cannot be seen outside that
+function, and does not collide with the name of other global variables and
+with the local variables of the other functions.
+</p>
+
+<p>
+Some special variables, named "superglobals", have always global scope.
+Superglobals are defined by the PHP interpreter and have a special
+meaning. The programmer cannot define new superglobal variables.
+</p>
+
+<p>
+The ID part of the name of a variable may be a reserved word:
+<code>$function</code>, <code>$define</code> and <code>$true</code>
+are all valid variable names.  PHPLint raises an error in these cases.
+</p>
+
+
+
+<h3>Functions</h3>
+
+<p>
+The name of a function is an ID and cannot be re-declared.  Their
+namespace is global.
+</p>
+
+<p>
+The name of a function is case-insensitive: <code>Print()</code>,
+<code>print()</code> and <code>PRINT()</code> are the same.
+PHPLint promotes a clean programming style, and raises a warning if
+a function is used with names that differ only by upper-case and
+lower-case letters.
+</p>
+
+<p>
+A function may be declared inside another function, but the first
+function cannot be called once more because there would be a collision in the
+namespace with the previous declaration, like in this example:
+</p>
+
+<blockquote><pre>
+function parent_f()
+{
+    function nested_f()
+    {
+    }
+}
+
+parent_f(); # ok; now also nested_f() exists
+parent_f(); # FATAL ERROR
+</pre></blockquote>
+
+<p>
+So, practically, nested functions aren't allowed in PHP as them cannot
+be used in a natural way. Nested functions are there in PHP only to allow
+inclusions of files inside a function. But beware: "global" variables
+of the included file becomes local variables of the function!
+</p>
+
+<p>
+PHPLint raises a warning on nested functions. The <code>require_once</code>
+statement is allowed only at global scope and the included file is parsed
+recursively by PHPLint. The <code>require</code>, <code>include</code>
+and <code>include_once</code> statements are allowed inside functions,
+but the included files are not parsed recursively by PHPLint.
+</p>
+
+
+
+<h3>Classes</h3>
+
+<p>
+Class names are case-insensitive. "Inner" classes are not allowed. Classes
+may be declared inside a function, but if this function is called twice
+it is a fatal error. Classes cannot be defined inside a method. The scope
+of classes IDs is global. The namespace of the entities declared inside a
+class is protected by the name of the class and does not collide with global
+items.
+</p>
+
+<p>
+Constants, properties and methods declared inside the class each one has a
+reserved namespace; the syntax of the language allows to discern which item
+has to be used. For example there may be an "x" constant, a "$x" property
+and a "x()" method that can be referred as CLASS::x, CLASS::$x or $obj->x
+and CLASS::x() respectively.
+</p>
+
+
+<h3>Class::Constants</h3>
+
+<p>
+Case-sensitive.
+</p>
+
+
+<h3>Class::Variables (aka Properties, aka Members)</h3>
+
+<p>
+Case-sensitive.
+</p>
+
+
+
+<h3>Class::Functions (aka Methods)</h3>
+
+<p>
+Case-insensitive.
+</p>
+
+</body>
+</html>

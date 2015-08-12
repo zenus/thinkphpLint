@@ -1,0 +1,27 @@
+BEGIN parsing of 5-classes-circular-references.php
+1:	<?php
+2:	
+3:	# Detect circular reference in regular classes using proto:
+4:	/*. forward class A {} .*/
+5:	class B extends A {}
+6:	class A extends B {}
+
+	class A extends B {}
+	        \_ HERE
+==== 6: ERROR: A: detected circular reference with B
+7:	
+8:	# Detect circular reference in regular class:
+9:	class C extends C {}
+
+	class C extends C {}
+	                  \_ HERE
+==== 9: ERROR: undeclared parent class C
+10:	
+11:	# Detect circular reference in proto classes:
+12:	/*. forward class D extends D {} .*/
+
+	/*. forward class D extends D {} .*/
+	                              \_ HERE
+==== 12: ERROR: class D cannot extend child class D: forbidden circular reference
+END parsing of 5-classes-circular-references.php
+Overall test results: 3 errors, 0 warnings.

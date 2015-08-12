@@ -1,0 +1,277 @@
+<HTML>
+<HEAD>
+<TITLE>PHPLint Reference Manual</TITLE>
+<META name=description content="PHPLint Reference Manual">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<LINK rel=stylesheet type='text/css' href='../styles.css'>
+<script type="text/javascript" src="../utils.js"></script>
+</HEAD><BODY onload="buildTOC('toc');">
+
+<h2 id="toc">Types</h2>
+
+
+<h3>How PHPLint enhances the type model of PHP</h3>
+
+<p>
+The PHP language provides some basic data types: numbers, strings of
+characters, arrays and classes. Every expression and every variable
+has its own type. Although PHP allows to mix freely data of different
+types, abusing of this feature might compromise the <u>efficiency</u>,
+the <u>safety</u> and the <u>security</u> of the program.  Moreover, the
+long-run aim of the PHPLint is to validate sources ready to be compiled
+into an efficient and compact executable code.
+</p>
+
+<p>
+So, PHPLint takes the type model already existing in the PHP language, and
+adds some restrictions on how these types can be combined together. For
+example, we can multiply two numbers, but adding an object to a boolean
+value generally does not make much sense. PHP allows to add a number to a
+string <code>$str + $num</code>, but this implies a conversion of the
+string into a number. Since converting data from a type to another takes
+some time, and since there might be some safety and security issues
+involved, in this case PHPLint requires and explicit typecast operator
+<code>$str + (int)$num</code> just to make the programmer aware that a
+conversion takes place. The presence of too much conversions in a source
+is the clear symptom that the types chosen by the programmer do not
+fit well the problem, and the source should be rewritten in a better way.
+</p>
+
+
+
+<h3>How PHPLint handles the PHP types</h3>
+
+<p>
+PHP provides the type <b>null</b> that has only one value, namely the
+constant <code>NULL</code>.  Currently the NULL value is rarely used by
+PHP programmers.  On the contrary, PHPLint implements a different model where
+some data types take the <code>NULL</code> value as a special value. These
+are the types commonly known in other programming languages as <i>dynamically
+allocated</i> data types, namely <b>string</b>, <b>resource</b>, <b>array</b>
+and <b>object</b>.  So, for example, if <code>$str</code> is a variable of
+the type <b>string</b>, this variable can be either the <code>NULL</code>
+value or an actual string of zero or more characters.
+</p>
+
+<div class="note_box">
+	<b>NOTE</b><br>
+These types are called <i>dynamic</i> in this documentation because most
+programming languages implement them as pointers to dynamically allocated
+memory blocks. A <code>NULL</code> pointer simply point to nothing and
+its typical value is zero.  Actually, in PHP <i>all</i> the variables are
+dynamically allocated.
+</div>
+
+<p>
+In PHP the data types <code>int float string</code> etc. are
+keywords the programmer can use only inside the type-cast operator,
+but these keywords cannot be used elsewhere.
+Since a suitable syntax is not provided by the language, PHPLint
+introduces its own meta-code to declare the type of a variable or an
+expression; remember that this meta-code must always be enclosed
+inside a comment <code>/*. <i>the_type</i> .*/</code>:
+</p>
+
+<ul>
+<li><b><code>void</code></b> is a special type returned by functions that... do not return a value.</li>
+<li><b><code>boolean</code></b> is a boolean value, i.e. <code>FALSE</code> or <code>TRUE</code>.</li>
+<li><b><code>int</code></b> is an integer number, like <code>-123</code>.</li>
+<li><b><code>float</code></b> is a floating-point number, like <code>1.234</code>.</li>
+<li><b><code>string</code></b> is a string like <code>"abc"</code>, possibly <code>NULL</code>.</li>
+<li><b><code>array</code></b> is an array, like <code>array("a", "b")</code>, possibly <code>NULL</code>.</li>
+<li><b><code>resource</code></b> is an handle to a resource, like a file descriptor, possibly <code>NULL</code>.</li>
+<li><b><code>object</code></b> is a generic object, possibly <code>NULL</code>.</li>
+<li><b><code><i>CLASS_NAME</i></code></b> is an object of the named class, possibly <code>NULL</code>. Declaring new classes is the only way to create
+new data types in PHPLint.</li>
+<li><b><code>mixed</code></b> is any type of value, possibly NULL.</li>
+</ul>
+
+<p>
+Using a simplified EBNF notation, a type declaration using the PHPLint
+meta-code can be defined as follows:
+</p>
+
+<blockquote>
+x_type = <code><b>"void"</b></code> | <code><b>"boolean"</b></code> |
+<code><b>"int"</b></code> | <code><b>"float"</b></code> |
+<code><b>"string"</b></code> |
+<i>x_array_type</i> | <code><b>"resource"</b></code> |
+<code><b>"mixed"</b></code> | <code><b>"object"</b></code> | <i>class_name</i>
+;<br>
+</blockquote>
+
+<p>
+The syntax of the array type will be explained in the chapter <u>Arrays</u>.
+</p>
+
+<p>
+Values and variables of different types can be mixed only in few
+controlled ways.  The chapter <u>Type compatibility</u> gives the rules
+that PHPLint apply when variables or expressions of different type are
+assigned together or passed as arguments to a function.
+</p>
+
+<p>
+The chapter <u>Typecasting</u> explain how an expression of a type can be
+converted to an expression of another type.
+</p>
+
+
+<pre>
+
+</pre>
+<center>
+<img src="phplint-types.svg">
+<p>
+<b>Types supported by PHPLint. Arrows indicate assignment compatibility.</b>
+</center>
+<pre>
+
+</pre>
+
+
+<h3>The boolean type</h3>
+
+<p>
+There are only two possible literal values of the type <b>boolean</b>:
+they are the constants <code>FALSE</code> and <code>TRUE</code>.
+The lower-case version of these constants <code>false</code> and
+<code>true</code> are allowed but their usage is discouraged, since
+constants are commonly written in upper-case letters only.  <b>bool</b>
+is allowed as an abbreviation for <b>boolean</b>.
+</p>
+
+
+<h3>The int type</h3>
+
+<p>
+The integer numbers can be either positive and negative. The range is
+limited: typically, on 32-bit processors the minimum value is -2^31 and
+the maximum value is 2^31-1. This chunk of code prints the number
+of bits available on the computer running the program:
+</p>
+
+<div class="code_box"><pre>
+/*. int .*/ function size_of_int()
+{
+    static $n = 0;
+
+    if( $n &gt; 0 )  return $n;
+    $n = 1;
+    $i = 1;
+    while( $i &gt; 0 ){
+        $i &lt;&lt;= 1;
+        $n++;
+    }
+    return $n;
+}
+
+echo "int size = ", size_of_int(), " bits\n";
+# ==&gt; int size = 32 bits
+</pre></div>
+
+<p>
+While evaluating an expression, if an intermediate result becomes too big
+to be represented as an <b>int</b>, the PHP interpreter automatically
+promotes this value to a floating-point precision number.
+This feature provides an effective way to detect overflow in integer
+expressions, for example:
+</p>
+
+<div class="code_box"><pre>
+$count = $count + $incr;
+if( is_float($count) )
+    die("overflow on \$count", E_USER_ERROR);
+</pre></div>
+
+<b>integer</b> is allowed as alternative name for <b>int</b>.
+
+
+
+<h3>The float type</h3>
+
+<p>
+The floating-point numbers include the fractional part, and they can
+hold values much bigger than <b>int</b>, but with limited precision.
+Float numbers are rarely used in WEB applications; sometimes they are
+used to hold monetary values, but the programmer must take care of the
+rounding problem, since that might bring to unexpected results also for
+simple operations. For example, 0.57-0.56 gives 0.0099999999 rather than
+the expected 0.01.
+</p>
+
+<p>
+<b>double</b> and <b>real</b> are allowed as an alternative name for
+<b>float</b>.
+</p>
+
+
+<h3>The string type</h3>
+
+<p>
+According to PHPLint, the type <b>string</b> is something that contain
+zero, one or more bytes, or possibly the value NULL. The value NULL
+is handled by PHP mostly like the empty string, so for
+example <code>$s=NULL;&nbsp;echo&nbsp;$s;</code> will display nothing.
+The following function will print a string as a proper "PHPLint-compliant"
+literal string whatever its value is, including the NULL value,
+and can be useful for debugging and logging purposes:
+</p>
+
+<div class="code_box"><pre>
+/*. string .*/ function stringToLiteral(/*. string .*/ $s)
+{
+    if( $s === NULL )
+        return "NULL";
+    else
+        return '"' . addcslashes($s, "\000..\037\\\"\$\177..\377") . '"';
+}
+echo StringToLiteral(NULL);  # ==&gt; NULL
+echo StringToLiteral("");    # ==&gt; ""
+echo StringToLiteral("\\x\"abc\n\x85{\$x}");
+# ==&gt; "\\x\"abc\n\205{\$x}"
+</pre></div>
+
+<p>
+The function <code>addcslashes()</code> converts all the non-ASCII
+printable characters to the corresponding escaped sequence. The double
+quote, the back-slash and the dollar character are converted to their
+escaped sequence, since they have a special meaning.  Note that the
+special NULL value must be treated differently since the function
+<code>addcslashes()</code> would consider NULL as an empty string.
+</p>
+
+<p>
+<b>Double quoted literal strings</b> can contain simple variables.  In PHP
+5 also objects of classes providing a <code>__toString()</code> method are
+allowed. These variables must already have a value and are accounted as
+"used":
+</p>
+
+<blockquote>
+<code>"Found $n records looking for $name:\n"</code>
+</blockquote>
+
+<p>
+Variables embedded inside double quoted strings cannot be dereferenced,
+and the curly brace syntax is not currently supported by PHPLint. For example
+PHPLint will raise an error if any of these forms is used:
+</p>
+
+<blockquote>
+<code>
+"Element value is <b>$arr[$i]</b>"<br>
+"Property value is <b>$obj-&gt;prop</b>"</br>
+"<b>{$x}${x}</b>"
+</code>
+</blockquote>
+
+<p>
+In here-docs and now-docs, if the terminating line contains invisible spaces or
+tabulators these are detected and signaled as error.
+</p>
+
+</body>
+</html>

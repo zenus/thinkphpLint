@@ -1,0 +1,12 @@
+BEGIN parsing of 5-pkg-type-detection-bom.php
+1:	﻿<?php  # <-- Invisible BOM "\xEF\xBB\xBF" here.
+
+	﻿<?php  # <-- Invisible BOM "\xEF\xBB\xBF" here.
+	   \_ HERE
+==== 1: ERROR: unsupported Unicode UTF-8 BOM sequence detected: "\357\273\277".
+2:	
+3:	?>
+==== ?: notice: this package is not a library:
+	Unicode UTF-8 BOM sequence detected: "\357\273\277".
+END parsing of 5-pkg-type-detection-bom.php
+Overall test results: 1 errors, 0 warnings.

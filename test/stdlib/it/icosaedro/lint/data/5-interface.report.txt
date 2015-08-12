@@ -1,0 +1,10 @@
+BEGIN parsing of 5-interface.php
+1:	<?php
+2:	
+3:	# interface cannot be final|abstract:
+4:	final interface if1 {}
+
+	final interface if1 {}
+	               \_ HERE
+==== 4: ERROR: (FATAL) expected `class', found symbol sym_interface
+Overall test results: 1 errors, 0 warnings.

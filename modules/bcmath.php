@@ -1,0 +1,20 @@
+<?php
+/**
+BCMath Arbitrary Precision Mathematics Functions.
+
+See: {@link http://www.php.net/manual/en/ref.bc.php}
+@package bcmath
+*/
+
+
+
+/*. string .*/ function bcadd(/*. string .*/ $left_operand, /*. string .*/ $right_operand /*., args .*/){}
+/*. string .*/ function bcsub(/*. string .*/ $left_operand, /*. string .*/ $right_operand /*., args .*/){}
+/*. string .*/ function bcmul(/*. string .*/ $left_operand, /*. string .*/ $right_operand /*., args .*/){}
+/*. string .*/ function bcdiv(/*. string .*/ $left_operand, /*. string .*/ $right_operand /*., args .*/){}
+/*. string .*/ function bcmod(/*. string .*/ $left_operand, /*. string .*/ $right_operand){}
+/*. string .*/ function bcpowmod(/*. string .*/ $x, /*. string .*/ $y, /*. string .*/ $mod /*., args .*/){}
+/*. string .*/ function bcpow(/*. string .*/ $x, /*. string .*/ $y /*., args .*/){}
+/*. string .*/ function bcsqrt(/*. string .*/ $operand /*., args .*/){}
+/*. int .*/ function bccomp(/*. string .*/ $left_operand, /*. string .*/ $right_operand /*., args .*/){}
+/*. bool .*/ function bcscale(/*. int .*/ $scale){}

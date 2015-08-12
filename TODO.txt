@@ -1,0 +1,36 @@
+TODO LIST:
+- Parsing of "${i}".
+- Support for tags: <script, <%, <%=.
+- Option for warning on control characters in literal strings, except
+  LF, CR, HT.
+- Missing modules: sybase_ct.
+
+- DocBlocks:
+	- Implement missing line tags: @ignore, @internal, ...
+	- Implement missing inline tags.
+	- Dotted list automatic detection.
+	- Ordered list automatic detection.
+
+- Dereferencing constant by object $obj::CONST is allowed since PHP 5.2.4.
+
+- Static method call with arrow CLASSNAME->staticMetod() allowed since PHP
+5.2.4. Is this the reason why in PHP static methods are allowed in interfaces?
+Does PHPLint really need to support all this?
+
+- Interface prototypes: implement `extends'.
+
+- Class and interface prototypes: implement constants with type, but without
+value (only partially implemented as the type cannot be indicated).
+
+- goto
+
+IDEAS:
+
+- C++ templates (aka Java generics).
+
+- Detect source code encoding and report along the generated documentation.
+Warn when packages with different encoding are mixed together. Also
+detect initial BOM in text files. Is define(encoding='UTF-8') useful to this?
+PROBLEM: strings still allows to mix binary data that do not belong to any
+character encoding: "\x00\x01\x03".
+Since PHP 5.3.0 the declare(encoding='xxx') is available.

@@ -1,0 +1,1819 @@
+<HTML>
+<HEAD>
+<TITLE>PHPLint Reference Manual</TITLE>
+<META name=description content="PHPLint Reference Manual">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<LINK rel=stylesheet type='text/css' href='../styles.css'>
+<script type="text/javascript" src="../utils.js"></script>
+</HEAD><BODY onload="buildTOC('toc');">
+
+<h2 id="toc">DocBlocks</h2>
+
+<p>
+DocBlocks are multi-line comments properly formatted from which
+PHPLint acquires the detailed description of the PHP item defined below it,
+including constants, variables, functions and classes.
+</p>
+
+
+<a name=whatisadocblock></a>
+<h2>What is a DocBlock</h2>
+
+<p>
+Constants, variables, functions, classes, class constants, properties
+and methods can be preceded by a multi-line comment properly formatted.
+The symbol <code><b>/**</b></code> marks the beginning of the DocBlock:
+</p>
+
+<div class="code_box">
+<pre>
+/**   Two asterisks after the slash mark the beginning of the DocBlock.  */
+</pre>
+</div>
+
+<p>
+Every line of the DocBlock may begin with an optional asterisk "*", which is ignored and discarded:
+</p>
+
+<div class="code_box">
+<pre>
+/**
+ * The asterisk at the beginning of every line has only an
+ * aesthetic purpose and, if present, is ignored and will
+ * not be rendered in the generated document.
+ */
+</pre>
+</div>
+
+<p>
+Every line, leading asterisk and the possible next space apart, is the
+content of the DocBlock. The structure of a DocBlock consists of three
+sections: the short description, the long description and the line tags, in
+this order.
+</p>
+
+<div class="code_box">
+<pre>
+/**
+ * The first sentence is the short description. Any text that
+ * follows up to the first line tag is the long description.
+ * The short description should be short, possibly incomplete
+ * but meaningful, usually not longer than one line of text.
+ * @param int $i  A line that begins with @ is a line tag.
+ * @return void  And this is another line tag.
+ */
+</pre>
+</div>
+
+<p>
+The <b>short description</b> starts at the first non-empty line and spans
+up to the first empty line, the end of the DocBlock or the first period not
+included inside a word. If the short description so determined results
+to be more than 3 lines long, only the first line is taken.  If the short
+description is terminated by a period, the period itself is removed.
+</p>
+
+<p>
+All the text between the short description and the first line tag or the end of
+the DocBlock is the <b>long description</b>.
+</p>
+
+<p>
+The short description, the long description and the descriptive text allowed in
+some of the line tags can contain a subset of the HTML entities as listed
+below:
+</p>
+
+<blockquote>
+<code>
+&lt;b&gt; &lt;i&gt; &lt;code&gt; &lt;br&gt; &lt;kbd&gt; &lt;p&gt; &lt;pre&gt;
+&lt;ul&gt; &lt;ol&gt; &lt;li&gt;
+</code>
+</blockquote>
+
+<p>
+Currently PHPLint does not allow upper-case letter, nor it allows
+spaces inside the tags, so take care to write them exactly as indicated here
+otherwise they would be signaled as errors.
+Moreover, PHPLint checks for proper usage of these entities,
+and raises an error on unclosed tags, wrong nesting, badly formed
+punctuated lists, etc.
+</p>
+
+<p>
+The following tag and special sequences are additions of PHPLint and may be
+incompatible with other documentation systems:
+
+<blockquote>
+	<p>
+	Single Unicode characters can be entered as "<code>&amp;#123;</code>" in
+	decimal notation, or as "<code>&amp;#x1ab;</code>" in hexadecimal notation.
+	For example, the asterisk is <code>&amp;#42;</code>.
+	</p>
+
+	<p>
+	Others tag specific of PHPLint:
+	<p>
+	<code>
+	&lt;h1&gt; &lt;h2&gt; &lt;h3&gt; &lt;h4&gt; &lt;h5&gt; &lt;h6&gt;
+	&lt;u&gt;
+	&lt;sub&gt;
+	&lt;sup&gt;
+	&lt;blockquote&gt;
+	&lt;center&gt;
+	</code>
+</blockquote>
+
+<p>
+These tags, and only these, can be used to format the text of the long
+description.
+Any other entity or special character including <code>&lt; &gt;
+&amp;</code> gets rendered literally (i.e. <code>&lt;</code> is converted
+to <code>&amp;lt;</code> and so on).
+
+<p>
+The text enclosed between <code>&lt;pre&gt;</code> and
+<code>&lt;/pre&gt;</code> is always rendered literally.
+</p>
+
+<p>
+The <b>line tags</b> are all the lines with a leading "@" (extra spaces and
+tabulations between the asterisk and the "@" are ignored).
+The first line tag found opens the line tags section of the DocBlock.
+</p>
+
+
+
+<h2>What can be commented with a DocBlock</h2>
+
+<p>
+	PHPLint recognizes DocBlocks for: package, constants, global variables,
+	functions, classes and interfaces, class constants, properties and
+	methods.
+</p>
+
+<p>
+The other elements of the source that <u>cannot be documented</u>
+and PHPLint signals an error because the DocBlock is not used:<br>
+the <code>namespace</code> statement,<br>
+the <code>use</code> statement,<br>
+the <code>declare</code> statement,<br>
+the <code>include</code>, <code>include_once</code>, <code>require</code> statements.
+</p>
+
+
+<h3>Documenting a package</h3>
+
+<p>
+	A PHP source file can contain only one package DocBlock. A package
+	DocBlock is a DocBlock containing the <code>@package</code> line tag;
+	this latter line-tag is then the only mandatory line-tag in this kind
+	of DocBlock.
+	Example:
+</p>
+
+
+<div class="code_box"><pre>
+/**
+ * Utility functions.
+ * @author Umberto Salsi
+ * @package utils
+ */
+</pre></div>
+
+<p>
+	The name chosen for the package has not particular meaning for PHPLint
+	and currently is used only to give a title to the HTML generated for
+	that package.
+</p>
+
+
+<h3>Documenting a constant</h3>
+
+<p>
+	Constants can be defined with the <code>define();</code> statement
+	or the <code>const</code> statement (PHP 5 only). There are no
+	mandatory line-tags. The type of the constant is guessed from the
+	expression assigned.
+	Example:
+</p>
+
+<div class="code_box"><pre>
+/**
+ * Popular value of "PI".
+ */
+define("PI_POPULAR", 3.14);
+
+/**
+ * Root of the library files.
+ */
+const LIBS = __DIR__ . "/../../libs";
+
+/**
+ * Format of the file.
+ */
+const TEXT_FMT = 0, TEXT_EXT = ".txt",
+      HTML_FMT = 1, HTML_EXT = ".html",
+      PDF_FMT = 3,  PDF_EXT = ".pdf";
+</pre></div>
+
+<p>
+	If the <code>const</code> statement defines 2 or more constants
+	in a list of comma separated assignments, then the same DocBlock applies
+	to all these constants; each constant may have its own different type.
+</p>
+
+
+<h3>Documenting a variable</h3>
+
+<p>
+	Only variables at global scope can be documented, and the statement that
+	follows must be the assignment of their initial value.
+	The <code>@var TYPE</code> line tag is not mandatory and can be
+	added to define the detailed structure of the type when it cannot be
+	guessed from the type of the expression.
+	Examples:
+</p>
+
+<div class="code_box"><pre>
+/**
+ * Current number of records read.
+ */
+$record_read_no = 0;
+
+/**
+ * Collected users' names as UTF-8 strings.
+ * @var string[int]
+ */
+$users_names = array();
+
+/**
+ * Peer input socket.
+ * @var resource
+ */
+$peer_in_socket = NULL;
+
+/**
+ * Collected exceptions to be reported at the end of the program.
+ * @var Exception[int]
+ */
+$exceptions = array();
+
+/**
+ * Rotational 3x3 matrix.
+ */
+$rotation = array(
+	array(1.0, 0.0, 0.0),
+	array(0.0, 1.0, 0.0),
+	array(0.0, 0.0, 1.0));
+</pre></div>
+
+<p>
+	If the assignment statement involves 2 or more variables
+	<code>$v1 = $v2 = $v3 = EXPR;</code>
+	in a list of comma separated assignments, then the same DocBlock applies
+	to all these variables.
+</p>
+
+
+<h3>Documenting a function</h3>
+
+<p>
+	The DocBlock of a function MUST always declare unhandled errors and
+	uncaught checked exceptions using the <code>@triggers E_XXXXX</code> and
+	the <code>@throws SomeException</code> line tags. Also the mandatory
+	arguments, those that have not a default value, MUST be declared
+	with a <code>@param TYPE $name</code> line tag. Usually, the return
+	type is always guessed automatically by PHPLint.
+	Examples:
+</p>
+
+
+<div class="code_box"><pre>
+/**
+ * Returns the area of the circle given its radius.
+ * &lt;b&gt;Attention!&lt;/b&gt; This function performs the
+ * calculation using the popular, approximated value of PI.
+ * @param float $r Radius of the circle. Must be non-negative.
+ * @return float Area of the circle.
+ * @throws \InvalidArgumentException Negative radius.
+ */
+function circle_area($r){
+	if( $r < 0.0 )
+		throw new \InvalidArgumentException("r=$r");
+	return PI_POPULAR * $r * $r;
+}
+</pre></div>
+
+<p>
+	In normal situations, PHPLint can guess the return type from the first
+	<code>return EXPR;</code> statement it encounters in the body of the
+	function, but there may be cases in which this guess may fail and an
+	error is signaled, for example on recursive functions or when
+	class autoloading on mutually dependent packages is triggered
+	(for example, the body of the function references a class that gets
+	loaded by the autoloader, and in turn this class calls the function).
+	In some others cases you may want to provide a <code>@return TYPE</code>
+	line-tags anyway to direct the IDE, which might not be so smart to
+	guess this information from the code.
+</p>
+
+<p>
+	In the example above, the function may throw the unchecked exception
+	<code>InvalidArgumentException</code>. It is not mandatory to declare the
+	unchecked exceptions, but here it has been specified just to document
+	what happen if the client program violates the contract of the
+	interface (the argument must be non-negative).
+</p>
+
+<p>
+	Note that a <code>@access private</code> line tag can be added to functions
+	that are private to the file: these private functions cannot be called
+	from the other packages.
+</p>
+
+
+<h3>Documenting a class</h3>
+
+<p>
+	Classes and interfaces can be documented as well. There are no mandatory
+	line-tags here, but <code>@author NAME</code> and <code>@version VER</code>
+	are very common. Example:
+</p>
+
+
+<div class="code_box"><pre>
+/**
+ * Input stream of bytes. Possible implementations of this abstract class
+ * may provide, for example, access to the file system or to data in memory.
+ *
+ * @author Umberto Salsi &lt;salsi@icosaedro.it&gt;
+ * @version $Date: 2015/03/05 10:33:28 $
+ */
+abstract class InputStream {
+	...
+}
+</pre></div>
+
+
+<h3>Documenting a class constant</h3>
+
+<p>
+	There are no mandatory line tags. The type of the constant is guessed
+	from the expression assigned.
+	Example:
+</p>
+
+
+<div class="code_box"><pre>
+/**
+ * Popular value of "PI".
+ */
+const PI_POPULAR = 3.14;
+</pre></div>
+
+<p>
+	If the <code>const</code> statement defines 2 or more constants
+	in a list of comma separated assignments, then the same DocBlock applies
+	to all these constants; each constant may have its own different type.
+</p>
+
+
+<h3>Documenting a property</h3>
+
+<p>
+	In PHPLint, properties of the simple type boolean, int and float
+	MUST always be initialized to some value. This is required because
+	PHP would otherwise initialize them to the NULL value, which is forbidden
+	for those types under PHPLint. The type of these properties can then be
+	guessed by PHPLint from the type of the expression assigned, so a
+	<code>@var TYPE</code> is not required here and can be omitted.
+</p>
+<p>
+	The <code>@var TYPE</code> line tag is not mandatory and can be
+	added to define the detailed structure of the type when it cannot be
+	guessed from the type of the expression.
+	Examples:
+</p>
+
+
+<div class="code_box"><pre>
+/**
+ * Current number of records read.
+ */
+public $record_read_no = 0;
+
+/**
+ * Collected users' names as UTF-8 strings.
+ * @var string[int]
+ */
+public $users_names = array();
+
+/**
+ * Peer input socket. Its initial value is NULL.
+ * @var resource
+ */
+private $peer_in_socket;
+
+/**
+ * Collected exceptions to be reported at the end of the program.
+ * @var Exception[int]
+ */
+private $exceptions = array();
+
+/**
+ * Rotational 3x3 matrix.
+ */
+private $rotation = array(
+	array(1.0, 0.0, 0.0),
+	array(0.0, 1.0, 0.0),
+	array(0.0, 0.0, 1.0));
+</pre></div>
+
+<p>
+	In the examples above, note that <code>$record_read_no</code> has an
+	initial value <code>0</code> from which PHPLint guesses the type of the
+	property, that is <code>int</code>.
+</p>
+
+<p>
+	<code>$users_names</code>, instead, is initialized to an empty array
+	<code>array()</code>, so that an explicit declaration of type
+	<code>string[int]</code> is required to specify that the
+	keys of the array are <code>int</code> numbers and the elements are
+	<code>string</code>s. Without this explicit declaration of type, the
+	resulting array would be a generic <code>mixed[]</code> because
+	PHPLint cannot otherwise guess the structure from an empty array.
+</p>
+
+<p>
+	<code>$rotation</code> is initialized with a non-empty array from which
+	PHPLint can guess the type <code>float[int][int]</code>. No explicit
+	type declaration is required in this case.
+</p>
+
+<p>
+	If the assignment statement lists 2 or more properties, for example
+	<code>public $p1, $p2 = EXPR, $p3;</code>
+	then the same DocBlock applies
+	to all these variables and all the variables MUST have the same exact
+	type; if their type is boolean or numeric, an initial value MUST be
+	indicated.
+</p>
+
+
+<h3>Documenting a method</h3>
+
+<p>
+	The DocBlock of a method MUST always declare unhandled errors and
+	uncaught exceptions using the <code>@triggers E_XXXXX</code> and
+	the <code>@throws SomeException</code> line tags. Also the mandatory
+	arguments, those that have not a default value, MUST be declared
+	with a <code>@param TYPE $name</code> line tag. Usually, the return
+	type is always guessed automatically by PHPLint.
+	Examples:
+</p>
+
+
+<div class="code_box"><pre>
+/**
+ * Returns the area of the circle given its radius.
+ * &lt;b&gt;Attention!&lt;/b&gt; This function performs the
+ * calculation using the popular, approximated value of PI.
+ * @param float $r Radius of the circle.
+ * @return float Area of the circle.
+ * @throws \InvalidArgumentException Negative radius.
+ */
+public static function circle_area($r){
+	if( $r < 0.0 )
+		throw new \InvalidArgumentException("r=$r");
+	return self::PI_POPULAR * $r * $r;
+}
+</pre></div>
+
+<p>
+	In normal situations, PHPLint can guess the return type from the first
+	<code>return EXPR;</code> statement it encounters in the body of the
+	function, but there may be cases in which this guess may fail and an
+	error is signaled, for example on recursive methods or when
+	class autoloading on mutually dependent packages is triggered
+	(for example, the body of the function references a class that gets
+	loaded by the autoloader, and in turn this class calls the method).
+	In some others cases you may want to provide a <code>@return TYPE</code>
+	line-tags anyway to direct the IDE, which might not be so smart to
+	guess this information from the code.
+</p>
+
+
+
+<h2>Supported line tags</h2>
+
+<p>
+The syntax of every line tag is described with the aid of these elements:
+</p>
+
+<blockquote>
+
+	<p>
+	<b>WORD</b> is any sequence of characters not including spaces,
+	tabulations an new-lines. WORDs are rendered literally.
+	</p>
+
+	<p>
+	<b>$VAR</b> is the name of a variable. Note that the dollar sign
+	is required.
+	</p>
+
+	<p>
+	<b>TEXT</b> is any text, possibly spanning on several lines up to
+	the next line tag or the end of the DocBlock. A TEXT is rendered
+	literally.
+	</p>
+
+	<p>
+	<b>DESCR</b> is an HTML text, and the subset of tags already listed
+	for the long description are allowed. The DESCR can span several
+	lines up to the next line tag or the end of the DocBlock.  A DESCR
+	enclosed between square parenthesis [DESCR] is optional.
+	</p>
+
+</blockquote>
+
+<p>
+The following table summarizes all the available line tags, their syntax,
+and the context where they are legal:
+</p>
+
+<pre>
+
+</pre>
+
+<table align=center border=1 cellpadding=3 cellspacing=0 width="70%">
+<tr><th>Line tag</th><th>PHP 4</th><th>PHP 5</th></tr>
+<tr><td><code>@abstract</code></td><td>class, method</td><td>See note 1.</td></tr>
+<tr><td><code>@access&nbsp;private</code></td><td>constant, global variable, function, class, property, method</td><td>constant, global variable, function, class, class constant</td></tr>
+<tr><td><code>@access&nbsp;protected</code></td><td>property, method</td><td>See note 1.</td></tr>
+<tr><td><code>@access&nbsp;public</code></td><td>property, method</td><td>See note 1.</td></tr>
+<tr><td><code>@author&nbsp;<i>TEXT</i></code></td><td>(always)</td><td>(always)</td></tr>
+<tr><td><code>@copyright&nbsp;<i>DESCR</i></code></td><td>(always)</td><td>(always)</td></tr>
+<tr><td><code>@deprecated&nbsp;<i>DESCR</i></code></td><td>(always)</td><td>(always)</td></tr>
+<tr><td><code>@final</code></td><td>class, method</td><td>See note 1.</td></tr>
+<tr><td><code>@license&nbsp;[<i>TEXT</i>]</code></td><td>(always)</td><td>(always)</td></tr>
+<tr><td><code>@link&nbsp;<i>WORD</i> [<i>TEXT</i>]</code></td><td>(always)</td><td>(always)</td></tr>
+<tr><td><code>@package&nbsp;<i>WORD</i></code></td><td>package</td><td>package</td></tr>
+<tr><td><code>@param&nbsp;<i>TYPE</i>&nbsp;[&amp;]&nbsp;<i>$VAR</i>&nbsp;[<i>DESCR</i>]</code></td><td>function, method</td><td>function, method</td></tr>
+<tr><td><code>@return&nbsp;<i>TYPE</i>&nbsp;[<i>DESCR</i>]</code></td><td>function, method</td><td>function, method</td></tr>
+<tr><td><code>@see <i>WORD</i></code></td><td>(always)</td><td>(always)</td></tr>
+<tr><td><code>@since <i>DESCR</i></code></td><td>(always)</td><td>(always)</td></tr>
+<tr><td><code>@static</code></td><td>method</td><td>See note 1.</td></tr>
+<tr><td><code>@triggers&nbsp;<i>WORD</i>&nbsp;[<i>DESCR</i>]</code></td><td>function, method</td><td>See note 2.</td></tr>
+<tr><td><code>@throws&nbsp;<i>TYPE</i>&nbsp;[<i>DESCR</i>]</code></td><td>function, method</td><td>See note 2.</td></tr>
+<tr><td><code>@todo <i>DESCR</i></code></td><td>(always)</td><td>(always)</td></tr>
+<tr><td><code>@var&nbsp;<i>TYPE</i></code></td><td>property</td><td>property</td></tr>
+<tr><td><code>@version&nbsp;<i>TEXT</i></code></td><td>(always)</td><td>(always)</td></tr>
+</table>
+
+<p></p>
+
+<table width="70%" align=center><tr><td>
+<b>Note 1.</b> PHP 5 already has the attributes <code>abstract final private
+protected public static</code>. These keywords MUST be used instead of
+the corresponding <code>@access</code>, <code>@final</code> and
+<code>@static</code> line tags.
+<p>
+<b>Note 2.</b> The <code>@triggers</code> and <code>@throws</code> line tags
+are explained below in detail.
+</td></tr>
+</table>
+
+<pre>
+
+</pre>
+
+<p>
+The supported TYPEs are described in the next paragraph.
+</p>
+
+<p>
+PHPLint raises a notice if a line tags is used in the wrong context,
+for example <code>@var</code> in a function description.
+</p>
+
+<p>
+PHPLint raises an error if a DocBlock omits to declare the type of a
+variable, function, argument, property or method when this type cannot
+be guessed from the code.
+</p>
+
+
+<h2>Types</h2>
+
+<p>
+All the basic PHP types are supported, with the addition of <code>void</code>.
+The general syntax in EBNF format is:
+</p>
+
+<blockquote><pre>
+ TYPE = name | array_old_syntax | array_new_syntax;
+ 
+ array_old_syntax = "array" [ index {index} [name] ];
+ 
+ array_new_syntax = name index {index};
+ 
+ index = "[]" | "[int]" | "[string]";
+ 
+ name = "void"     | "bool"   | "boolean" | "int" | "integer"
+      | "float"    | "double" | "real"    | "string"
+      | "resource" | "mixed"  | "object"  | class_name | "self" | "parent"
+      | "FALSE"    | "NULL";
+ 
+ class_name = ["\\"] identifier {"\\" identifier};
+</pre></blockquote>
+
+<p>
+(For the keyword <code>FALSE</code> and <code>NULL</code>, that are not
+really types, see the discussion below).
+</p>
+
+<p>
+The following table summarizes the allowed types and their meaning:
+</p>
+
+<pre>
+
+</pre>
+<table align=center cellpadding=5 cellspacing=0 border=1 width="70%">
+
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+
+<tr>
+<td align=top><b>void</b></td>
+<td>Functions and methods that do not return a value are declared to
+return a value of this dummy type.</td></tr>
+
+<tr>
+<td align=top><b>bool</b> or <b>boolean</b></td>
+<td>A boolean value, either FALSE or TRUE. 0 and 1 are numbers in PHPLint
+and cannot be used in place of the boolean values.</td></tr>
+
+<tr><td align=top><b>int</b> or <b>integer</b></td>
+<td>An integer number.</td></tr>
+
+<tr><td align=top><b>float</b> or <b>double</b> or <b>real</b></td>
+<td>A floating point number.</td></tr>
+
+<tr><td align=top><b>string</b></td>
+<td>A string of bytes. Variables of this type can also evaluate to NULL under PHPLint.</td></tr>
+
+<tr><td align=top><b>E[K]</b></td>
+<td>Array with keys of type K and elements of type E.
+Variables of this type can also evaluate to NULL under PHPLint.
+</td></tr>
+
+<tr><td align=top><b>resource</b></td>
+<td>Typically an opened file, or a network socket.
+Variables of this type can also evaluate to NULL under PHPLint.
+</td></tr>
+
+<tr><td align=top><b>object</b></td>
+<td>Generic object.
+Variables of this type can also evaluate to NULL under PHPLint.
+</td></tr>
+
+<tr><td align=top><i>CLASS_NAME</i></td>
+<td>An object of the specified class.
+Variables of this type can also evaluate to NULL under PHPLint.
+</td></tr>
+
+<tr><td align=top><b>mixed</b></td>
+<td>
+A variable of this type is a generic container of any type of value.
+Variables of this type can also evaluate to NULL under PHPLint.
+You should avoid mixed variables, or use them with care, because there is
+very little you can do with variables of such type under PHPLint.
+</td></tr>
+</table>
+<pre>
+
+</pre>
+
+<p>
+An array can be described including the type of the index and the type of
+the elements using the old PHPLint syntax:
+</p>
+
+<blockquote>
+<code>array[<i>K</i>]<i>E</i></code>
+</blockquote>
+
+or the new, more concise, but perfectly equivalent PHPLint syntax below:
+
+<blockquote>
+<code>E[K]</code>
+</blockquote>
+
+<p>
+being <i>K</i> the type of the key (<b>int</b> or <b>string</b>) and <i>E</i>
+the type of the elements (all the elements must be of the same type).
+The empty key <code>E[]</code> means: array of element of the type
+<code>E</code> and keys that can be both <code>int</code> and
+<code>string</code>.
+Some examples:
+</p>
+
+<pre>
+
+</pre>
+<table align=center width="70%" cellspacing=0 cellpadding=5 border=1>
+
+<tr>
+<th colspan=3>Several ways to define an array type</th>
+</tr>
+
+<tr>
+<th width=200>Long form</th>
+<th>Short form</th>
+<th>Description</th>
+</tr>
+
+<tr>
+<td><code>array</code></td>
+<td><code>mixed[]</code></td>
+<td>index can be both integers and strings, elements mixed (avoid)</td>
+</tr>
+
+<tr>
+<td><code>array[]</code></td>
+<td><code>mixed[]</code></td>
+<td>index can be both integers and strings, elements mixed (avoid)</td>
+</tr>
+
+<tr>
+<td><code>array[int]string</code></td>
+<td><code>string[int]</code></td>
+<td>array of strings with int index</td>
+</tr>
+
+<tr>
+<td><code>array[int][int]float</code></td>
+<td><code>float[int][int]</code></td>
+<td>matrix of floating-point numbers</td>
+</tr>
+
+<tr>
+<td><code>array[string]it\icosaedro\bignumbers\Bigint</code></td>
+<td><code>it\icosaedro\bignumbers\Bigint[string]</code></td>
+<td>associative array of big integer numbers</td>
+</tr>
+
+<tr>
+<td><code>array[]SomeClass</code></td>
+<td><code>SomeClass[]</code></td>
+<td>array of objects of the class SomeClass,<br>
+the keys can be both integer numbers and strings (avoid)</td>
+</tr>
+
+
+<tr>
+<td><code>array[int]SomeClass</code></td>
+<td><code>SomeClass[int]</code></td>
+<td>array of objects of the class SomeClass,<br>
+the keys are integer numbers</td>
+</tr>
+
+</table>
+<pre>
+
+</pre>
+
+
+
+<p>
+Some functions and methods can return values of different types that
+can be listed separated by a vertical bar.  Many functions of the
+standard library can return some result or <code>FALSE</code> on error.
+For example <code>fopen()</code> can return either a <code>resource</code>
+or the <code>FALSE</code> value. This practice is discouraged by PHPLint,
+but it is tolerated; in this case PHPLint keeps only the first type, then
+the remaining types are parsed but ignored. Example:
+</p>
+
+
+
+<div class="code_box"><pre>
+/**
+ *  Opens my data file
+ *
+ *  @return resource|FALSE
+ */
+function my_fopen()
+{
+    return fopen("data.txt", "r");
+}
+</pre></div>
+
+<p>
+Note that PHPLint allows to indicate the value <code>FALSE</code> in place
+of the correct type <code>boolean</code> just to support this common practice.
+The <a href="tutorial.html">Tutorial</a> expands this topic with
+several practical examples.
+Please, in new software you write (or at least, if it is intended to be
+validated by PHPLint) try to choose among the alternatives indicated there.
+</p>
+
+
+<h2>Literal arrays</h2>
+
+<p>
+In PHP, literal arrays can be defined through the <code>array()</code>
+constructor. PHPLint parses accurately literal arrays in order to
+guess their type (both index and elements). For non-empty literal arrays,
+PHPLint guesses the structure of the array from the first entry:
+</p>
+
+
+<div class="code_box"><pre>
+array( $key =&gt; $element, ...
+</pre></div>
+
+<p>
+The type of the key is the type of the <code>$key</code> expression,
+while the type of the elements is the type of the <code>$element</code>
+expression.
+If no key is specified, the type of the key defaults to <code>int</code>,
+because this is just what PHP does. The following elements MUST have the same
+type for the key and the type of the elements MUST equal or 
+For example:
+</p>
+
+<pre>
+
+</pre>
+
+<table align=center border=1 cellspacing=0 cellpadding=5>
+
+<tr>
+<th>Literal array</th>
+<th>Guessed type</th>
+</tr>
+
+<tr>
+<td><code>array()</code></td>
+<td><code>mixed[]</code></td>
+</tr>
+
+<tr>
+<td><code>array( array( ) )</code></td>
+<td><code>mixed[int][]</code></td>
+</tr>
+
+<tr>
+<td><code>array( "a" =&gt; array( ) )</code></td>
+<td><code>mixed[string][]</code></td>
+</tr>
+
+<tr>
+<td><code>array("AA", "BB")</code></td>
+<td><code>string[int]</code></td>
+</tr>
+
+<tr>
+<td><code>array(0=&gt;"AA", 1=&gt;"BB")</code></td>
+<td><code>string[int]</code></td>
+</tr>
+
+<tr>
+<td><code>array("a"=&gt;"AA", "b"=&gt;"BB")</code></td>
+<td><code>string[string]</code></td>
+</tr>
+
+<tr>
+<td><code>array( new SOME_CLASS() )</code></td>
+<td><code>SOME_CLASS[int]</code></td>
+</tr>
+
+<tr>
+<td><code>array("a"=&gt;array(1.0,0.0), "b"=&gt;array(0.0,1.0))</code></td>
+<td><code>float[string][int]</code></td>
+</tr>
+
+<tr>
+<td><code>/*. (float[int]) .*/ array()</code></td>
+<td><code>float[int]</code></td>
+</tr>
+
+<tr>
+<td><code>array( /*. (float[int]) .*/ array() )</code></td>
+<td><code>float[int][int]</code></td>
+</tr>
+
+</table>
+
+<pre>
+
+</pre>
+
+<p>
+Note that PHPLint encounters a difficulty when the literal array is empty,
+because no keys nor elements are available and the resulting type is
+an array of unspecified structure (PHPLint will display that as <code>unknown[unknown]</code>).
+Such undefined type is likely to produce an error if
+it is assigned to some variable or passed by value to a function.
+PHPLint allows to add a <b>formal typecast</b> in front to the empty array. The
+formal typecast <code>/*.(T).*/</code> tells to PHPLint which is the expected
+structure of the empty array.
+
+<p>
+The same holds when the NULL value is involved in an expression: NULL is a
+special value that is assignment-compatible with every array, but it cannot
+provide to PHPLint any information about the real structure of the array.<br>
+In these cases the correct type should be indicated through a formal
+typecast, like in these examples:
+</p>
+
+
+<div class="code_box"><pre>
+
+&lt;?php
+/**
+ *  List of names, initially empty.
+ *  Here using PHPLint formal type-cast.
+ */
+$names = <b>/*. (string[int]) .*/</b> array();
+
+/**
+ *  List of names, initially NULL.
+ *  Here using DocBloc's line tag.
+ *  @var <b>string[int]</b>
+ */
+$names2 = NULL;
+
+/**
+ *  Matrix of coefficients, initially empty
+ */
+$m = <b>/*. (float[int][int]) .*/</b> array();
+
+/**
+ *  Prints a list of names. This function requires an array of a well
+ *  defined structure.
+ *
+ * @param string[int] $a  List of names.
+ * @return void
+ */
+function print_names($a)
+{
+    echo count($a), " names in list:\n";
+    for($i=0; $i&lt;count($a); $i++)
+        echo $a[$i], "\n";
+}
+
+
+print_names( array( "Foo", "Bar" ) );
+/*
+ *  Here the type of the actual argument is correctly guessed by PHPLint
+ *  to be string[int], which matches exactly the type of the formal
+ *  argument $a.
+ */
+
+print_names( <b>/*. (string[int]) .*/</b> array() );
+/*
+ *  Note the empty list and the formal typecast.  Without this formal
+ *  type-cast PHPLint would raise an error because the type of the array
+ *  unknown[unknown] would be incompatible with any passed actual value.
+ */
+
+print_names( NULL );
+/*
+ *  NULL is assignment-compatible with the type of the formal argument,
+ *  so no format typecast is required. For the record, since count(NULL)
+ *  gives 0, nothing will be printed by the function.
+ */
+?&gt;
+</pre></div>
+
+
+<h2>The @triggers line tag</h2>
+
+<p>
+	This line-tag allows to declare all the errors the function or method
+	may trigger. It is mandatory for functions and methods that may
+	trigger unhandled errors, including <code>E_NOTICE</code>.
+</p>
+<p>
+	If the mapping of errors into <code>ErrorException</code> is enabled,
+	all the errors are assumed to be <code>ErrorException</code>.
+	In this case, using that function or method requires to either
+	capture the exception or declare the exception as thrown in the
+	client code.
+</p>
+<p>
+	Example:
+</p>
+
+
+<div class="code_box"><pre>
+/**
+ * Save data to file.
+ * @param string $d Data to save.
+ * @param string $fn Destination file name.
+ * @triggers E_WARNING File access failure; data might not be
+ * properly written or might not be written at all.
+ */
+function save_data($d, $fn){
+	$f = fopen($fn, "wb");
+	if( $f !== FALSE )
+		fwrite($f, $d);
+	fclose($f);
+}
+</pre></div>
+
+<p>
+	The following error labels are recognized:
+	
+		<code>E_ERROR</code>,
+		<code>E_WARNING</code>,
+		<code>E_PARSE</code>,
+		<code>E_NOTICE</code>,
+		<code>E_CORE_ERROR</code>,
+		<code>E_CORE_WARNING</code>,
+		<code>E_COMPILE_ERROR</code>,
+		<code>E_COMPILE_WARNING</code>,
+		<code>E_USER_ERROR</code>,
+		<code>E_USER_WARNING</code>,
+		<code>E_USER_NOTICE</code>,
+		<code>E_STRICT</code>,
+		<code>E_RECOVERABLE_ERROR</code>,
+		<code>E_DEPRECATED</code>,
+		<code>E_USER_DEPRECATED</code>,
+		<code>E_ALL</code>.
+</p>
+
+
+<h2>The @throws line tag</h2>
+
+<p>
+The <code>@throws WORD [DESCR]</code> line tag allows to declare an exception
+the function or the method may throw, where WORD is the name of the exception
+and DESCR describes the conditions that causes this exception to be thrown:
+</p>
+
+
+<div class="code_box"><pre>
+/**
+ *  Return the size of the file. On 32-bit systems, this function
+ *  returns the correct value also for files whose size is up to 4 GB.
+ *
+ *  @param string $filename  Path of the file.
+ *
+ *  @return float  Size of the file (bytes). Being a float, this value
+ *                 may be greater than the maximum allowed for int.
+ *
+ *  @throws ErrorException  If an error occurs accessing the file.
+ */
+function BigFileSize($filename)
+{
+    $size = @filesize($filename);
+    if( $size === FALSE )
+        throw new ErrorException($php_errormsg);
+    if( $size &gt;= 0 )
+        return (float) $size;
+    else
+        return (float) $size + 2.0 * (1.0 + PHP_INT_MAX);
+}
+
+
+interface MyCollection {
+
+    /**
+     *  Return the element of the given index in the list.
+     *
+     *  @param int $index  Index of the element.
+     *
+     *  @return mixed      The element.
+     *
+     *  @throws OutOfBoundException  If the $index is out of bound.
+     *
+     *  @throws ErrorException   Implementing methods may also throw this,
+     *                           depending on the specific code that will
+     *                           implement this method.
+     */
+    function getElement($index);
+
+    ...
+}
+</pre></div>
+
+<p>
+All the checked exceptions a function or method may throw must be declared.
+It is allowed to add also unchecked exceptions, but these exceptions are
+reported in the generated documentation only if a descriptive text is also
+provided; if no descriptive text is provided, the declaration of the unchecked
+exception is parsed but it is otherwise completely ignored.
+</p>
+
+<p>
+The programmer may still add more exceptions the are still not thrown, but that
+might thrown later in some overriding or implementing method. In fact, as
+explained in more details in the PHPLint manual, the list of thrown checked
+exceptions is part of the method contract that implementing and overriding
+methods must comply with. Basically, implementing and overriding methods can
+only throw the same checked exceptions the original method throws, or even more
+specialized exceptions derived from these. In other words, <b>implementing and
+overriding methods cannot throw new, unrelated exceptions.</b>
+</p>
+
+<p>
+In the document generated by PHPLint Documentator, thrown exceptions are always
+listed in the order from more specialized ones to more general ones (that is,
+parent classes) so to suggest to the programmer the proper order of the
+<code>catch()</code> branches.
+</p>
+
+
+
+<h2>Namespaces and names resolution</h2>
+
+<div class="note_box">
+	<b>ATTENTION!</b><br>
+	Namespaces are still not supported by the official phpDocumentor
+	program, so what follows must be considered as an extension
+	specific of PHPLint.
+</div>
+
+<p>
+PHP 5.3 introduces the concept of namespaces with which, for example, the
+<i>fully qualified name</i> of a class consists of one or more identifiers
+separated by a back-slash character, like in this example:
+<code>it\icosaedro\bignumbers\BigInt</code>. To be more precise, we will use
+the following nomenclature with examples applied to the class above:
+</p>
+
+<blockquote>
+
+<p>
+The <b>fully qualified name (FQN)</b> of the class is a sequence of identifiers
+separated by the back-slash character that univocally identify the item; you
+may think at it as the real, complete name of the class or function:
+<center><code>it\icosaedro\bignumbers\BigInt</code></center>
+
+<p>
+A <b>qualified name</b> is a sequence of two or more identifiers
+separated by the back-slash character, that may represent only part of a FQN:
+<center><code>bignumbers\BigInt</code></center>
+
+<p>
+The <b>absolute name</b> of the class is its FQN with a leading back-slash
+appended to it: <center><code>\it\icosaedro\bignumbers\BigInt</code></center>
+
+<p>
+<b>Proper</b> name of the class is the last identifier of the FQN:
+<center><code>BigInt</code></center>
+
+</blockquote>
+
+
+<p>
+The <code>namespace\</code> operator can be used as abbreviation to reference an
+item which is reachable from the current namespace and the name so generated
+is considered absolute. For example, if the current namespace is
+<code>it\icosaedro</code> then <code>namespace\bignumbers\BigInt</code> is the
+absolute name of the intended item.
+</p>
+
+<p>
+Incomplete names, that is qualified and bare identifiers, are also allowed
+but a special resolution algorithm has to be applied in order to recover
+the actual absolute name of the intended item. PHPLint applies the same
+resolution algorithm the PHP interpreter applies. The only difference is
+that PHPLint performs namespace resolution also in PHPLint meta-code and in
+DocBlocks.
+</p>
+
+<p>
+Then the <code>@param</code> line tag, the <code>@return</code> line tag and
+the <code>{@link}</code> all can make reference to constants, functions and
+classes using fully qualified names, qualified names, and bare identifiers.
+Also the <code>namespace\</code> operator and the <code>use</code> clauses are
+interpreted as usual.
+</p>
+
+<p>
+There are only two restrictions to names that occurs in a DocBlock:
+</p>
+
+<ul>
+
+<li>
+<b>Spaces are not allowed within a fully qualified or qualified name.</b>
+So for example <code>a&nbsp;\&nbsp;b</code> (allowed in PHP code)
+must always be written as <code>a\b</code> without white spaces.
+</li>
+
+<li>
+<b>Referred items must be already defined.</b> Since PHPLint is a single-pass
+parser, it scans the source only once from the beginning to the end, and
+it pretends every item be defined before it be used, and <i>used</i>
+here includes also bare references in a DocBlock. The manual explains how
+this eggs-and-chicken problem can be resolved either sorting declarations
+in bottom-up order and possibly using <i>forward</i> declarations.
+<br>
+The only exception to this restriction is the <code>{@link}</code> in-line tag:
+if the specified item is fully qualified, then it is resolved only after the
+package has been completely parsed, so that, at least in this particular case,
+forward references are allowed. Then <code>{@link&nbsp;namespace\x}</code>
+or <code>{@link&nbsp;\a\b\c}</code> might be valid fully qualified references
+to some item defined later in the package.
+</li>
+
+</ul>
+
+<p>
+The name resolution is performed in the same context of the DocBlock, so using
+the same current namespace and the same list of <code>use</code> mappings. The
+following example illustrate the issue with two DocBlocks, the first appears
+before a namespace, and the second appears after the namespace:
+</p>
+
+
+
+<div class="code_box"><pre>
+&lt;?php
+/**
+ *  DocBlock outside the namespace. The namespace below declared the class
+ *  BigInt and the function One.  To refer to the class BigInt we must use a
+ *  fully qualified name, for example {@link \it\icosaedro\bignumbers\BigInt}
+ *  because this DocBlock is still in global namespace.
+ * 
+ *  Unqualified names as {@link BigInt} and qualified names as {@link
+ *  bignumbers\One()} DOES NOT WORK and gives an error because it cannot be
+ *  resolved in the context of this DocBlock, and because the `use' clauses
+ *  below have a scope limited to their namespace.
+ *
+ *  Now the mandatory @package line tag, as usual, to give a name to this
+ *  package:
+ *  @package it/icosaedro/bignumbers/BigInt
+ */
+
+namespace it\icosaedro\bignumbers;
+
+use it\icosaedro\bignumbers;
+
+use it\icosaedro\bignumbers as BN;
+
+class BigInt {
+    # ...
+}
+
+/**
+ *  Quite useless function that returns a cached BigInt(0).
+ *
+ *  @return BigInt
+ *          Unqualified name here works, but also {@link bignumbers\BigInt}
+ *          and {@link BN\BigInt} are allowed.
+ *
+ *  @throws \Exception  Inherited from BigInt for this and that reason.
+ *          Useless (but allowed) leading back-slash.
+ */
+function Zero()
+{
+    static $zero = /*. (BigInt) .*/ NULL;
+    if( $zero == NULL )
+        $zero = new BigInt(0);
+    return $zero;
+}
+</pre></div>
+
+<p>
+And here is how a possible client package might use the package above:
+</p>
+
+
+
+<div class="code_box"><pre>
+&lt;?php
+
+require_once __DIR__ . "/../../bignumbers/BigInt.php";
+
+namespace it\icosaedro\stats\Test;
+use it\icosaedro\bignumbers\BigInt;
+use it\icosaedro\bignumbers as BN;
+
+/**
+ *  This package performs simple statistical calculations using
+ *  big numbers from the {@link BigInt} class.
+ *
+ *  @package it\icosaedro\stats\Test
+ */
+
+/**
+ *  Calculates the arithmetic mean between {@link BigInt} numbers.  This link
+ *  can be resolved using the first "use" clause.  With the second "use"
+ *  clause we might also write {@link BN\BigInt} but it is mostly useful to
+ *  build short names of non-class items like the {@link BN\Zero()} function.
+ *  Without any "use" clause we would need to write the fully qualified name
+ *  {@link \it\icosaedro\bignumbers\BigInt}.
+ *
+ *  @param array[]BN\BigInt $a  One, two or more numbers.
+ *
+ *     Illustrates how the second "use" clause can be used to
+ *     resolve the name. A bare array[]BigInt would be sufficient
+ *     because we have imported the class with the first "use".
+ *
+ *  @return it\icosaedro\bignumbers\BigInt   The arithmetic mean.
+ *
+ *     Here too, a bare BigInt would be sufficient.
+ */
+function Mean($a)
+{
+    $n = count($a);
+    $sum = $a[0];
+    for( $i = 1; $i &lt; $n; $i++ )
+        $sum = $sum->add($a[$i]);
+    return $sum->div( new BigInt($n) );
+}
+</pre></div>
+
+
+<p>
+Summarizing, fully qualified, qualified and unqualified names of constants,
+functions and classes may appear in the <code>{@link}</code> in line tag and in
+the <code>@param</code> and <code>@return</code> line tags as class names, and
+in all these cases namespace resolution algorithm applies.
+</p>
+
+<p>
+All the items parsed by PHPLint are reported in the generated document
+with their fully qualified names.
+</p>
+
+<p>
+Namespaces declarations by themselves are not reported and cannot be documented
+with a DocBlock.
+</p>
+
+
+
+<h2>Supported in-line tags</h2>
+
+<p>
+The sequence of characters <code>{@</code> has a special meaning as it
+is the beginning of an inline tag. The general syntax of an inline tag
+is as follows:
+</p>
+
+<blockquote>
+<code>{@</code><i>TAG</i><code>}</code>
+</blockquote>
+
+<p>
+Some in-line tags may have one or more arguments separated by one or more
+spaces, tabulator characters or line feed; the general structure of an
+inline tag requiring arguments is a follows:
+</p>
+
+<blockquote>
+<code>{@</code><i>TAG ARG1 ARG2 ... ARGn</i><code>}</code>
+</blockquote>
+
+<p>
+Inline tags are allowed in the short description, in the long description, and
+in the descriptive text of line tags that have a descriptive text. Inline tags
+are not allowed, that is are passed verbatim, in any other location.
+</p>
+
+<p>
+The inline tags PHPLint supports are listed below:
+</p>
+
+<dl>
+
+<dt>
+<b><code>{@}</code></b>
+</dt>
+<dd>
+This tag allows to insert the sequence of characters <code>{@</code>
+that would be otherwise forbidden because them are reserved to start
+an inline tag.
+</dd>
+
+<dt>
+<b><code>{@*}</code></b>
+</dt>
+<dd>
+This tag allows to insert the sequence of characters <code>*/</code>
+that would be otherwise forbidden in a multi-line comment. It is mostly
+useful when a long chunk of code has to be inserted into the text.
+</dd>
+
+<dt>
+<b><code>{@link</code></b> <i>ITEM</i><code><b>}</b></code><br>
+<b><code>{@link</code></b> <i>ITEM HTML</i><code><b>}</b></code><br>
+<b><code>{@link</code></b> <i>URL</i><code><b>}</b></code><br>
+<b><code>{@link</code></b> <i>URL HTML</i><code><b>}</b></code>
+</dt>
+<dd>
+This tag allows to insert an hypertext link to some documented item
+(constant, variable, function, etc.) or to some generic resource available
+in Internet through an URL. <i>ITEM</i>s can be specified using their name,
+for example:
+
+<blockquote>
+
+<p>
+<code>{@link M_PI}</code><br>
+inserts a reference to the constant <code>M_PI</code>.
+</p>
+
+<p>
+<code>{@link $varName}</code><br>
+inserts a reference to the global variable
+<code>$varName</code>. Note that the <code>$</code> symbol is mandatory.
+Variables that are local to a function or method and formal arguments of
+function and method cannot be referenced.
+</p>
+
+<p>
+<code>{@link funcName()}</code><br>
+inserts a reference to the function
+<code>funcName()</code>. Note that the parentheses are mandatory as them
+allows to distinguish between constants and functions. You may also add
+specific arguments inside the parentheses, but still spaces are not allowed.
+For example you may write <code>{@link&nbsp;tan(M_PI)}</code>.
+If the function belongs to a namespace, the fully qualified name must be
+reported.
+</p>
+
+<p>
+<code>{@link SomeClass}</code><br>
+inserts a reference to the class or interface <code>SomeClass</code>.
+If the class belongs to a namespace, the fully qualified name must be
+reported.
+</p>
+
+<p>
+<code>{@link SomeClass::SOME_CONST}</code><br>
+inserts a reference to the class constant <code>SomeClass::SOME_CONST</code>.
+If the class belongs to a namespace, the fully qualified name must be
+reported.
+</p>
+
+<p>
+<code>{@link SomeClass::$aProperty}</code><br>
+inserts a reference to the property <code>SomeClass::$aProperty</code>.
+</p>
+
+<p>
+<code>{@link SomeClass::aMethod()}</code><br>
+inserts a reference to the method <code>SomeClass::aMethod()</code>.
+Between parentheses, you may enter some specific actual argument just like
+already explained for functions.
+If the class belongs to a namespace, the fully qualified name must be
+reported.
+</p>
+
+</blockquote>
+
+<p>
+In DocBlocks related to a class, <code>self</code> and <code>parent</code> are
+recognized, or the name of the class name itself can be omitted at all
+so bringing to these shorter references:
+</p>
+
+<blockquote>
+
+<p>
+<code>{@link ::SOME_CONST}</code><br>
+inserts a reference to the class constant <code>SOME_CONST</code>
+defined inside the same class to which the DocBlock belongs.
+</p>
+
+<p>
+<code>{@link ::$aProperty}</code><br>
+inserts a reference to the property <code>$aProperty</code>
+defined inside the same class to which the DocBlock belongs.
+</p>
+
+<p>
+<code>{@link ::aMethod()}</code><br>
+inserts a reference to the method <code>aMethod()</code>
+defined inside the same class to which the DocBlock belongs.
+</p>
+
+</blockquote>
+
+<p>
+The ITEMs that can be referenced are only those that are available in the
+current package, including imported standard modules (see
+<code>require_module</code>) and imported packages (see
+<code>require_once</code>).
+Instead, ITEMs that are not accessible from the current package cannot be
+referenced directly but, if really needed, a full URL or a relative path can be
+provided instead.
+</p>
+
+<p>
+In-line tags are resolved by the PHPLint Documentator while generating the HTML
+file. At that time, all the items collected from the source are available, so
+any item, also those defined <u>after</u> the in-line tag itself, can be
+referenced. This offers a more freedom and flexibility. For example, the
+DocBlock describing a class can make reference to any of its methods that are
+defined only below that DocBlock.
+</p>
+
+<p>
+Private items cannot be referenced.
+</p>
+
+<p>
+The <code>{@link}</code> in-line tag also allows to insert links either to local
+file or to remote resources. To avoid URLs and file paths be confused with PHP
+documented items, URLs must always indicate the protocol used and file paths
+must always be indicated as relative to the directory of the current document
+file or as absolute path. For example:
+</p>
+
+<blockquote>
+
+<p>
+<code>{@link ftp://sources.company.com/myproject/package-1.0.zip}</code><br>
+<code>{@link http://www.company.com/}</code><br>
+<code>{@link https://www.company.com/}</code><br>
+<code>{@link mailto:bugs@company.com Please, send bug reports here}</code><br>
+<code>{@link ./anotherPackage.htm}</code><br>
+<code>{@link ../otherLib/otherPackage.htm}</code><br>
+</p>
+
+</blockquote>
+
+</dd>
+
+
+<dt>
+<b><code>{@img URL}</code></b>
+</dt>
+<dd>
+This tag allows to insert an image. This tag is an extension specific of
+PHPLint and may be incompatible with other documentation systems.
+</dd>
+
+</dl>
+
+<p>
+Unsupported in-line tags <code>{@example} {@internal} {@inheritdoc}
+{@source} {@tutorial}</code> are reported verbatim.
+Invalid in-line tags are reported verbatim but signaled as errors.
+</p>
+
+<p>
+Nested in-line tags are not allowed.
+</p>
+
+<p>
+Absolute file paths <code>C:/xxx</code> or <code>/user/www</code> are not
+recognized, only relative paths that starts with <code>./xxx</code> or
+<code>../xxx</code> are. Note that the directory separator character is the
+slash, NOT the back-slash, this latter being reserved to PHP namespaces.
+</p>
+
+
+
+
+<h2>When PHPLint meta-code is still required</h2>
+
+<p>
+Here is a list of the features not covered by DocBlock and that still require
+PHPLint meta-code:
+</p>
+
+
+<ul>
+
+<li>
+<p>
+<b>Required modules.</b>
+Every program and every library depends on some module built-in in the PHP
+interpreter. The required modules must be listed and imported with the
+<code>/*. require_module 'MODULE'; .*/</code> meta-code statement, typically
+located at the very beginning of the file. Example:
+</p>
+
+<div class="code_box"><pre>
+<b>/*.
+    require_module 'standard';
+    require_module 'session';
+    require_module 'mysql';
+.*/</b>
+</pre></div>
+<p>
+See the chapter <i>Importing modules</i> of the reference manual for more
+details.
+</p>
+</li>
+
+
+<li>
+<p>
+<b>Class autoloading.</b>
+The <code>/*. pragma 'autoload' ... .*/</code> statement makes aware PHPLint
+that the autoloading of classes is enabled through the magic function
+<code>__autoload($callname)</code>. See the chapter <i>Autoloading classes</i>
+of the reference manual for more details.
+</p>
+</li>
+
+
+<li>
+<p>
+<b>Prototypes of functions, classes and methods.</b>
+When forward reference to functions, classes and methods are required, then a
+prototype must be used. See the chapter <i>Recursive declarations</i> of the
+reference manual for more details.
+</p>
+</li>
+
+
+<li>
+<p>
+<b>Formal arguments that return by reference.</b>
+PHPLint support a new variant of formal argument named <i>return by
+reference</i>. Formal arguments that return by reference are arguments passed
+by reference that can be unassigned at the time of the call and that the static
+analysis performed by PHPLint guaranties to be definitely assigned once the
+function or method returns. Arguments that return by reference must be marked
+with the <code>/*. return .*/</code> keyword as in this example:
+</p>
+
+
+<div class="code_box"><pre>
+/**
+ *  Example of argument that returns by reference.
+ *  @param string &amp; $a  Argument assigned by this function.
+ *  @return void
+ */
+function f(<b>/*. return .*/</b> &amp;$a)
+{
+    $a = "xyz";
+}
+
+f($x);
+echo $x;  # here $x is definitely assigned
+</pre></div>
+<p>
+See the chapter <i>Functions</i> of the reference manual for more details.
+</li>
+
+
+<li>
+<p>
+<b>Optional arguments in functions and methods.</b>
+The <code>/*. args .*/</code> meta-code keyword must be present in the list of
+formal arguments of functions and methods that that accepts an arbitrary number
+of optional arguments after the mandatory ones and after the default ones:
+</p>
+
+<div class="code_box"><pre>
+/**
+ *  Example of function that accept optional arguments.
+ *  @param int  $mandatoryArg   This is a mandatory argument.
+ *  @param int  $defaultArg     This has a default value.
+ *  @return void
+ */
+function f($mandatoryArg, $defaultArg = 0 <b>/*. , args .*/</b>)
+{ ... }
+
+f(1, 2, 3, 4);
+</pre></div>
+<p>
+Please note the comma <i>inside</i> the meta-code in the example above.
+See the chapter <i>Functions</i> of the reference manual for more details.
+</p>
+</li>
+
+
+<li>
+<p>
+<b>Qualify the type of NULL and empty array().</b>
+Formal type-cast are required when the generic <code>NULL</code> value or the
+generic empty <code>array()</code> have to be translated to a specific type. We
+already saw several examples before. Formal type-cast are also required
+to unbox a mixed variable into an object of a specified class.
+</p>
+</li>
+
+
+<li>
+<p>
+<b>Fall-through branches and missing default branch in switch().</b>
+In the <code>switch()</code> statement two special statements were introduced
+to account for unclosed case branches and missing default branch, that is
+<code>missing_break</code> and <code>missing_default</code>. Without these
+pseudo-code statements PHPLint would complain on unclosed case branches and
+missing default branches. See the chapter <i>Control structures</i> of the
+reference manual for more details.
+</p>
+</li>
+
+
+<li>
+<p>
+<b>Unchecked exception attribute.</b>
+The attribute <code>/*. unchecked .*/</code> marks an exception as
+unchecked. See the chapter <i>Exceptions</i> of the reference manual for more
+details.
+</p>
+</li>
+
+
+<li>
+<p>
+<b>Throws declaration.</b>
+All the checked exceptions a function or method may throw must be declared with
+the <code>/*. throws Exception1, Exception2 .*/</code> statement. Also forward
+declarations of functions and methods and also abstract methods must list all
+the checked exceptions their implementation is planning to throw.
+</p>
+</li>
+
+
+</ul>
+
+
+
+
+<h2>Missing features and differences</h2>
+
+<ul>
+
+<li>
+Some line tags are still not supported, they are reported as "unsupported"
+and rendered verbatim:
+<code>
+@category
+@example
+@exception
+@filesource
+@ignore
+@internal
+@method
+@name
+@property
+@staticvar
+@subpackage
+@tutorial
+@uses
+</code>.
+</li>
+
+<li>
+Some inline tags are still not supported, they are reported as "unsupported"
+and rendered verbatim:
+<code>
+{@example} {@internal} {@inheritdoc} {@source} {@tutorial}
+</code>
+</li>
+
+<li>
+Different semantic for the <code>@package</code> line tag (in PHPLint it
+is simply a PHP source file).
+</li>
+
+<li>
+In the <code>@param</code> line tag, the name of the parameter is mandatory,
+and it must start with the dollar sign "<code>$</code>". So these lines
+<b>are not valid:</b>
+
+<blockquote><pre>
+@param int maxlen          (missing $)
+@param $maxlen             (missing type)
+@param $maxlen int         (TYPE/NAME exchanged)
+</pre></blockquote>
+</li>
+
+<li>
+The templates <code>/**#@+*/  /**#@-*/</code> are scanned but ignored.
+</li>
+
+<li>
+<code>@author</code> line tag: text contained between &lt;&gt; is rendered
+literally, not as email hyper-link.
+</li>
+
+<li>
+The <code>include*()</code> and <code>require*()</code> statements cannot be
+documented. PHPLint automatically lists packages imported with
+<code>required_once()</code>.
+</li>
+
+<li>
+The <code>@ignore</code> line tag is not supported. You can use the
+<code>@access private</code> line tag instead with a similar effect.
+</li>
+
+</ul>
+
+</BODY></HTML>

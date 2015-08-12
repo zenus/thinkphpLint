@@ -1,0 +1,228 @@
+BEGIN parsing of 5-errors-handled.php
+1:	<?php
+2:	
+3:	/*. require_module 'standard'; .*/
+4:	require_once __DIR__ . "/../../../../../../stdlib/errors.php";
+5:	
+6:	
+7:	trigger_error("", 0);
+
+	trigger_error("", 0);
+	                    \_ HERE
+==== 7: notice: throwing ErrorException
+
+	trigger_error("", 0);
+	                    \_ HERE
+==== 7: Warning: uncaught exception ErrorException at global scope
+8:	
+9:	trigger_error("", E_ERROR);
+
+	trigger_error("", E_ERROR);
+	                          \_ HERE
+==== 9: notice: throwing ErrorException
+
+	trigger_error("", E_ERROR);
+	                          \_ HERE
+==== 9: Warning: uncaught exception ErrorException at global scope
+10:	
+11:	trigger_error("", E_USER_ERROR);
+
+	trigger_error("", E_USER_ERROR);
+	                               \_ HERE
+==== 11: notice: throwing ErrorException
+
+	trigger_error("", E_USER_ERROR);
+	                               \_ HERE
+==== 11: Warning: uncaught exception ErrorException at global scope
+12:	
+13:	fopen("", "");
+
+	fopen("", "");
+	              \_ HERE
+==== 13: notice: throwing ErrorException
+
+	fopen("", "");
+	              \_ HERE
+==== 13: Warning: uncaught exception ErrorException at global scope
+14:	
+15:	
+16:	function f() /*. throws ErrorException .*/
+17:	{
+18:		trigger_error("", 0);
+
+		trigger_error("", 0);
+	                            \_ HERE
+==== 18: notice: throwing ErrorException
+19:	
+20:		trigger_error("", E_ERROR);
+
+		trigger_error("", E_ERROR);
+	                                  \_ HERE
+==== 20: notice: throwing ErrorException
+21:	
+22:		trigger_error("", E_USER_WARNING);
+
+		trigger_error("", E_USER_WARNING);
+	                                         \_ HERE
+==== 22: notice: throwing ErrorException
+23:	
+24:		trigger_error("", E_USER_ERROR);
+
+		trigger_error("", E_USER_ERROR);
+	                                       \_ HERE
+==== 24: notice: throwing ErrorException
+25:	
+26:		fopen("", "");
+
+		fopen("", "");
+	                      \_ HERE
+==== 26: notice: throwing ErrorException
+27:	}
+28:	
+29:	
+30:	function g()
+31:	{
+32:		f();
+
+		f();
+	            \_ HERE
+==== 32: notice: throwing ErrorException
+
+		f();
+	            \_ HERE
+==== 32: ERROR: g: exception ErrorException must be caught or declared to be thrown
+33:	}
+34:	
+35:	
+36:	function h()
+37:	/*. throws ErrorException .*/
+38:	{
+39:		f();
+
+		f();
+	            \_ HERE
+==== 39: notice: throwing ErrorException
+40:	}
+41:	
+42:	
+43:	class MyClass {
+44:		/*. void .*/ function m() /*. throws ErrorException .*/
+45:		{
+46:			trigger_error("", 0);
+
+			trigger_error("", 0);
+	                                    \_ HERE
+==== 46: notice: throwing ErrorException
+47:	
+48:			trigger_error("", E_ERROR);
+
+			trigger_error("", E_ERROR);
+	                                          \_ HERE
+==== 48: notice: throwing ErrorException
+49:	
+50:			trigger_error("", E_USER_WARNING);
+
+			trigger_error("", E_USER_WARNING);
+	                                                 \_ HERE
+==== 50: notice: throwing ErrorException
+51:	
+52:			trigger_error("", E_USER_ERROR);
+
+			trigger_error("", E_USER_ERROR);
+	                                               \_ HERE
+==== 52: notice: throwing ErrorException
+53:	
+54:			fopen("", "");
+
+			fopen("", "");
+	                              \_ HERE
+==== 54: notice: throwing ErrorException
+55:		}
+56:	}
+57:	
+58:	
+59:	class MySecondClass extends MyClass {
+60:		function m()
+61:		{ }
+62:	}
+63:	
+64:	class MyThirdClass extends MyClass {
+65:		function m() /*. throws ErrorException .*/
+66:		{ }
+67:	}
+68:	
+69:	
+70:	f();
+
+	f();
+	    \_ HERE
+==== 70: notice: throwing ErrorException
+
+	f();
+	    \_ HERE
+==== 70: Warning: uncaught exception ErrorException at global scope
+71:	
+72:	$o = new MyClass();
+73:	$o->m();
+
+	$o->m();
+	        \_ HERE
+==== 73: notice: throwing ErrorException
+
+	$o->m();
+	        \_ HERE
+==== 73: Warning: uncaught exception ErrorException at global scope
+74:	
+75:	@f();
+
+	@f();
+	 \_ HERE
+==== 75: ERROR: errors mapping into exception is in effect, the silencer operator `@' cannot be used anymore
+
+	@f();
+	     \_ HERE
+==== 75: notice: throwing ErrorException
+
+	@f();
+	     \_ HERE
+==== 75: Warning: uncaught exception ErrorException at global scope
+76:	
+77:	@$o->m();
+
+	@$o->m();
+	 \_ HERE
+==== 77: ERROR: errors mapping into exception is in effect, the silencer operator `@' cannot be used anymore
+
+	@$o->m();
+	         \_ HERE
+==== 77: notice: throwing ErrorException
+
+	@$o->m();
+	         \_ HERE
+==== 77: Warning: uncaught exception ErrorException at global scope
+78:	
+79:	trigger_error("", 12345);
+
+	trigger_error("", 12345);
+	                        \_ HERE
+==== 79: notice: throwing ErrorException
+
+	trigger_error("", 12345);
+	                        \_ HERE
+==== 79: Warning: uncaught exception ErrorException at global scope
+80:	
+==== ?: notice: this package is not a library:
+	Uncaught exception ErrorException at global scope in line 7.
+	Uncaught exception ErrorException at global scope in line 9.
+	Uncaught exception ErrorException at global scope in line 11.
+	Uncaught exception ErrorException at global scope in line 13.
+	Uncaught exception ErrorException at global scope in line 70.
+	Uncaught exception ErrorException at global scope in line 73.
+	Uncaught exception ErrorException at global scope in line 75.
+	Uncaught exception ErrorException at global scope in line 77.
+	Uncaught exception ErrorException at global scope in line 79.
+END parsing of 5-errors-handled.php
+==== ?:?: notice: unused package ../../../../../../stdlib/errors.php
+==== ?:?: notice: required module standard.php
+==== ?:?: notice: required package ../../../../../../stdlib/InternalException.php
+Overall test results: 3 errors, 9 warnings.

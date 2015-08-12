@@ -1,0 +1,123 @@
+BEGIN parsing of 5-exceptions-unchecked.php
+1:	<?php
+2:	
+3:	/*.
+4:		require_module 'standard';
+5:		require_module 'spl';
+6:	.*/
+7:	
+8:	
+9:	class Ex extends Exception {}
+10:	class Ex2 extends Exception {}
+11:	class Ex3 extends Exception {}
+12:	/*. unchecked .*/ class UEx extends Exception {}
+13:	/*. unchecked .*/ class UEx2 extends Exception {}
+14:	
+15:	#### Proto of func: implementation cannot throw new exceptions:
+16:	
+17:	/*. forward void function ThrowingFunc()
+18:		throws Ex, UEx; .*/
+19:	
+20:	/**
+21:	 * This function throws several exceptions.
+22:	 * @return void
+23:	 * @throws Ex   Decription for checked exception Ex.
+24:	 * @throws UEx  Decription for unchecked exception UEx.
+25:	 */
+26:	function ThrowingFunc()
+27:	{
+28:		if( time() > 0 ) throw new Ex();
+
+		if( time() > 0 ) throw new Ex();
+	                                        \_ HERE
+==== 28: notice: throwing Ex
+29:		if( time() > 0 ) throw new Ex2();
+
+		if( time() > 0 ) throw new Ex2();
+	                                         \_ HERE
+==== 29: notice: throwing Ex2
+
+		if( time() > 0 ) throw new Ex2();
+	                                         \_ HERE
+==== 29: ERROR: ThrowingFunc: exception Ex2 must be caught or declared to be thrown
+30:		if( time() > 0 ) throw new UEx();
+31:		if( time() > 0 ) throw new UEx2();
+32:	}
+33:	
+34:	
+35:	#### Proto of method: implementation cannot throw new checked exceptions:
+36:	
+37:	class ThrowingClassWithForward
+38:	{
+39:	
+40:		/*. forward void function ThrowingFunc()
+41:			throws Ex, UEx; .*/
+42:	
+43:		/*. void .*/ function ThrowingFunc()
+44:		{
+
+		/*. void .*/ function ThrowingFunc()
+	                                          \_ HERE
+==== 43: ERROR: method ThrowingClassWithForward::ThrowingFunc with prototype
+	public void()
+	does not match the forward declaration in line 40 with prototype
+	public void() throws Ex, UEx
+45:			if( time() > 0 ) throw new Ex2();
+
+			if( time() > 0 ) throw new Ex2();
+	                                                 \_ HERE
+==== 45: notice: throwing Ex2
+
+			if( time() > 0 ) throw new Ex2();
+	                                                 \_ HERE
+==== 45: ERROR: ThrowingClassWithForward::ThrowingFunc: exception Ex2 must be caught or declared to be thrown
+46:			if( time() > 0 ) throw new Ex3();
+
+			if( time() > 0 ) throw new Ex3();
+	                                                 \_ HERE
+==== 46: notice: throwing Ex3
+
+			if( time() > 0 ) throw new Ex3();
+	                                                 \_ HERE
+==== 46: ERROR: ThrowingClassWithForward::ThrowingFunc: exception Ex3 must be caught or declared to be thrown
+47:			if( time() > 0 ) throw new UEx2();
+48:		}
+49:	
+50:	}
+51:	
+52:	
+53:	#### Proto of uncheked exception: implementation must be unchecked too:
+54:	#### Good:
+55:	/*. forward unchecked class ForwUncheckedEx extends Exception {} .*/
+56:	/*. unchecked .*/ class ForwUncheckedEx extends Exception {}
+57:	#### Bad:
+58:	/*. forward unchecked class ForwUncheckedEx2 extends Exception {} .*/
+59:	class ForwUncheckedEx2 extends Exception {}
+
+	class ForwUncheckedEx2 extends Exception {}
+	                       \_ HERE
+==== 59: ERROR: declaration of class ForwUncheckedEx2 as
+	class ForwUncheckedEx2 extends Exception
+	does not match the forward declaration in line 58 as
+	unchecked class ForwUncheckedEx2 extends Exception
+60:	
+61:	
+62:	#### Implementation of guessed function can throw unchecked exceptions:
+63:	
+64:	guessed_func();
+
+	guessed_func();
+	             \_ HERE
+==== 64: ERROR: unresolved function guessed_func
+65:	function guessed_func(){ throw new UEx(); }
+66:	
+67:	guessed_func2();
+
+	guessed_func2();
+	              \_ HERE
+==== 67: ERROR: unresolved function guessed_func2
+68:	function guessed_func2() /*. throws UEx .*/ {}
+END parsing of 5-exceptions-unchecked.php
+==== ?:?: notice: unused module spl.php
+==== ?:?: notice: required module standard.php
+Overall test results: 7 errors, 0 warnings.

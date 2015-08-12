@@ -1,0 +1,466 @@
+<HTML>
+<HEAD>
+<TITLE>PHPLint Reference Manual</TITLE>
+<META name=description content="PHPLint Reference Manual">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<LINK rel=stylesheet type='text/css' href='../styles.css'>
+<script type="text/javascript" src="../utils.js"></script>
+</HEAD><BODY onload="buildTOC('toc');">
+
+<h2 id="toc">Arrays</h2>
+
+<p>
+PHP implements arrays as hash tables whose indices can be either integers
+and strings of characters, possibly mixed together in the same array.
+There are no restrictions on the type of the elements stored inside an
+array, and they can be all of different types inside the same array.
+Very simple to use, very powerful for quick-and-dirty programming,
+very dangerous.
+</p>
+
+<p>
+Not surprisingly, PHPLint introduces some restriction on how an array
+can be defined and used.
+</p>
+
+
+
+<h3>The structured array type</h3>
+
+<p>
+Simply declaring that a value is of the type <b>array</b> does not give
+very much information to the parser. So, <b>PHPLint</b> allows a more
+accurate description of the array structure that provides the type of the
+index (<b>int</b>, <b>string</b> or both) and the type of the elements
+and that can be expressed informally as:
+</p>
+
+<blockquote>
+<code><i>E</i>[<i>K</i>]</code>
+</blockquote>
+
+<p>
+where <i>K</i> is the type of the index (<b>int</b> or <b>string</b> or both if
+empty) and <i>E</i> is the type of the elements.
+Arrays can also be declared in the old form
+</p>
+
+<blockquote>
+<code>array[<i>K</i>]<i>E</i></code>
+</blockquote>
+
+<p>
+In this case if the element E if omitted, it is assumed mixed, and if also
+the index is omitted then <code>[]</code> is assumed. Then a bare
+<code>array</code> type is equivalent to <code>array[]mixed</code> that allows
+indeces and elements of any type.
+</p>
+
+<p>
+Several indices may be provided to define a matrix, for example:
+<code>float[int][int]</code> is a matrix of floating point numbers. The
+rightmost index is the inner index.
+</p>
+
+<div class="note_box">
+<b>Do not mix int and string keys in arrays</b><br>
+PHP allows to mix indices of type <b>int</b> and of type <b>string</b> on
+the same array. However there is a quirk: as stated by the PHP manual,
+<i>if a key</i> (an index, in our discussion) <i>is the standard
+representation of an integer, it will interpreted as such.</i> Isn't
+unclear to me what the manual exactly means as "standard representation"
+of an integer, but it gives this example: <code>$a[8]</code> and
+<code>$a["8"]</code> are the same element, while <code>$a["08"]</code> is
+dereferenced actually using the string "08" as an index. In general,
+different strings might be evaluated to indices that collide with others
+integer numbers.  So, be careful selecting the type of the index that
+better matches your needs.
+</div>
+
+<p>
+If you really need an associative array that maps both strings and integers
+to different values, the problem stated in the box above may be resolved
+adding a fixed string to the given index. For example, this code maps
+the key <code>$key</code> into the value <code>$value</code>:
+</p>
+
+<div class="code_box">
+<code>$map[ "x" . $key ] = $value;</code>
+</div>
+
+<p>
+This ensures that different values of the <code>$key</code>, that can
+be either integer numbers or strings of characters, will be mapped into
+distinct elements of the array. Note too that the NULL string (a value
+allowed for a <b>string</b> according to the type model of PHPLint) would
+be mapped into <code>"x"</code> exactly as the empty string <code>""</code>:
+how to resolve this ambiguity is left as an exercise for the reader :-)
+</p>
+
+
+
+
+<h3>Building arrays element-by-element</h3>
+
+<p>
+PHPLint guesses the structure of a variable examining its usage. The
+presence of the operator "<code><b>[</b></code>" lets to guess that the
+variable is an array, the type of the expression giving the index gives
+the type of the index of the array, and the type of the expression
+assigned gives the type of the elements. In this example, the type of
+the variables is guessed from their usage:
+</p>
+
+<div class="code_box"><pre>
+$players[] = "Rick"; # Guess: $players is string[int]
+$players[] = "John";
+
+$groups['beta'] = $players;  # Guess: $groups is
+                             # string[string][int]
+
+$matrix[0][0] = 1.0;  # Guess: $m is float[int][int]
+$matrix[0][1] = 0.0;
+/* ... */
+
+$params["width"] = 10.0;  # Guess: $parmas is float[string]
+$params["height"] = 7.0;
+$params["depth"] = 3.0;
+</pre></div>
+
+
+
+
+
+
+
+<h3>The array constructor</h3>
+
+<p>
+The <code>array()</code> is a special construct of the PHP language
+that allows to define an array, its values and their indeces using only
+one instruction.  The <code>array()</code> lets to assign both the
+elements and the index (or key) of each element. For example, the same
+arrays of the example above might be rewritten as:
+</p>
+
+<div class="code_box"><pre>
+$players = array("Rick", "John");
+$groups = array( "beta" =&gt; $players );
+$matrix = array( array(1.0, 0.0, 0.0),
+                 array(0.0, 1.0, 0.0),
+                 array(0.0, 0.0, 1.0));
+$params = array("width" =&gt; 10.0, "height" =&gt; 7.0, "depth" =&gt; 3.0);
+</pre></div>
+
+
+<p>
+PHPLint parses the <code>array()</code> constructor to guess the type the
+resulting array.  The first element of the array can contain an expression
+giving the key and an expression giving the value
+</p>
+
+<blockquote>
+<code>array( KEY =&gt; VALUE, </code>...
+</blockquote>
+
+<p>
+This first element gives the structure of the array acconding to these rules:
+</p>
+
+<ul>
+<li>If the key is not present, the index is <b>int</b>.</li>
+<li>If the key is present, its type must be <b>int</b> or <b>string</b>,
+and the type of the index is set accordingly.</li>
+<li>The type of the element gives the type of the elements of the array,
+	and any following element must either match the same type, or be a subclass
+	of the first element.</li>
+</ul>
+
+<p>
+Once the first element of the array constructor has been parsed,
+PHPLint scans the remaining elements. Each key/element pair found must
+match the type of the first pair. If a key does not match, a warning
+message is raised and the type of the index can be either <b>int</b>
+or <b>string</b>. If an element does not match the type of the first
+element an error is reported and the type of the elements of the
+array becomes <b>mixed</b>.
+</p>
+
+<p>
+The empty array <code>array()</code> don't lets PHPLint to guess anything
+about the structure of the array, so the resulting type is a generic
+<code>array[]</code> with index and element types both unknown.  To build
+an empty array of a specific type, you <b>must</b> use a formal type-cast operator
+(see chapter <u>Typecasting</u>):
+</p>
+
+<div class="code_box"><code>
+$file_names = /*. (string[int]) .*/  array();
+</code></div>
+
+<p>
+The following table summarizes the rules PHPLint applies trying to detect
+the structure of the array. $k is an expression giving a value of the type
+K (<b>int</b> or <b>string</b>). $e is an expression giving a value of the
+type E.
+</p>
+
+<pre>
+
+</pre>
+<table align=center cellpadding=5 cellspacing=0 border=1>
+
+<tr>
+<th>Array constructor</th>
+<th>Detected type</th>
+<th>Note</th>
+</tr>
+
+<tr>
+<td><code>/*.&nbsp;(E[K])&nbsp;.*/&nbsp;array()</code></td>
+<td><code>E[K]</code></td>
+<td>
+The formal typecast is the PHPLint meta-code in the comment that tells to
+PHPLint which is the exact expected type of the empty array.
+</td>
+</tr>
+
+<tr>
+<td><code>array()</code></td>
+<td><code>mixed[]</code></td>
+<td>
+The empty array has a special meaning for PHPLint because a formal type-cast
+operator <code>/*.(T).*/</code> can be applied to it; the same operator
+cannot be applied to non-empty array.
+</td>
+</tr>
+
+<tr>
+<td><code>array($e, ...)</code></td>
+<td><code>E[int]</code></td>
+<td>
+The type of the index is <b>int</b> and the first element will be stored at
+the offset 0. The type of the elements is the type of the expression
+$e. If more that one element is present, the others elements must be
+of the same type of $e or subclass of it, and the keys, if they are present,
+must be of type int.
+</td>
+</tr>
+
+<tr>
+<td><code>array($k&nbsp;=&gt;&nbsp;$e, ...)</code></td>
+<td><code>E[K]</code></td>
+<td>
+The type of the index is the type K of the expression $k. K must be the
+type <b>int</b> or the type <b>string</b>. The type of the elements is
+the type E of the expression $e. If more that one element is present,
+the others elements must be of the same type E or subclass of E, and the keys,
+if they are present, must be of the type K; missing keys are allowed only
+if the guessed type of the key is <b>int</b>.
+</td>
+</tr>
+
+</table>
+<pre>
+
+</pre>
+
+<div class="note_box">
+<b>Do not mix types in arrays</b><br>
+You cannot list elements of different types in the same
+array() constructor; all the elements must be assignment-compatible with
+the first one.
+</div>
+
+
+For example
+
+<div class="code_box">
+<code>array(1, "two")</code>
+</div>
+
+<p>
+causes a warning message for mixed types and then the array is assumed
+<code>mixed[int]</code>. If the first element is an object, then the following
+elements must be objects of the same class or subclass, or the NULL value and,
+in the general case, the next elements must be assignment-compatible with
+the first one.
+If you really need to build an array of mixed
+elements, first declare the empty array, then add the mixed elements one by
+one, like in this example:
+</p>
+
+<div class="code_box">
+<pre>
+$a = /*. (mixed[int]) .*/ array();
+$a[] = 1;
+$a[] = "two";
+</pre>
+</div>
+
+<p>
+Some examples (the comments report the type of the resulting expression):
+</p>
+
+
+<div class="code_box">
+<pre>
+# Our test class:
+class A { }
+
+# The comment shows the assigned type guessed by PHPLint:
+$a0 = array();  // mixed[]
+$a1 = array( 123, 456, 789 );  // int[int]
+$a2 = array( 123, 456, "xyz"); // mixed[int] - ERROR: mixing
+                               // elements of different types
+$a3 = array( 1=&gt;"one", 2=&gt;"two", 8=&gt;"eight");  // string[int]
+$a4 = array( array( new A() ) ); // A[int][int]
+$a5 = array( "data" => $a4 ); // A[string][int][int]
+$x = $a4[0]; // A[int]
+$y = $a4[0][0]; // A
+
+/**
+ * Builds a row of objects A.
+ * @param int $width Number of elements in the row.
+ * @return A[int] Array of exactly $width A objects.
+ */
+function BuildRow($width)
+{
+    $row = array( new A() );
+    for( $i = 1; $i &lt; $width; $i++ )  $row[$i] = new A();
+    return $row;
+}
+
+/**
+ * Builds a matrix of objects A.
+ * @param int $width Width of the matrix (columns).
+ * @param int $height Height of the matrix (rows).
+ * @return A[int][int] The matrix of $width*$height A
+ * objects.
+ */
+function BuildMatrix($width, $height)
+{
+    $m = array( BuildRow($width) );
+    for( $i = 1; $i &lt; $height; $i++ )  $m[] = BuildRow($width);
+    return $m;
+}
+
+$matrix = BuildMatrix(4, 4);  // A[int][int]
+</pre>
+</div>
+
+
+<p>
+Unsure of the actual type of a variable? PHPlint can tell you with this
+little trick:
+</p>
+
+<div class="code_box">
+<pre>if( $a5 ) ;</pre>
+</div>
+
+Since PHPLint is expecting a boolean expression as argument of the if()
+statement, it will complain if the variable $a5 is anything else than a
+boolean. In this case the error message will be:
+
+<blockquote><code>
+    <b>ERROR: `if(EXPR)': expected expression of the type boolean, but found
+    A[string][int][int]. Remember that an array with zero elements evaluates
+    to FALSE, and an array with one or more elements evaluates to TRUE.</b>
+</code></blockquote>
+
+The error message above contains the response: the variable $a5 has been
+detected by PHPLint to be of type A[string][int][int].
+
+
+
+<h3>Runtime errors accessing arrays</h3>
+
+<p>
+The formal validation of the source does not prevent errors that may be
+detected only at runtime by the PHP interpreter. Arrays are particularly prone
+to bugs that cannot be detected with a static analysis (or, at least, that
+PHPLint cannot detect yet). One of the most common errors of this type is
+accessing a missing entry, like in this example:
+</p>
+
+<div class="code_box">
+<pre>
+&lt;?php
+error_reporting(-1);
+
+$a = array(1, 2, 3);
+var_dump($a[9]);
+</pre></div>
+
+<blockquote><pre><b>==&gt; Notice: Undefined offset: 9 in /home/salsi/test.php on line 5
+    NULL</b>
+</pre>
+</blockquote>
+
+<p>
+The error here is evident to the human eye: we are accessing an element of the
+array that does not exist, PHP recognizes the issue and reports a notice just
+because I have set the maximum error level detection (-1), but the program
+still continues running possibly generating random results. On a real
+program, things becomes rapidly more complicated, and detecting errors like
+these becomes really difficult. My suggestions are:
+</p>
+
+<ul>
+	
+<li>
+<b>Integer indices must start from zero.</b> Arrays of type <code>T[int]</code>
+must have integer indices 0, 1, 2, ...
+</li>
+
+<li>
+<b>Prevention.</b>
+Apply PHPLint for a first, formal validation. Also review the code and try to
+make it clean and readable. Use the <code>array_key_exists(key, arr)</code>
+function if you are not sure if a certain key exists. Every function and method
+should check if its arguments are valid and in the expected range; if not, an
+<tt>IllegalAegumentException</tt> or a <tt>RuntimeException</tt> should be
+thrown; these exceptions are unchecked under PHPLint, that is they should cause
+an immediate abort because are the clear symptom of a bug.
+</li>
+
+<li>
+<b>Testing.</b>
+Every important package or class should have its
+own test suite. For example, for every <tt>MyClass.php</tt> there might be a
+<tt>test-MyClass.php</tt> that performs a number of tests on every method and
+with different input parameters. Run the whole set of test units before the
+deployment of a new release.
+</li>
+
+<li>
+<b>Enable maximum runtime error detection level.</b>
+You may either set it in the php.ini once for all:
+<blockquote>
+<code>error_reporting = E_ALL | E_STRICT | E_STYLE | E_DEPRECATED</code>
+</blockquote>
+or you may set it at runtime like in the example above. Also remember to send
+error message to a log file, typically the error log file of the WEB server,
+and do not display errors to the user (display_errors = Off). Always read
+carefully the log, every day, and refine you program until the number of
+messages be reduced to a minimum.
+</li>
+
+<li>
+<b>Dead programs are better than zombie programs.</b>
+Safety (data integrity, etc.) and security increase if the program gets killed
+as soon as possible whenever an unexpected problem is detected. Also the
+"notice" we saw above <b>is</b> a potential security and safety risk we must
+avoid absolutely. PHPLint provides the <code>errors.php</code> package along
+with its library: this package maps errors (E_NOTICEs included) into exceptions
+that normally stop the execution and generate a detailed report with stack
+trace.
+</li>
+
+</ul>
+
+</body>
+</html>

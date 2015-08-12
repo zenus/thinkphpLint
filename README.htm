@@ -1,0 +1,413 @@
+<html>
+<head>
+<title>PHPLint - README</title>
+<META name=description content="PHPLint README">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<LINK rel=stylesheet type='text/css' href='doc/styles.css'>
+<script type="text/javascript" src="doc/utils.js"></script>
+</head>
+<body onload="buildTOC('toc');">
+
+<h1><img src="doc/phplint.png"> PHPLint 2</h1>
+<p>
+Copyright 2005-2014 by Umberto Salsi <a href="mailto:phplint@icosaedro.it">phplint@icosaedro.it</a><br>
+More info: <a href="http://www.icosaedro.it/phplint/">www.icosaedro.it/phplint</a>
+
+<p>
+
+PHPLint is a validator and documentator for PHP 4 and PHP 5 programs.
+PHPLint extends the PHP language through transparent meta-code that can drive
+the parser to a even more strict check of the source. PHPLint is not simply a
+checker: it implements a new, strong typed, language implemented over the PHP
+language. You can build your programs from scratch with PHPLint in mind, or you
+can check and fix existing programs, or you can follow the quick-and-dirty PHP
+programming way and then add the PHPLint meta-code later once the program is
+finished. Whatever is the strategy you choose, PHPLint makes your programs
+safer, more secure, well documented and with drastically less bugs. 
+</p>
+
+<p>
+The package you downloaded right now contains a set of PHP
+source files, mostly libraries of general use, one of which is the PHPLint
+program itself. Some batch files are also provided to help starting the
+PHP CLI (command line interface) interpreter and run the PHPLint validator
+itself.
+</p>
+
+<h2 id="toc">Table of contents</h2>
+
+
+<h2>What you will need</h2>
+
+<ul>
+
+<li>A computer with Windows or Unix or Linux or any other operating system for
+   which a PHP interpreter is available.</li>
+
+<li>Download and install the PHP interpreter version 5.3 or above.
+   On Windows you may choose the NTS (non thread safe) version, 32-bits or
+   64-bits depending on your system.</li>
+   
+<li>Download the PHPLint package as detailed below (if you are reading these
+   notes, it is already there :-)</li>
+
+<li>If you want to run the GUI interface of the PHPLint validator (phplint.tcl)
+   you will need the Tcl/Tk interpreter from <a href="http://www.tcl.tk">www.tcl.tk</a></li>
+
+<li>A text editor, for example: Notepad, Notepad++, vim, etc. An IDE like
+   <a href="http://www.netbeans.org">NetBeans</a> with the PHP plug-in is very
+   handy to manage large projects.</li>
+
+</ul>
+
+
+<h2>Structure of the distributed package</h2>
+
+<dl>
+
+<dt>doc/</dt>
+<dd>
+Tutorial and reference manual.
+</dd>
+
+<dt>stdlib/</dt>
+<dd>
+	This directory is the root of all PHP source files of PHPLint and several
+	other useful packages and classes. The namespace scheme exactly matches
+	the structure of this directory, so the it\icosaedro\lint namespace
+	is just the stdlib/it/icosaedro/lint/ directory.
+	This directory also contains the php.ini configuration file used to start
+	PHP programs from the php script described below.
+</dd>
+
+<dt>stdlib/it/icosaedro/lint/PHPLint.php</dt>
+<dd>
+	Command line interface for the PHPLint validator. Its task is simply
+	to read the arguments from the command line and then to start the
+	actual validator by calling the it\icosaedro\lint\Linter::main()
+	function.
+</dd>
+
+<dt>modules/</dt>
+<dd>
+	Contains the "modules" stub files that PHPLint reads when it encounters
+	a "/*. require_module 'xxx'; .*/" meta-code statement. In this case,
+	PHPLint parses the file modules/xxx.php to learn which are the resources
+	provided by the xxx extension of PHP. For example, 'standard' defines
+	most of the commonly used constants, functions and classes of PHP,
+	ranging from strlen() to DateTime. These ARE NOT actual PHP programs
+	and are never actually needed to run a PHP program, but are requested
+	by PHPLint only.
+</dd>
+
+<dt>php.bat (Windows)<br/>
+php (Unix/Linux)</dt>
+<dd>
+	Shell script that invokes the PHP interpreter currently set in your
+	system and passes the right php.ini as argument. You must edit this file
+	to set the path of your PHP installation.
+</dd>
+
+<dt>phpl.bat (Windows)<br/>
+phpl (Unix/Linux)</dt>
+<dd>
+	Shell script that starts PHPLint. For example, you may type:
+	
+		<tt>phpl myprogram.php</tt>
+	
+	to see the PHPLint report about your program.
+</dd>
+
+<dt>example-*.php</dt>
+<dd>
+	Some sample programs you may test PHPLint on.
+</dd>
+
+<dt>test/stdlib</dt>
+<dd>
+	Contains the test programs for some classes of the standard library.
+	Each program has name "test-Class.php" where "Class" is the name of the
+	class being tested. For example, to test Linter:
+
+		<tt>php test/stdlib/it/icosaedro/lint/test-Linter.php</tt>
+
+	This specific test program runs Linter on every source test available in
+	the test/list directory (see below).
+</dd>
+
+<dt>test/list/</dt>
+<dd>
+	Contains several test source files used to check the Linter class.
+	Naming convention on these files: "5-xxx.php" means it is a PHP 5 test
+	source; "5-xxx.report.txt" is the generated report; "5-xxx.DIFFERS.txt"
+	is the new, different report generated right now: if ok, delete the
+	previous report and remove "DIFFERS." from the name of the new one.
+</dl>
+
+
+<h2>Download PHPLint</h2>
+
+<h3>Latest distributed package</h3>
+
+Please check for new versions of the program at:
+
+<blockquote>
+<a href="http://www.icosaedro.it/phplint/">www.icosaedro.it/phplint</a>
+</blockquote>
+
+The version of the program follows the pattern "a.b_YYYYMMDD" where "a" is
+the major version, "b" is the minor version, and "YYYYMMDD" is the release
+date of the build.
+
+
+<h3>Current snapshot</h3>
+
+You may also download the current version of the program, still under
+development, from the CVS
+
+<blockquote>
+	<a href="http://cvs.icosaedro.it:8080/viewvc/public/phplint/">http://cvs.icosaedro.it:8080/viewvc/public/phplint/</a>
+</blockquote>
+
+then click on the link "Download this directory as GNU tarball" to download
+the whole content of the directory. Save the file phplint.tar.gz anywhere
+you want, and extract the content. On Windows you may use the 7-Zip file
+archiver (<a href="http://www.7-zip.org">www.7-zip.org</a>).
+
+
+<h3>Download and keep updated with CVS</h3>
+
+On Windows, install a CVS client program (for example from <a href="http://www.cvsnt.org">www.cvsnt.org</a>)
+then type these commands from the terminal:
+
+<div class="code_box"><pre>
+C:\> cd myprograms
+C:\myprograms> setx CVSROOT :pserver:anonymous:@cvs.icosaedro.it/home/cvs/public
+C:\myprograms> cvs checkout phplint
+</pre></div>
+
+and later, to check for updates:
+
+<div class="code_box"><pre>
+C:\> cd c:\myprograms\phplint
+C:\myprograms\phplint> cvs update -dP
+</pre></div>
+
+On Unix/Linux:
+
+<div class="code_box"><pre>
+$ cd myprograms
+$ export CVSROOT=:pserver:anonymous:@cvs.icosaedro.it/home/cvs/public
+$ cvs checkout phplint
+</pre></div>
+
+and later, to check for updates:
+
+<div class="code_box"><pre>
+$ cd myprograms/phplint
+$ cvs update -dP
+</pre></div>
+
+
+<h2>Installation</h2>
+
+There are 2 script files that are very handy while using PHPLint from the
+command line: they are <b>php.bat</b> and <b>phpl.bat</b> (Windows) or <b>php</b> and <b>phpl</b> (on Unix
+and Linux). The first script launches the PHP CLI interpreter and, in turn, the
+latter uses the first to launch the PHPLint program, which is located at
+<tt>stdlib/it/icosaedro/lint/PHPLint.php</tt>. So, the first and only thing to do is
+to set in the first script the right path to the PHP CLI interpeter.
+<br/>
+On Windows, use your preferred text editor to open the script file
+
+
+<div class="code_box"><pre>
+php.bat
+</pre></div>
+
+or on Unix/Linux open the script file
+
+<div class="code_box"><pre>
+php
+</pre></div>
+
+and set the PHP variable with the actual path to your "php.exe" program.
+On Windows its name should be just "php.exe". On Unix/Linux it might be
+"php-cli". Anyway, it is the CLI version of the PHP interpreter you must
+set here.
+
+<div class="note_box">
+<b>ATTENTION</b><br/>
+You must really set the path to the PHP CLI executable of
+PHP, not the "CGI" version, not the "WIN" version. Setting the wrong
+PHP executable here may result in strange error messages (fails to
+access some file, or nothing is shown at all).
+</div>
+
+To make sure the PHP CLI be properly set and configured, type this command:
+
+<div class="code_box"><pre>
+C:\phplint> php -v         <i>(Windows)</i>
+~/phplint $ ./php -v       <i>(Unix, Linux)</i>
+PHP 5.5.9 (cli) (built: Feb  5 2014 13:02:16)
+Copyright (c) 1997-2014 The PHP Group
+Zend Engine v2.5.0, Copyright (c) 1998-2014 Zend Technologies
+</pre></div>
+
+This other command tells you which are the PHP extensions currently enabled:
+
+<div class="code_box"><pre>
+php -m
+</pre></div>
+
+If your installation of PHP requires shard libraries (.so files under Linux, or
+.dll files under Windows) you may want to edit stdlib/php.ini to enable more
+extensions, for example MySQL, sockets, etc.
+
+The phpl.bat (Windows) and phpl (on Unix/Linux) shell scripts use the
+script above to launch PHPLint.
+
+
+<h2>Running PHPLint from command line</h2>
+
+Simply type on the terminal (left: Windows; for Linux see note below):
+
+<div class="code_box"><pre>
+C:\> cd directory/of/phplint
+C:\> phpl myprogram.php
+</pre></div>
+
+or even, to save the report on file:
+
+<div class="code_box"><pre>
+C:\> phpl myprogram.php > report.txt
+</pre></div>
+
+	
+<div class="note_box">
+<b>NOTE</b><br/>
+On Unix/Linux you may need to type "<tt>./phpl</tt>" rather than simply
+"<tt>phpl</tt>", and "<tt>./php</tt>" rather than "<tt>php</tt>". It is also
+useful to set a symbolic link of this script on some directory in the $PATH, so
+that you may easily start phpl from any location.
+</div>
+
+To see which is the version of PHPLint you are running:
+
+<div class="code_box"><pre>
+phpl --version
+</pre></div>
+
+To see all the options of PHPLint, type:
+
+<div class="code_box"><pre>
+phpl --help
+</pre></div>
+
+
+<h2>Running PHPLint from GUI tool</h2>
+
+The phplint.tcl program is very handy, as it displays the report about
+your source file and updates it continously as the source file changes,
+so that you may edit the source, save it, and see immediately the result.
+
+Before running phplint.tcl, you need to install the tcl/tk interpreter as
+specified in the installation requirements. On Windows, the ".tcl" extension
+must be associated to the "wish.exe" executable program of tcl/tk.
+On Unix/Linux the executable bit flag may have to be set with the command
+"chmod +x phplint.tcl", then the first line of the script takes care to
+start the "wish" interpreter installed in the usual directory "/usr/bin/wish".
+
+You may start phplint.tcl even from the command line:
+
+<div class="code_box"><pre>
+phplint.tcl myprogram.php
+</pre></div>
+
+
+<h2>Generating the documents from the sources</h2>
+
+The PHPLint program allows to generate the HTML documents from the source by
+simply adding the --doc option before the name of the source file. Example:
+
+<div class="code_box"><pre>
+phpl --doc MyProgr.php
+</pre></div>
+
+generates MyProgr.html in the same directory of the source.
+
+The GUI has a specific button name "Doc" to do that and to see immediately the
+result in the browser.
+
+You can also generate all the documents of a source tree with a single command
+line using the utils/GenerateDoc.php program as described below.
+
+You may start generating the documentation about the module files. Copy and
+paste this command to your terminal:
+
+<div class="code_box"><pre>
+php utils/GenerateDoc.php --is-module --move modules doc/modules modules
+</pre></div>
+
+that will generate the HTML documents about all the modules/*.php files and will
+save the result under the doc/modules directory. The --is-module option relaxes
+some checks that PHPLint should not make on these special files because they are
+not actual PHP programs. The --move SRCROOT DOCROOT moves the generated HTML
+files from the specified source root to the destination documentation root
+directory, creating all the intermediate sub-directory as necessary.
+
+<div class="note_box">
+<b>ATTENTION</b><br/>
+The destination directory <tt>doc/modules</tt> must exist before launching the
+command. Then check if the modules directory already exists under the doc
+directory and, if not, create it before launching the command.
+</div>
+
+The following command will do the same for the standard library:
+
+<div class="code_box"><pre>
+php utils/GenerateDoc.php --move stdlib doc/stdlib stdlib
+</pre></div>
+
+This latter command takes some time to complete, as it may require about up to
+20 minutes on my 5 years old PC, so be patient.
+
+<div class="note_box">
+<b>ATTENTION</b><br/>
+The destination directory <tt>doc/stdlib</tt> must exist before launching the
+command. Then check if the stdlib directory already exists under the doc
+directory and, if not, create it before launching the command.
+</div>
+
+Later, you may add or update the documentation about your specific programs
+issuing a command similar to this one:
+
+<div class="code_box"><pre>
+php utils/GenerateDoc.php --move stdlib doc/stdlib stdlib/com/mycompany
+</pre></div>
+
+Once all the documentation has been generated, you may navigate the doc/
+directory with your preferred WEB browser.
+
+
+<h2>How to continue from here</h2>
+
+<p>
+	The doc directory contains several interesting documents that you may look
+	at for a starting tutorial and to learn more about PHPLint:
+</p>
+
+<blockquote>
+<a href="doc/tutorial.htm">Tutorial</a><br>
+<a href="doc/reference.htm">Reference Manual</a><br>
+</blockquote>
+
+<p>
+Enjoy!
+<p>
+	Umberto Salsi &lt;<a href="mailto:salsi@icosaedro.it">salsi@icosaedro.it</a>&gt;<br/>
+Bologna, 2014-11-27
+</body>
+</html> 

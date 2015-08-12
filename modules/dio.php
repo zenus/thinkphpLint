@@ -1,0 +1,18 @@
+<?php
+/**
+Direct IO Functions.
+
+See: {@link http://www.php.net/manual/en/ref.dio.php}
+@package dio
+*/
+
+
+/*. resource .*/ function dio_open(/*. string .*/ $filename, /*. int .*/ $flags /*., args .*/){}
+/*. string .*/ function dio_read(/*. resource .*/ $fd /*., args .*/){}
+/*. int .*/ function dio_write(/*. resource .*/ $fd, /*. string .*/ $data /*., args .*/){}
+/*. bool .*/ function dio_truncate(/*. resource .*/ $fd, /*. int .*/ $offset){}
+/*. array .*/ function dio_stat(/*. resource .*/ $fd){}
+/*. int .*/ function dio_seek(/*. resource .*/ $fd, /*. int .*/ $pos, /*. int .*/ $whence){}
+/*. mixed .*/ function dio_fcntl(/*. resource .*/ $fd, /*. int .*/ $cmd /*., args .*/){}
+/*. mixed .*/ function dio_tcsetattr(/*. resource .*/ $fd, /*. array .*/ $args_ ){}
+/*. void .*/ function dio_close(/*. resource .*/ $fd){}

@@ -1,0 +1,217 @@
+<HTML>
+<HEAD>
+<TITLE>PHPLint Reference Manual</TITLE>
+<META name=description content="PHPLint Reference Manual">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<LINK rel=stylesheet type='text/css' href='../styles.css'>
+</HEAD><BODY>
+
+<h2>Importing packages</h2>
+
+
+<p>
+PHPLint parses recursively the files that are imported through the PHP
+statement <code>require_once&nbsp;EXPR;</code> where EXPR is a string
+expression giving the file name of the file to be included. The included file,
+in turn, might require several other modules and packages.
+</p>
+
+<p>
+<b>Encoding of the file name.</b>
+File names that specify a package file and its path MUST be locale-encoded.
+This is a limitation of PHP, not of PHPLint.
+<p>
+Under <b>Linux/Unix</b> the locale preference is set through the LC_LOCALE
+environment variable, ad corresponds to the encoding of the files in the
+file system. Nowadays, the system locale encoding commonly set on these system is UTF-8,
+so that any possible file name becomes accessible from PHP using that same
+encoding.
+<p>
+Under <b>Windows</b> the locale preference depends on the configuration
+of the system, that in western countries is Windows-1252. These preferences
+set the conversion from file names on disk and single-byte strings of PHP.
+Although the Windows file system uses Unicode, the UTF-8 encoding is not
+available here, so there are limitations to the file names
+that are actually accessible from PHP. Characters that cannot be converted
+from Unicode to locale encoding or vice-versa, are converted to <code>?</code>
+(question mark) so generating an I/O access error (file not found).
+</p>
+
+<p>
+The ASCII encoding is the common subset of any other encoding, so it is
+recommended to use this encoding for library files and their path.
+</p>
+
+<p>
+PHP applies very complex resolution rules to convert relative file names into
+actual, absolute file names, so complex that it would be practically impossible
+for the programmer to build library packages that work together independently
+from the context from which they are called. That is why under PHPLint
+the path of the required package <b>must be absolute</b>. PHPLint raises an
+error if the path cannot be evaluated statically or if the path is relative.
+The magic constant <code>__DIR__</code> gives the directory of the current
+script.
+</p>
+
+<div class="note_box">
+<b>ATTENTION!</b><br>
+	Only the <code>require_once</code> statement is parsed recursively. The
+	statements <code>include</code>, <code>include_once</code> and
+	<code>require</code> are scanned by PHPLint but the files specified are
+	not parsed. To parse also these files, you can either change the
+	statement to <code>require_once</code> or add these files to the list
+	of files to be parsed in the command line that started PHPLint.
+	The reason is explained below.
+</div>
+
+<p>
+The <code>require()</code>  statement is not suitable to load libraries because
+it does not check is that file has been already read before, so generating a fatal
+error when a constant, a function or a class is re-defined while re-loading the
+same source file again.
+</p>
+
+<p>
+The <code>include()</code> and the <code>include_once()</code> statements are not
+suitable to load libraries because these statements can fail but the execution still
+continues, with potential safety and security issues if the program does not
+stop immediately.
+</p>
+
+<p>
+Then, <code>require_once()</code> must be parsed recursively just to collect
+the definitions of all the items the program needs. The other inclusion
+statements, instead, must not be parsed recursively because may either fail at
+runtime (<code>include*()</code>) or may cause fatal errors
+(<code>require()</code>) that can be detected only at runtime.
+</p>
+
+<p>
+As a practical rule, you should always use <code>require_once</code> to include
+libraries, and use <code>include</code> to include template files, header
+files, footer files, chunks of HTML code and similar.
+</p>
+
+<p>
+The <code>require_once</code> statement must appear at scope level "zero" of
+the program, and the expression giving the file name must be a simple
+expression of strings that can be evaluated "statically"; magic constants are
+also allowed; expressions involving variables and functions are not allowed.
+Some typical examples:
+</p>
+
+<div class="code_box">
+<pre>
+const "LIBS" = __DIR__ . "/../libs/";
+
+/* These packages are parsed recursively: */
+require_once LIBS . "db_access.php";
+require_once LIBS . "users_table.php";
+require_once __DIR__ . "/../frames/frame-top.php";
+
+/* These packages ARE NOT PARSED recursively because the expression
+   giving the file name cannot be evaluated statically: */
+require_once "lang-$lang.php";
+require_once $_SERVER['DOCUMENT_ROOT'] . "/borders.php";
+
+/* Files imported with the require|include|include_once statements
+   ARE NOT PARSED recursively: */
+require "borders/red.inc";
+include "borders/green.inc";
+include_once "borders/blue.inc";
+</pre>
+</div>
+
+
+<p>
+Every program and every package may require several other packages.
+The following picture shows the dependency tree among the packages
+required by the Main.php program. The main directly uses only A.php,
+B.php and C.php, but in turn B.php also requires D, E, and F.php and so on.
+Often these files contain a single class, or a set of related functions.
+</p>
+
+<blockquote>
+<pre>
+       Main.php
+       /   |   \
+      /    |    \
+     /     |     \
+    /      |      \
+A.php    B.php    C.php
+         / | \      |
+        /  |  \     |
+       /   |   \    |
+      /    |    \   |
+   D.php  E.php  \  |
+              \   \ |
+               \  | |
+                F.php
+</pre>
+</blockquote>
+
+<p>
+There are at least two possible strategies to import all the required package:
+</p>
+
+<ol>
+
+<li>
+<b>In the Main.php program we may list all the required packages,</b> including
+those sub-packages as D,E,F that are not directly used by Main.php and of which
+Main.php is completely unaware of. This strategy is not recommended with
+PHPLint and it is not recommended in any case.
+</li>
+
+<li>
+<b>Every package requires only the packages it directly needs,</b> and every
+sub-package, in turn, requires the other sub-packages. So, writing for example
+the source of Main.php, the programmer has only to require the packages he
+really directly needs, and every sub-package will import automatically its
+dependencies. This is the recommended import strategy with PHPLint because it
+is simpler and more natural for the programmer, and because it also allows to
+check with PHPLint every single file separately.
+</li>
+
+</ol>
+
+<p>
+Then, following the suggested strategy above, every package of our example will
+load only the packages it directly needs:
+</p>
+
+<blockquote>
+<pre>
+Main.php:
+    require_once "A.php";
+    require_once "B.php";
+    require_once "C.php";
+
+B.php:
+    require_once "D.php";
+    require_once "E.php";
+    require_once "F.php";
+
+C.php:
+    require_once "F.php";
+
+E.php:
+    require_once "F.php";
+</pre>
+</blockquote>
+
+
+<p>
+In some rare cases packages cannot be organized in a dependency tree as shown
+above because there are mutual dependencies, that might be direct (A requires B
+and B requires A) or indirect (A requires B, B requires C and C requires A).
+These mutual dependencies should be avoided reorganizing the structure of the
+program, possibly introducing common interfaces of common abstract classes.
+The chapter <i>Recursive declarations</i> addresses the cases that cannot
+be resolved otherwise.
+</p>
+
+</body>
+</html>

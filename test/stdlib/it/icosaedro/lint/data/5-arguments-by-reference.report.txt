@@ -1,0 +1,481 @@
+BEGIN parsing of 5-arguments-by-reference.php
+1:	<?php  # Test: arguments passed by reference.
+2:	
+3:	function f1(
+4:		/*. int        .*/ & $a,
+5:		/*. return int .*/ & $b,
+6:		/*. int        .*/ & $c = 1,
+7:		/*. return int .*/ & $d = 1
+8:	)
+9:	{
+10:		$b = 1;
+11:		$d = 1;
+12:	}
+13:	
+14:	function test1()
+
+		/*. int        .*/ & $a,
+	                               \_ HERE
+==== 4: notice: variable $a assigned but never used
+15:	{
+16:		# Actual args all assigned, use default:
+17:		$x = 1;
+18:		$y = 1;
+19:		f1($x, $y);
+20:		echo $x, $y;
+21:	}
+22:	
+23:	
+24:	function test2()
+25:	{
+26:		# Actual args all assigned:
+27:		$x = 1;
+28:		$y = 1;
+29:		$z = 1;
+30:		$t = 1;
+31:		f1($x, $y, $z, $t);
+32:		echo $x, $y, $z, $t;
+33:	}
+34:	
+35:	
+36:	function test3()
+37:	{
+38:		# Actual args not assigned, use default:
+39:		f1($x, $y);
+
+		f1($x, $y);
+	             \_ HERE
+==== 39: ERROR: variable $x does not exist
+40:		echo $x, $y;
+
+		echo $x, $y;
+	               \_ HERE
+==== 40: ERROR: variable $x does not exist
+41:	}
+42:	
+43:	
+44:	function test4()
+45:	{
+46:		# Actual args not assigned:
+47:		f1($x, $y, $z, $t);
+
+		f1($x, $y, $z, $t);
+	             \_ HERE
+==== 47: ERROR: variable $x does not exist
+48:		echo $x, $y, $z, $t;
+
+		echo $x, $y, $z, $t;
+	               \_ HERE
+==== 48: ERROR: variable $x does not exist
+49:	}
+50:	
+51:	
+52:	function f2(
+53:		/*. int        .*/ & $a,
+54:		/*. return int .*/ & $b,
+55:		/*. int        .*/ & $c = 1,
+56:		/*. return int .*/ & $d = 1
+57:	)
+58:	{
+59:		# No arg used.
+60:	}
+61:	
+62:	
+63:	function f3(
+
+		/*. return int .*/ & $b,
+	                               \_ HERE
+==== 54: ERROR: formal argument that returns by reference $b might not have been assigned
+
+		/*. int        .*/ & $a,
+	                               \_ HERE
+==== 53: notice: variable $a assigned but never used
+64:		/*. int        .*/ & $a,
+65:		/*. return int .*/ & $b,
+66:		/*. int        .*/ & $c = 1,
+67:		/*. return int .*/ & $d = 1
+68:	)
+69:	{
+70:		# All args as RHS:
+71:		echo $a, $b, $c, $d;
+
+		echo $a, $b, $c, $d;
+	                   \_ HERE
+==== 71: ERROR: variable $b might not have been assigned
+72:	}
+73:	
+74:	
+75:	function f4(
+
+		/*. return int .*/ & $b,
+	                               \_ HERE
+==== 65: ERROR: formal argument that returns by reference $b might not have been assigned
+76:		/*. int        .*/ & $a,
+77:		/*. return int .*/ & $b,
+78:		/*. int        .*/ & $c = 1,
+79:		/*. return int .*/ & $d = 1
+80:	)
+81:	{
+82:		# All args as LHS:
+83:		$a = 1;
+84:		$b = 1;
+85:		$c = 1;
+86:		$d = 1;
+87:	}
+88:	
+89:	
+90:	function f5(
+
+		/*. int        .*/ & $a,
+	                               \_ HERE
+==== 76: notice: variable $a assigned but never used
+91:		/*. int        .*/ & $a,
+92:		/*. return int .*/ & $b)
+93:	{
+94:		if($a > 1)
+95:			$b = 1;
+96:		else
+97:			return;
+
+			return;
+	                       \_ HERE
+==== 97: ERROR: formal argument that returns by reference $b might not have been assigned
+98:	}
+99:	
+100:	
+101:	/*. forward void function f6(
+102:		int        & $a,
+103:		return int & $b,
+104:		int        & $c =,
+105:		return int & $d =); .*/
+106:	
+107:	/*. void .*/ function f6(
+108:		/*. int        .*/ & $a,
+109:		/*. return int .*/ & $b,
+110:		/*. int        .*/ & $c = 1,
+111:		/*. return int .*/ & $d = 1
+112:	)
+113:	{
+114:		$b = 1;
+115:		$d = 1;
+116:	}
+117:	
+118:	
+119:	# Invalid implementation of proto:
+120:	/*. forward void function f7(
+
+		/*. int        .*/ & $a,
+	                               \_ HERE
+==== 108: notice: variable $a assigned but never used
+121:		int        & $a,
+122:		return int & $b,
+123:		int        & $c =,
+124:		return int & $d =); .*/
+125:	
+126:	/*. void .*/ function f7(
+127:		/*. int        .*/ & $a,
+128:		/*. return int .*/ & $b,
+129:		/*. int        .*/   $c = 1,
+130:		/*. return int .*/ & $d = 1
+131:	)
+132:	{
+
+	/*. void .*/ function f7(
+	                        \_ HERE
+==== 126: ERROR: function f7 with prototype
+	void function f7(int &, return int & [, int, return int &])
+	does not match the forward declaration in line 120 with prototype
+	void function f7(int &, return int & [, return int &, return int &])
+133:		$b = 1;
+134:		$d = 1;
+135:	}
+136:	
+137:	
+138:	# The same tests as before, but inside a class:
+139:	class aClass {
+
+		/*. int        .*/   $c = 1,
+	                               \_ HERE
+==== 129: notice: variable $c assigned but never used
+
+		/*. int        .*/ & $a,
+	                               \_ HERE
+==== 127: notice: variable $a assigned but never used
+140:	
+141:		function f1(
+142:			/*. int        .*/ & $a,
+143:			/*. return int .*/ & $b,
+144:			/*. int        .*/ & $c = 1,
+145:			/*. return int .*/ & $d = 1
+146:		)
+147:		{
+148:			$b = 1;
+149:			$d = 1;
+150:		}
+151:	
+152:		function test1()
+
+			/*. int        .*/ & $a,
+	                                       \_ HERE
+==== 142: notice: variable $a assigned but never used
+153:		{
+154:			# Actual args all assigned, use default:
+155:			$x = 1;
+156:			$y = 1;
+157:			$this->f1($x, $y);
+158:			echo $x, $y;
+159:		}
+160:	
+161:	
+162:		function test2()
+163:		{
+164:			# Actual args all assigned:
+165:			$x = 1;
+166:			$y = 1;
+167:			$z = 1;
+168:			$t = 1;
+169:			$this->f1($x, $y, $z, $t);
+170:			echo $x, $y, $z, $t;
+171:		}
+172:	
+173:	
+174:		function test3()
+175:		{
+176:			# Actual args not assigned, use default:
+177:			$this->f1($x, $y);
+
+			$this->f1($x, $y);
+	                            \_ HERE
+==== 177: ERROR: variable $x does not exist
+178:			echo $x, $y;
+
+			echo $x, $y;
+	                       \_ HERE
+==== 178: ERROR: variable $x does not exist
+179:		}
+180:	
+181:	
+182:		function test4()
+183:		{
+184:			# Actual args not assigned:
+185:			$this->f1($x, $y, $z, $t);
+
+			$this->f1($x, $y, $z, $t);
+	                            \_ HERE
+==== 185: ERROR: variable $x does not exist
+186:			echo $x, $y, $z, $t;
+
+			echo $x, $y, $z, $t;
+	                       \_ HERE
+==== 186: ERROR: variable $x does not exist
+187:		}
+188:	
+189:	
+190:		function f2(
+191:			/*. int        .*/ & $a,
+192:			/*. return int .*/ & $b,
+193:			/*. int        .*/ & $c = 1,
+194:			/*. return int .*/ & $d = 1
+195:		)
+196:		{
+197:			# No arg used.
+198:		}
+199:	
+200:	
+201:		function f3(
+
+			/*. return int .*/ & $b,
+	                                       \_ HERE
+==== 192: ERROR: formal argument that returns by reference $b might not have been assigned
+
+			/*. int        .*/ & $a,
+	                                       \_ HERE
+==== 191: notice: variable $a assigned but never used
+202:			/*. int        .*/ & $a,
+203:			/*. return int .*/ & $b,
+204:			/*. int        .*/ & $c = 1,
+205:			/*. return int .*/ & $d = 1
+206:		)
+207:		{
+208:			# All args as RHS:
+209:			echo $a, $b, $c, $d;
+
+			echo $a, $b, $c, $d;
+	                           \_ HERE
+==== 209: ERROR: variable $b might not have been assigned
+210:		}
+211:	
+212:	
+213:		function f4(
+
+			/*. return int .*/ & $b,
+	                                       \_ HERE
+==== 203: ERROR: formal argument that returns by reference $b might not have been assigned
+214:			/*. int        .*/ & $a,
+215:			/*. return int .*/ & $b,
+216:			/*. int        .*/ & $c = 1,
+217:			/*. return int .*/ & $d = 1
+218:		)
+219:		{
+220:			# All args as LHS:
+221:			$a = 1;
+222:			$b = 1;
+223:			$c = 1;
+224:			$d = 1;
+225:		}
+226:	
+227:	
+228:		function f5(
+
+			/*. int        .*/ & $a,
+	                                       \_ HERE
+==== 214: notice: variable $a assigned but never used
+229:			/*. int        .*/ & $a,
+230:			/*. return int .*/ & $b)
+231:		{
+232:			if($a > 1)
+233:				$b = 1;
+234:			else
+235:				return;
+
+				return;
+	                               \_ HERE
+==== 235: ERROR: formal argument that returns by reference $b might not have been assigned
+236:		}
+237:	
+238:	
+239:		/*. forward void function f6(
+240:			int        & $a,
+241:			return int & $b,
+242:			int        & $c =,
+243:			return int & $d =); .*/
+244:	
+245:		/*. void .*/ function f6(
+246:			/*. int        .*/ & $a,
+247:			/*. return int .*/ & $b,
+248:			/*. int        .*/ & $c = 1,
+249:			/*. return int .*/ & $d = 1
+250:		)
+251:		{
+252:			$b = 1;
+253:			$d = 1;
+254:		}
+255:	
+256:	
+257:		# Invalid implementation of proto:
+258:		/*. forward void function f7(
+
+			/*. int        .*/ & $a,
+	                                       \_ HERE
+==== 246: notice: variable $a assigned but never used
+259:			int        & $a,
+260:			return int & $b,
+261:			int        & $c =,
+262:			return int & $d =); .*/
+263:	
+264:		/*. void .*/ function f7(
+265:			/*. int        .*/ & $a,
+266:			/*. return int .*/ & $b,
+267:			/*. int        .*/   $c = 1,
+268:			/*. return int .*/ & $d = 1
+269:		)
+270:		{
+
+		/*. void .*/ function f7(
+	                                \_ HERE
+==== 264: ERROR: method aClass::f7 with prototype
+	public void(int &, return int & [, int, return int &])
+	does not match the forward declaration in line 258 with prototype
+	public void(int &, return int & [, return int &, return int &])
+271:			$b = 1;
+272:			$d = 1;
+273:		}
+274:	
+275:	}
+
+			/*. int        .*/   $c = 1,
+	                                       \_ HERE
+==== 267: notice: variable $c assigned but never used
+
+			/*. int        .*/ & $a,
+	                                       \_ HERE
+==== 265: notice: variable $a assigned but never used
+276:	
+277:	
+278:	interface Interface1 {
+279:		/*. void .*/ function m1(/*. int .*/ &$a, /*. return int .*/ &$b);
+280:		/*. void .*/ function m2(/*. int .*/ &$a, /*. return int .*/ &$b);
+281:	}
+282:	
+283:	class Concrete1 implements Interface1 {
+284:	
+285:		/*. void .*/ function m1(/*. int .*/ &$a, /*. return int .*/ &$b)
+286:		{
+287:			if( $a < 0 )
+288:				$b = 0;
+289:			else
+290:				$b = $a;
+291:		}
+292:	
+293:		/*. void .*/ function m2(/*. int .*/ &$a, /*. int .*/ &$b)
+294:		{
+295:		}
+296:	
+297:	}
+
+		/*. void .*/ function m2(/*. int .*/ &$a, /*. int .*/ &$b)
+	                                                                 \_ HERE
+==== 293: notice: variable $b assigned but never used
+
+		/*. void .*/ function m2(/*. int .*/ &$a, /*. int .*/ &$b)
+	                                                \_ HERE
+==== 293: notice: variable $a assigned but never used
+
+		/*. void .*/ function m2(/*. int .*/ &$a, /*. int .*/ &$b)
+	                                \_ HERE
+==== 293: ERROR: method Concrete1::m2 with prototype
+	public void(int &, int &)
+	is not call-compatible with Interface1::m2 with prototype
+	public void(int &, return int &)
+	(argument no. 2 is not call-compatible)
+298:	
+299:	
+300:	abstract class AbsClass1 {
+301:		abstract /*. void .*/ function m1(/*. int .*/ &$a, /*. return int .*/ &$b);
+302:		abstract /*. void .*/ function m2(/*. int .*/ &$a, /*. return int .*/ &$b);
+303:	}
+304:	
+305:	class Concrete2 extends AbsClass1 {
+306:	
+307:		/*. void .*/ function m1(/*. int .*/ &$a, /*. return int .*/ &$b)
+308:		{
+309:			if( $a < 0 )
+310:				$b = 0;
+311:			else
+312:				$b = $a;
+313:		}
+314:	
+315:		/*. void .*/ function m2(/*. int .*/ &$a, /*. int .*/ &$b)
+316:		{
+317:		}
+318:	
+319:	}
+
+		/*. void .*/ function m2(/*. int .*/ &$a, /*. int .*/ &$b)
+	                                                                 \_ HERE
+==== 315: notice: variable $b assigned but never used
+
+		/*. void .*/ function m2(/*. int .*/ &$a, /*. int .*/ &$b)
+	                                                \_ HERE
+==== 315: notice: variable $a assigned but never used
+
+		/*. void .*/ function m2(/*. int .*/ &$a, /*. int .*/ &$b)
+	                                \_ HERE
+==== 315: ERROR: method Concrete2::m2 with prototype
+	public void(int &, int &)
+	is not call-compatible with AbsClass1::m2 with prototype
+	public void(int &, return int &)
+	(argument no. 2 is not call-compatible)
+320:	
+END parsing of 5-arguments-by-reference.php
+Overall test results: 20 errors, 0 warnings.

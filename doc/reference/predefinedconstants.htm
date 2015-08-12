@@ -1,0 +1,79 @@
+<HTML>
+<HEAD>
+<TITLE>PHPLint Reference Manual</TITLE>
+<META name=description content="PHPLint Reference Manual">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<LINK rel=stylesheet type='text/css' href='../styles.css'>
+</HEAD><BODY>
+
+<h2>Predefined constants</h2>
+
+<p>
+The following constants are predefined inside the PHPLint parser:
+</p>
+
+<blockquote>
+
+<p>
+<code>/*. boolean .*/ <b>FALSE</b></code><br>
+<code>/*. boolean .*/ <b>TRUE</b></code><br>
+Logical values. PHPLint accepts the lower-case letters version
+<code>false</code> and <code>true</code>.
+</p>
+
+<p>
+<code>/*. float .*/ <b>NAN</b></code><br>
+Not-A-Number.
+</p>
+
+<p>
+<code>/*. float .*/ <b>INF</b></code><br>
+Infinity.
+</p>
+
+<p>
+<code>/*. <i>null</i> .*/ <b>NULL</b></code><br>
+This constant is the only value allowed for the type <b>null</b>
+and it can match a <b>string</b>, an <b>array</b>, a <b>resource</b>, an
+<b>object</b> or a <b>mixed</b>.  PHPLint also accepts the lower-case letters
+version <code>null</code>.
+</p>
+
+<p>
+<code>/*. resource .*/ <b>STDIN</b><br>
+/*. resource .*/ <b>STDOUT</b><br>
+/*. resource .*/ <b>STDERR</b></code><br>
+These constant are special the sense that constants of type resource cannot
+be defined in user code (only scalar values and strings are allowed).
+Note too that these constants are defined only in the CLI version of PHP,
+but this cannot be verified by PHPLint.
+</p>
+
+
+</blockquote>
+
+
+
+
+
+<p>
+The following <b>magic constants</b> are not real constants, but special
+expressions of the language whose value depends on the context in which they
+appear. PHPLint calculate their value and substitute this value in place
+according to the specifications of the PHP manual:
+</p>
+
+<blockquote><pre>
+/*. string .*/ __DIR__         (PHP 5 only)
+/*. string .*/ __FILE__
+/*. int    .*/ __LINE__
+/*. string .*/ __NAMESPACE__   (PHP 5 only)
+/*. string .*/ __FUNCTION__    (lowercase in PHP 4)
+/*. string .*/ __CLASS__       (lowercase in PHP 4)
+/*. string .*/ __METHOD__      (PHP 5 only)
+</pre></blockquote>
+
+</body>
+</html>

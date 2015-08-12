@@ -1,0 +1,595 @@
+BEGIN parsing of 5-flow-analysis.php
+1:	<?php
+2:	# Static flow analysis test:
+3:	# 1. Unreachable code detection.
+4:	# 2. Missing return.
+5:	
+6:	/*. require_module 'standard'; .*/
+7:	
+8:	
+9:	# Generic boolean expr of indeterminate value (in fact, PHPLint cannot guess
+10:	# that this variable is actually assigned once):
+11:	$flag = false;
+12:	
+13:	class AException extends Exception{}
+14:	class BException extends AException{}
+15:	class CException extends BException{}
+16:	
+17:	
+18:	
+19:	/*. int .*/ function f()
+20:	{
+21:		if( false )
+22:			return 1;
+23:		# BUG
+24:	}
+25:	
+26:	
+27:	/*. string .*/ function g(/*. int .*/ $i)
+
+	/*. int .*/ function f()
+	                      \_ HERE
+==== 19: ERROR: missing `return' in at least one execution path in non-void function f
+28:	{
+29:		switch($i){
+30:		case 0: return "zero";
+31:		case 1:
+32:		case 2: return "one or two";
+33:		case 3: echo "three"; break;  # <-- BUG
+34:		default: die("unexpected value $i");
+35:		}
+36:	}
+37:	
+38:	
+39:	if( true )
+
+	/*. string .*/ function g(/*. int .*/ $i)
+	                         \_ HERE
+==== 27: ERROR: missing `return' in at least one execution path in non-void function g
+40:		exit;
+41:	else
+42:		throw new Exception();
+
+		throw new Exception();
+	                              \_ HERE
+==== 42: notice: throwing Exception
+
+		throw new Exception();
+	                              \_ HERE
+==== 42: Warning: uncaught exception Exception at global scope
+43:	
+44:	while(true){
+
+	while(true){
+	     \_ HERE
+==== 44: ERROR: unreachable statement
+45:		if( true )
+46:			exit;
+47:		else
+48:			throw new Exception();
+
+			throw new Exception();
+	                                      \_ HERE
+==== 48: notice: throwing Exception
+
+			throw new Exception();
+	                                      \_ HERE
+==== 48: Warning: uncaught exception Exception at global scope
+49:		echo 123;
+
+		echo 123;
+	            \_ HERE
+==== 49: ERROR: unreachable statement
+50:	}
+51:	
+52:	do {
+
+	do {
+	  \_ HERE
+==== 52: ERROR: unreachable statement
+53:		if( true )
+54:			exit;
+55:		else
+56:			break;
+57:	} while(true);
+58:	
+59:	while(true){
+
+	while(true){
+	     \_ HERE
+==== 59: ERROR: unreachable statement
+60:	}
+61:	
+62:	while(false){
+
+	while(false){
+	     \_ HERE
+==== 62: ERROR: unreachable statement
+
+	while(false){
+	             \_ HERE
+==== 62: ERROR: unreachable statement
+63:	}
+64:	
+65:	while(TRUE){
+66:	}
+67:	
+68:	
+69:	while(true){
+
+	while(true){
+	     \_ HERE
+==== 69: ERROR: unreachable statement
+70:		echo 1;
+71:	}
+72:	
+73:	while(false){
+
+	while(false){
+	     \_ HERE
+==== 73: ERROR: unreachable statement
+
+	while(false){
+	             \_ HERE
+==== 73: ERROR: unreachable statement
+74:		echo 1;
+75:	}
+76:	
+77:	while(TRUE){
+78:		break;
+79:	}
+80:	
+81:	do {
+82:		echo 1;
+83:	} while(false);
+84:	
+85:	define("DEBUG", true);
+86:	
+87:	do {
+88:		echo 1;
+89:	} while(DEBUG);
+90:	
+91:	do {
+
+	do {
+	  \_ HERE
+==== 91: ERROR: unreachable statement
+92:		if(true) break;
+93:		echo 1;
+
+		echo 1;
+	            \_ HERE
+==== 93: ERROR: unreachable statement
+94:	} while(true);
+95:	
+96:	for(;;){
+97:		continue;
+98:	}
+99:	
+100:	
+101:	for(;true;){
+
+	for(;true;){
+	   \_ HERE
+==== 101: ERROR: unreachable statement
+102:		continue;
+103:	}
+104:	
+105:	
+106:	
+107:	/*. void .*/ function test_vars_definitely_assigned()
+
+	/*. void .*/ function test_vars_definitely_assigned()
+	        \_ HERE
+==== 107: ERROR: unreachable statement
+108:	{
+109:		global $flag;
+110:	
+111:		if(false){
+112:			$a = 1;
+113:		}
+114:		echo $a;
+
+		echo $a;
+	               \_ HERE
+==== 114: ERROR: variable $a might not have been assigned
+115:	
+116:		if(false){
+117:			$v = 1;
+118:			$u = 2;
+119:		} else {
+120:			#echo $v, $u;
+121:			$v = 3;
+122:			$w = 4;
+123:		}
+124:		echo $v, $u, $w;
+
+		echo $v, $u, $w;
+	                   \_ HERE
+==== 124: ERROR: variable $u might not have been assigned
+125:	
+126:		if(false){
+127:			$x = 1;
+128:			$y = 2;
+129:		} elseif(false){
+130:			$x = 3;
+131:		}
+132:		echo $x, $y;
+
+		echo $x, $y;
+	               \_ HERE
+==== 132: ERROR: variable $x might not have been assigned
+
+		echo $x, $y;
+	                   \_ HERE
+==== 132: ERROR: variable $y might not have been assigned
+133:		$y = "";
+
+		$y = "";
+	                \_ HERE
+==== 133: ERROR: cannot assign string to $y of type int
+134:	
+135:	# Test 4: variables preserve their type in any execution path:
+136:		if(true)
+137:			$t4_x = 1;
+138:		else
+139:			$t4_x = "";
+
+			$t4_x = "";
+	                           \_ HERE
+==== 139: ERROR: cannot assign string to $t4_x of type int
+140:	
+141:	# Test 5: nested if():
+142:		if(false){
+143:			$t5_a = 1;
+144:			$t5_b = 2;
+145:		} else {
+146:			$t5_a = 3;
+147:			if( $t5_a > 9 )
+148:				$t5_b = 4;
+149:		}
+150:		echo $t5_a, $t5_b;
+
+		echo $t5_a, $t5_b;
+	                         \_ HERE
+==== 150: ERROR: variable $t5_b might not have been assigned
+151:	
+152:	# Test 6: excluded branches in if():
+153:		if(false){
+154:			$t6_a = 1;
+155:			return;
+156:		}
+157:		echo $t6_a;
+
+		echo $t6_a;
+	                  \_ HERE
+==== 157: ERROR: variable $t6_a might not have been assigned
+158:	
+159:		if(false){
+160:			$t6_b = 1;
+161:			return;
+162:		} else {
+163:			$t6_c = 1;
+164:		}
+165:		echo $t6_b, $t6_c;
+
+		echo $t6_b, $t6_c;
+	                  \_ HERE
+==== 165: ERROR: variable $t6_b might not have been assigned
+166:	
+167:		if(false){
+168:			$t6_d = 1;
+169:		} else {
+170:			$t6_e = 1;
+171:			return;
+172:		}
+173:		echo $t6_d, $t6_e;
+
+		echo $t6_d, $t6_e;
+	            \_ HERE
+==== 173: ERROR: unreachable statement
+
+		echo $t6_d, $t6_e;
+	                  \_ HERE
+==== 173: ERROR: variable $t6_d might not have been assigned
+
+		echo $t6_d, $t6_e;
+	                         \_ HERE
+==== 173: ERROR: variable $t6_e might not have been assigned
+174:	
+175:		if(false){
+176:			$t6_f = 1;
+177:			return;
+178:		} else {
+179:			$t6_g = 1;
+180:			return;
+181:		}
+182:		echo $t6_f, $t6_g;
+
+		echo $t6_f, $t6_g;
+	            \_ HERE
+==== 182: ERROR: unreachable statement
+
+		echo $t6_f, $t6_g;
+	                  \_ HERE
+==== 182: ERROR: variable $t6_f might not have been assigned
+
+		echo $t6_f, $t6_g;
+	                         \_ HERE
+==== 182: ERROR: variable $t6_g might not have been assigned
+183:	
+184:	# Test 7: while():
+185:		while($flag){
+186:			$t7_a = 1;
+187:			if(true)
+188:				$t7_b = 1;
+189:		}
+190:		echo $t7_a, $t7_b;
+
+		echo $t7_a, $t7_b;
+	                  \_ HERE
+==== 190: ERROR: variable $t7_a might not have been assigned
+
+		echo $t7_a, $t7_b;
+	                         \_ HERE
+==== 190: ERROR: variable $t7_b might not have been assigned
+191:	
+192:		while(false){
+
+		while(false){
+	                     \_ HERE
+==== 192: ERROR: unreachable statement
+193:			$t7_c = 1;
+194:			if(true)
+195:				$t7_d = 1;
+196:		}
+197:		echo $t7_c, $t7_d;
+
+		echo $t7_c, $t7_d;
+	                  \_ HERE
+==== 197: ERROR: variable $t7_c might not have been assigned
+
+		echo $t7_c, $t7_d;
+	                         \_ HERE
+==== 197: ERROR: variable $t7_d might not have been assigned
+198:	
+199:		while(true){
+200:			$t7_e = 1;
+201:			if(true)
+202:				$t7_f = 1;
+203:		}
+204:		echo $t7_e, $t7_f;
+
+		echo $t7_e, $t7_f;
+	            \_ HERE
+==== 204: ERROR: unreachable statement
+205:	
+206:	# Test 8: switch():
+207:		switch(1){
+208:			case 1: $t8_a = 1; break;
+209:			default: $t8_a = 2; break;
+210:		}
+211:		echo $t8_a;
+212:	
+213:		switch(1){
+214:			case 1: $t8_b = 1; break;
+215:			default: $t8_c = 2; break;
+216:		}
+217:		echo $t8_b, $t8_c;
+
+		echo $t8_b, $t8_c;
+	                  \_ HERE
+==== 217: ERROR: variable $t8_b might not have been assigned
+
+		echo $t8_b, $t8_c;
+	                         \_ HERE
+==== 217: ERROR: variable $t8_c might not have been assigned
+218:	
+219:		switch(1){
+220:			case 1:
+221:				$t8_d = 1;
+222:				if($flag)
+223:					$t8_e = 1;
+224:				break;
+225:			default: $t8_d = 2; break;
+226:		}
+227:		echo $t8_d, $t8_e;
+
+		echo $t8_d, $t8_e;
+	                         \_ HERE
+==== 227: ERROR: variable $t8_e might not have been assigned
+228:	
+229:		switch(1){
+230:			case 1: $t8_f = 1; break;
+231:			default: return;
+232:		}
+233:		echo $t8_f;
+234:	
+235:		switch(1){
+236:		case 1:  return;
+237:		default:
+238:			if($flag)
+239:				$t8_g = 1;
+240:			else
+241:				$t8_g = 1;
+242:		}
+243:		echo $t8_g;
+244:	
+245:	# Test 9: try{}catch(){}
+246:	
+247:		try {
+248:			$t9_a = 1;
+249:			if($t9_a == 1)
+250:				throw new AException();
+
+				throw new AException();
+	                                               \_ HERE
+==== 250: notice: throwing AException
+251:			else if($t9_a == 2)
+252:				throw new BException();
+
+				throw new BException();
+	                                               \_ HERE
+==== 252: notice: throwing BException
+253:		}
+254:		catch(CException $e){
+
+		catch(CException $e){
+	                         \_ HERE
+==== 254: ERROR: exception CException not thrown or already caught
+255:			die("exception!");
+256:		}
+257:		catch(BException $e){
+
+		catch(CException $e){
+	                           \_ HERE
+==== 254: notice: caught exception variable $e not used
+258:			$t9_a = 1;
+259:		}
+260:		catch(AException $e){
+
+		catch(BException $e){
+	                           \_ HERE
+==== 257: notice: caught exception variable $e not used
+261:			$t9_a = 1;
+262:			$t9_b = 1;
+263:		}
+264:		echo $t9_a, $t9_b;
+
+		catch(AException $e){
+	                           \_ HERE
+==== 260: notice: caught exception variable $e not used
+
+		echo $t9_a, $t9_b;
+	                         \_ HERE
+==== 264: ERROR: variable $t9_b might not have been assigned
+265:	
+266:		# Test fixed bug:
+267:		$undefined = $undefined;
+
+		$undefined = $undefined;
+	                               \_ HERE
+==== 267: ERROR: variable $undefined does not exist
+268:		echo $undefined;
+269:	}
+270:	
+271:	
+272:	/*. void .*/ function advanced_data_flow_analysis()
+
+			$t9_b = 1;
+	                     \_ HERE
+==== 262: notice: variable $t9_b assigned but never used
+
+					$t8_e = 1;
+	                                     \_ HERE
+==== 223: notice: variable $t8_e assigned but never used
+
+			default: $t8_c = 2; break;
+	                              \_ HERE
+==== 215: notice: variable $t8_c assigned but never used
+
+			case 1: $t8_b = 1; break;
+	                             \_ HERE
+==== 214: notice: variable $t8_b assigned but never used
+
+				$t7_d = 1;
+	                             \_ HERE
+==== 195: notice: variable $t7_d assigned but never used
+
+			$t7_c = 1;
+	                     \_ HERE
+==== 193: notice: variable $t7_c assigned but never used
+
+				$t7_b = 1;
+	                             \_ HERE
+==== 188: notice: variable $t7_b assigned but never used
+
+			$t7_a = 1;
+	                     \_ HERE
+==== 186: notice: variable $t7_a assigned but never used
+
+			$t6_g = 1;
+	                     \_ HERE
+==== 179: notice: variable $t6_g assigned but never used
+
+			$t6_f = 1;
+	                     \_ HERE
+==== 176: notice: variable $t6_f assigned but never used
+
+			$t6_e = 1;
+	                     \_ HERE
+==== 170: notice: variable $t6_e assigned but never used
+
+			$t6_d = 1;
+	                     \_ HERE
+==== 168: notice: variable $t6_d assigned but never used
+
+			$t6_b = 1;
+	                     \_ HERE
+==== 160: notice: variable $t6_b assigned but never used
+
+			$t6_a = 1;
+	                     \_ HERE
+==== 154: notice: variable $t6_a assigned but never used
+
+			$t5_b = 2;
+	                     \_ HERE
+==== 144: notice: variable $t5_b assigned but never used
+
+			$t4_x = 1;
+	                     \_ HERE
+==== 137: notice: variable $t4_x assigned but never used
+
+			$y = 2;
+	                  \_ HERE
+==== 128: notice: variable $y assigned but never used
+
+			$x = 1;
+	                  \_ HERE
+==== 127: notice: variable $x assigned but never used
+
+			$u = 2;
+	                  \_ HERE
+==== 118: notice: variable $u assigned but never used
+
+			$a = 1;
+	                  \_ HERE
+==== 112: notice: variable $a assigned but never used
+273:	{
+274:		$flag = true;
+275:	
+276:	
+277:		# Multiple `break' in sequence:
+278:		do {
+279:			$a = 1;
+280:			if( $flag )  break;
+281:			$b = 1;
+282:			if( $flag )  break;
+283:		} while( $flag );
+284:		echo $a, $b;
+285:		# FIXME: $b should result not assigned
+286:	
+287:	
+288:		# Multiple `break' in sequence:
+289:		switch(1){
+290:	
+291:		case 1:
+292:			$c = 1;
+293:			if( $flag )  break;
+294:			$d = 1;
+295:			break;
+296:	
+297:		default:
+298:			return;
+299:		}
+300:		echo $c, $d;
+301:		# FIXME: $d should result not assigned
+302:	}
+303:	
+304:	echo "still alive\n";
+==== ?: notice: this package is not a library:
+	Uncaught exception Exception at global scope in line 42.
+	Uncaught exception Exception at global scope in line 48.
+END parsing of 5-flow-analysis.php
+==== ?:?: notice: required module standard.php
+Overall test results: 42 errors, 2 warnings.

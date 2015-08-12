@@ -1,0 +1,329 @@
+<HTML>
+<HEAD>
+<TITLE>PHPLint Reference Manual</TITLE>
+<META name=description content="PHPLint Reference Manual">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<LINK rel=stylesheet type='text/css' href='../styles.css'>
+<script type="text/javascript" src="../utils.js"></script>
+</HEAD><BODY onload="buildTOC('toc');">
+
+<h2 id="toc">Functions</h2>
+
+<p>
+A function is a chunk of code with a name and possibly some arguments.
+Once defined, a function can be called from any scope and cannot be
+re-defined. Functions cannot be nested: although PHP allows to do that,
+invoking the container function twice would cause a fatal runtime error.
+Differently from constants and variables, the
+name of a function isn't case sensitive. However, PHPLint checks the right
+spelling and raises a warning if you call a function with a name that
+does not match exactly its declaration. So, for example,
+<code>strlen()</code> cannot be written as <code>StrLen()</code> nor as
+<code>STRLEN()</code>.
+</p>
+
+<div class="note_box">
+<b>PHPLint is case-sensitive</b><br>
+The general rule in PHPLint is that all the identifiers and the keywords
+are always case-sensitive and must be written exactly as defined in the
+PHP manual. This also holds for functions, methods an classes, that are
+case-insensitive in PHP.
+</div>
+
+<p>
+The <i>signature</i> of a function consists of:
+</p>
+
+<ul>
+	<li><b>Type of the returned value.</b></li>
+	
+	<li><b>Type and passing mode of each formal mandatory argument.</b></li>
+	
+	<li><b>Type and passing mode of each default argument.</b></li>
+	
+	<li><b>Presence of arbitrary further optional arguments.</b></li>
+	
+	<li><b>All the errors triggered.</b></li>
+	
+	<li><b>All the checked exceptions thrown.</b></li>
+</ul>
+
+<p>
+	The following function declaration illustrates all the elements of a
+	signature using a DocBlock:
+</p>
+
+<div class="code_box"><pre>
+/**
+ * This function does nothing useful. Only illustrates all the
+ * possible elements of a function signature. We declare this
+ * function private to this package.
+ * @access private
+ * @param int $a First and only mandatory formal argument
+ * passed by value.
+ * @param int &amp; $b First and only mandatory argument passed
+ * by reference.
+ * @param int $d First and only default argument.
+ * @return int Description of the returned type here.
+ * @triggers E_NOTICE Something gone wrong.
+ * @triggers E_WARNING Again, something gone wrong.
+ * @throws ErrorException Something that gone wrong and you should be
+ * aware of; you may catch it and recover or let the program crash.
+ * @throws RuntimeException Unrecoverable problem detected, possibly
+ * a bug in the program, wrong arguments, short of memory, etc.
+ * Something you should not try to recover from, anyway.
+ */
+function f($a, &amp; $b, $d = 123 /*. , args .*/)
+{
+	...
+}
+</pre></div>
+
+
+<p>
+	The same declaration using PHPLint meta-code:
+</p>
+
+<div class="code_box"><pre>
+/*. private int .*/ function f(
+	/*. int .*/ $a,
+	/*. int .*/ &amp; $b,
+	$d = 123 /*. , args .*/)
+/*. triggers E_WARNING, E_NOTICE
+    throws ErrorException, RuntimeException .*/
+{
+	...
+}
+</pre></div>
+
+<p>
+	The two forms, DocBlock and PHPLint meta-code, are perfectly equivalent
+	from the point of view of PHPLint, and can be used also mixed together.
+	The main difference is that DocBlocks allows to enter useful descriptions
+	that are reported in the generated documentation. The other difference is
+	that PHPLint meta-code can be used also to declare function prototypes,
+	where DocBlocks are not allowed.
+</p>
+
+
+
+<h3>Private functions</h3>
+
+<p>
+Functions that are private to the package and that cannot be used
+by other packages can be qualified as "private" using the <code>@access private</code> line tag or the <code>/*. private .*/</code> meta-code modifier.
+Private functions are reported by the PHPLint Documentator inside
+the list of the <b>Private items</b> of the package.
+</p>
+
+
+<h3>Return type</h3>
+
+<p>
+<u>The type returned by the function is optional.</u> Normally, it can be
+guessed by PHPLint parsing the first "<b>return</b> EXPR;" statement that
+appears in the source: the resulting type of the expression gives the type
+of the function; if the expression EXPR is missing, the function does not
+return anything, then this type is <b>void</b>.
+</p>
+
+
+<h3>Formal arguments</h3>
+
+<p>
+<u>The type of the mandatory arguments must always be specified.</u>
+	PHPLint has no other way to determinate their type.
+</p>
+
+<p>
+<u>The type of a default arguments, instead, is optional</u> as it can be guessed
+	from the type of the default value assigned. If the type is specified,
+	the default value must be assignment-compatible with it.
+	In the example above, being the default value 123 an integer number, the
+	same type is assumed for the formal argument $d. For this reason, an
+	explicit declaration of type is optional in this specific case (in the
+	second example it has been omitted).
+</p>
+
+<p>
+	Generally, only if the default value
+	is NULL or the empty array, either a type or a type-cast operator on the
+	generic value must be used because NULL and the empty array do not allows
+	PHPLint to guess a specific type. This example illustrates all these cases
+	using a combination of DocBlock and PHPLint meta-code (which makes all
+	a bit confused):
+</p>
+
+<div class="code_box"><pre>
+/**
+ * @param resource $file0
+ * @param string[int] $names0
+ */
+function g(
+	$file0 = NULL,
+	/*. resource .*/ $file1 = NULL,
+	$file2 = /*. (resource) .*/ NULL,
+	$names0 = array(),
+	/*. string[int] .*/ $names1 = array(),
+	$names2 = /*. (string[int]) .*/ $names2)
+{ ... }
+</pre></div>
+
+<p>
+	In the example above, $file0, $file1 and $file2 are all resources with
+	default value NULL, while $names0, $names1 and $names2 are both arrays of
+	strings with integer keys and the empty array as default value.
+</p>
+
+<p>
+<u>The special meta-code keyword</u> <b>args</b> tells that the function takes
+a variable number of <b>optional arguments</b> that follow the mandatory
+arguments and the default arguments.  For example, the function that follows
+takes one mandatory argument and a variable number of optional arguments:
+</p>
+
+<div class="code_box"><pre>
+/*.void.*/ function PrintArgs(/*.string.*/ $prompt /*. , args.*/)
+{
+    echo $prompt, "\n";
+    $n = func_num_args();
+    for($i = 1; $i &lt;= $n; $i++ )
+        echo (string) func_get_arg($i), "\n";
+}
+</pre></div>
+
+<p>
+Note that a comma character is required before the <code>args</code>
+meta-code keyword.
+</p>
+
+
+
+<h3>Passing method for arguments</h3>
+
+<p>
+When a function is called, every actual argument is evaluated by the
+caller before being passed to the called function and assigned to the
+<i>formal argument</i> inside the code of the function.
+Consider, for example this chunk of code:
+</p>
+
+<div class="code_box">
+<pre>
+function f(
+    <b>/*. int        .*/</b>   $a,   # BY VALUE
+    <b>/*. return int .*/</b> &amp; $b,   # RETURN BY REFERENCE
+    <b>/*. int        .*/</b> &amp; $c)   # BY REFERENCE
+{
+    $b = $a + $c;
+    if( $c &gt; 0 )
+        $c = 0;
+}
+
+
+$carry = -3;
+f(1+2, $result, $carry);
+echo $result;  # 0; $carry===0
+</pre>
+</div>
+
+<p>
+There are 3 passing methods:
+</p>
+
+<ul>
+
+<li>
+<u>By value.</u>
+The formal argument $a that appears in the declaration of the
+function is a variable, local to the function, that receives an incoming value
+from the evaluation of the actual argument, that is the expression
+<code>1+2</code>, and this actual value is copied inside the local variable.
+In a word, from the point of view of the function, arguments passed by value
+are incoming values.
+</li>
+
+<li>
+<u>Return by reference.</u>
+The formal argument $b that appears in the declaration of the function is a
+variable, local to the function, that receives a <i>reference</i> to another
+variable (the actual argument $result), so that the actual and the formal
+variables both refer to the same value. Then, assigning $b also $result will
+be assigned. The attribute <b>return</b> is a special attribute introduced
+by PHPLint telling that this argument will return a value because it will be
+certainly assigned inside the function.
+In other words, the <b>return</b> attribute tells that this argument represents
+an outgoing value from the function to the caller.
+<br>
+PHPLint raises an error if the value of the variable $b is used inside the
+function before being assigned. PHPLint also raises an error if $b is not
+definitely assigned before exiting the function. Moreover, the actual variable
+$result does not need to be assigned at the time the function gets called.
+</li>
+
+<li>
+<u>By reference.</u>
+The formal argument $c is a reference to an actual argument which is a variable
+already assigned by the caller, $carry. Then, variables passed by reference can
+be used inside the function both as incoming and as outgoing values.
+<br>
+PHPLint raises an error if the actual argument $carry is not definitely
+assigned before the call to the function.
+</li>
+
+</ul>
+
+
+<h3>Triggered errors</h3>
+
+<p>
+	<u>Listing all the triggered, non captured errors is mandatory.</u> PHPLint
+	complains if the body of the function may generate any error not declared
+	in the signature (errors can be handled using the "silencer" operator
+	<code>@</code>).
+</p>
+
+<p>
+	The following error labels are recognized:
+</p>
+
+<blockquote><pre>
+E_ERROR
+E_WARNING
+E_PARSE
+E_NOTICE
+E_CORE_ERROR
+E_CORE_WARNING
+E_COMPILE_ERROR
+E_COMPILE_WARNING
+E_USER_ERROR
+E_USER_WARNING
+E_USER_NOTICE
+E_STRICT
+E_RECOVERABLE_ERROR
+E_DEPRECATED
+E_USER_DEPRECATED
+E_ALL
+</pre></blockquote>
+
+
+<h3>Thrown exceptions</h3>
+
+<p>
+	<u>Listing all the thrown checked exceptions is mandatory.</u>
+	Listing thrown unchecked exceptions is optional. Again, PHPLint complains
+	if the body of the function may throw a checked exception not listed in the
+	<code>throws</code> section of the signature or in the <code>@throws</code>
+	line-tag of the
+	DocBlock. Listing unchecked exceptions like <code>RuntimeException</code>
+	above is allowed for documenting the behavior of the function in some
+	edge case. As explained in detail in the chapter about the exceptions,
+	unchecked exceptions should be used to report failures related to the
+	internals of the program: their generation means the program is bugged and
+	should be immediately terminated to avoid even worse disasters.
+</p>
+
+</body>
+</html>

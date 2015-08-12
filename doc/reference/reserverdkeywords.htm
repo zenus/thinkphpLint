@@ -1,0 +1,248 @@
+<HTML>
+<HEAD>
+<TITLE>PHPLint Reference Manual</TITLE>
+<META name=description content="PHPLint Reference Manual">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<LINK rel=stylesheet type='text/css' href='../styles.css'>
+</HEAD><BODY>
+
+<h2>Reserved keywords</h2>
+
+<p>
+There are some differences on how PHP and PHPLint scan the source of
+a program.  PHPLint behave much like a compiler would, first scanning the source
+in distinct symbols and keywords, then parsing the semantic of these
+symbols. Instead, the PHP interpreter act much like a scripting language
+would do, and some of the words that compose the source have a meaning that
+depend on the context.
+</p>
+
+
+<h3>PHP keywords</h3>
+
+<p>
+These keywords are reserved by the parser of the PHP code, and cannot
+be used for names of constants, variables, functions, classes, class
+constants, properties or methods.
+</p>
+
+<center>
+<table border="0" cellspacing="10">
+<tr><td align="left" valign="top">
+<pre>
+FALSE
+NULL
+TRUE
+abstract
+and
+array
+as
+bool
+boolean
+break
+<u>callable</u>
+case
+catch
+class
+clone
+const
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+continue
+declare
+default
+define
+die
+do
+double
+echo
+else
+elseif
+<u>enddeclare</u>
+<u>endfor</u>
+<u>endforeach</u>
+<u>endif</u>
+<u>endswitch</u>
+<u>endwhile</u>
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+exit
+extends
+final
+float
+for
+foreach
+function
+global
+goto
+if
+implements
+include
+include_once
+instanceof
+<u>insteadof</u>
+int
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+integer
+interface
+isset
+<u>list</u>
+namespace
+new
+object
+or
+parent
+print
+private
+protected
+public
+real
+require
+require_once
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+return
+self
+static
+string
+switch
+throw
+<u>trait</u>
+trigger_error
+try
+use
+var
+while
+xor
+<u>yield</u>
+</pre>
+</td>
+</tr></table>
+</center>
+
+<p>
+<u>Underlined</u> keywords are unimplemented in PHPLint and, if found in the
+source, a fatal error is triggered.
+</p>
+
+<p>
+This list of keywords is longer than that stated by the PHP manual.
+Moreover, variables, properties and methods cannot take the name of a
+keyword, also if this name might be valid for the PHP interpreter. For
+example, this code:
+</p>
+
+<blockquote><pre>
+define('function', 'xxxx');
+
+class string
+{
+    private $private = "yyyy";
+
+    function int()
+    {
+        $private = $this->private;
+    }
+}
+</pre></blockquote>
+
+<p>
+is valid for the PHP 5 interpreter, but it is not for PHPLint because the
+constant name <code>function</code>,
+the class name <code>string</code>,
+the property name <code>$private</code>,
+the function name <code>int()</code>,
+the variable name <code>$var</code>
+and the property <code>...->private</code>
+are all reserved keywords. PHPLint will raise an error if a constant or
+variable name collide with a keyword, and a fatal error in all the
+other cases.
+</p>
+
+
+
+<h3>PHPLint keywords</h3>
+
+<p>
+These keywords are reserved by PHPLint when parsing the extended code
+inside the comments "<code>/*.  .*/</code>":
+</p>
+
+<center>
+<table border="0" cellspacing="10">
+<tr><td align="left" valign="top">
+<pre>
+abstract
+args
+array
+bool
+boolean
+class
+else
+end_if_php_ver
+extends
+final
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+float
+forward
+if_php_ver_4
+if_php_ver_5
+implements
+int
+integer
+interface
+missing_break
+missing_default
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+mixed
+namespace
+object
+parent
+pragma
+private
+protected
+public
+require_module
+resource
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+return
+self
+static
+string
+throws
+triggers
+unchecked
+void
+</pre>
+</td>
+</tr>
+</table>
+</center>
+
+<p>
+Since the extended code can include the class names, class names cannot
+collide with these keywords.
+</p>
+
+</body>
+</html>

@@ -1,0 +1,58 @@
+BEGIN parsing of 5-is_a-2.php
+1:	<?php
+2:	
+3:	class C1 {}
+4:	class C2 extends C1 {}
+5:	class C3 extends C2 {}
+6:	
+7:	function f(C2 $obj){}
+8:	f(new C1());  # ERR
+
+	function f(C2 $obj){}
+	                  \_ HERE
+==== 7: notice: variable $obj assigned but never used
+
+	f(new C1());  # ERR
+	           \_ HERE
+==== 8: ERROR: calling f declared in line 7, argument no. 1: found type C1 is not assignment compatible with C2
+9:	f(new C3());
+10:	
+11:	abstract class Abstr {
+12:		abstract public function f1(C2 $c);
+13:	}
+14:	
+15:	class Work1 extends Abstr {
+16:		public function f1(C1 $c){} # ERR
+17:	}
+
+		public function f1(C1 $c){} # ERR
+	                                \_ HERE
+==== 16: notice: variable $c assigned but never used
+18:	
+19:	class Work3 extends Abstr {
+20:		public function f1(C3 $c){} # ERR
+21:	}
+
+		public function f1(C3 $c){} # ERR
+	                                \_ HERE
+==== 20: notice: variable $c assigned but never used
+
+		public function f1(C3 $c){} # ERR
+	                          \_ HERE
+==== 20: ERROR: method Work3::f1 with prototype
+	public void(C3)
+	is not call-compatible with Abstr::f1 with prototype
+	public void(C2)
+	(argument no. 1 is not call-compatible)
+22:	
+23:	function foo(Abstr $obj) {
+24:		$X = new C2();
+25:		$obj->f1($X);
+26:	}
+27:	
+28:	foo(new Work1);
+29:	foo(new Work3);
+30:	
+31:	?>
+END parsing of 5-is_a-2.php
+Overall test results: 2 errors, 0 warnings.

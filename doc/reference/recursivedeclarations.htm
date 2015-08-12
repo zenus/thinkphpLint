@@ -1,0 +1,294 @@
+<HTML>
+<HEAD>
+<TITLE>PHPLint Reference Manual</TITLE>
+<META name=description content="PHPLint Reference Manual">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<LINK rel=stylesheet type='text/css' href='../styles.css'>
+<script type="text/javascript" src="../utils.js"></script>
+</HEAD><BODY onload="buildTOC('toc');">
+
+<h2 id="toc">Recursive declarations</h2>
+
+<p>
+PHPLint is a single-pass parser. With this design, the program becomes simple
+and fast. The drawback is that every item has to be declared before be used,
+and the programmer is forced to declare functions, classes and methods in a
+strict bottom-up order: low-level come first, high-level ones next. However
+there are cases in which functions (or even methods and classes) must call each
+other recursively because this may be the "natural" way to resolve some complex
+algorithms. PHPLint resolves these cases through the <b>forward
+declaration</b>.
+</p>
+
+<p>
+Forward declarations are meta-code statements that may declare the
+<b>prototype</b> of a function, a class or a method, so that these elements can
+be used before being fully declared in actual PHP code.
+</p>
+
+<p>
+All the prototypes declared in a file MUST have their corresponding full
+code declaration in the same file. When PHPLint ends parsing a file, in
+fact, it checks that all the prototypes declared in that file be resolved
+in actual PHP code.
+</p>
+
+
+<h3>Function prototypes</h3>
+
+<p>
+Function prototypes MUST be declared at global scope. Function prototypes
+cannot be declared inside a function or inside a method. This also means that
+function prototypes cannot be used inside files included by a function.
+</p>
+
+<p>
+Function prototypes MUST fully declare the signature of the function, including
+returned type and argument types, as in this example:
+</p>
+
+<div class="code_box">
+<code>/*. forward void function Location(string $url = ); .*/</code>
+</div>
+
+<p>
+Note the reserved keyword <b>forward</b> that marks the prototype. Note also
+that the expression giving the default value of the argument must be left
+empty, so that this value can be indicated only once for all where the
+actual code is implemented.
+</p>
+
+<p>
+The actual code implementing this prototype MUST match exactly the signature
+of the prototype. Here we can rely on the guesses PHPLint performs, but the
+resulting signature must be that expected. For example, the function above
+can be implemented in code omitting the returned type, as this type can
+be guessed by PHPLint:
+</p>
+
+<div class="code_box">
+<pre>function Location(/*. string .*/ $url = NULL)
+{
+    if( $url === NULL )
+        header("Location: http://www.mysite.com/");
+    else
+        header("Location: $url");
+}
+</pre>
+</div>
+
+<p>
+Note that the $url argument has a default value, and this default value has
+been explicitly given only in the actual PHP code and was omitted in the
+prototype.
+</p>
+
+<p>
+Function prototypes can include also the <b>private</b> attribute and
+the <b>args</b> formal argument. The following example illustrates
+a private function that has a mandatory argument, a default argument
+and zero or more optional arguments:
+</p>
+
+<div class="code_box">
+<pre>/*. forward private void function
+    print_list(string $label, string $sept=, args); .*/
+</pre>
+</div>
+
+<p>
+The implementation in actual PHP code must match the same signature:
+</p>
+
+<div class="code_box">
+<pre>/*. private void .*/ function print_list(
+    /*. string .*/ $label,
+    /*. string .*/ $sept = ", "
+    /*., args .*/)
+{
+    #...
+}
+</pre>
+</div>
+
+<p>
+A prototype of function can also declare a set of thrown checked exceptions. In
+the actual function the set of declared thrown exceptions must be a class
+subset of the the set of the declared exceptions in the prototype. In
+particular, note that if the prototype does not declares any thrown exception,
+the actual function cannot throw checked exceptions at all. See the chapter
+devoted to the exceptions for more details.
+</p>
+
+<p>
+None of the examples above actually required a prototype, as none of the
+functions depends recursively from another function (or class).
+If you know any concrete, short example that illustrates the actual need
+for recursive functions, please let me know and I will add it here.
+</p>
+
+
+<h3>Method prototypes</h3>
+
+<p>
+Recursive calls arise also within the methods of a class. In this case some of
+the methods have to be declared <b>forward</b>. Methods prototypes are just
+like function prototypes, with the only difference that methods may have also
+their proper attributes, visibility, <b>static</b> and <b>final</b>.
+</p>
+
+<div class="code_box">
+<pre>
+class Data {
+
+    /*.
+        forward public void function __construct(string $value);
+        forward public Data function getMoreData();
+    .*/
+
+    # From now on __construct() and getMoreData() can be used by
+    # any method and can be declared in PHP code in any order.
+}
+</pre>
+</div>
+
+<p>
+A prototype of method can also declare a set of thrown checked exceptions. In
+the actual method the set of declared thrown exceptions must be a class subset
+of the set of the declared exceptions in the prototype. In particular, note
+that if the prototype does not declares any thrown exception, the actual
+method cannot throw checked exceptions at all. See the chapter devoted to the
+exceptions for more details.
+</p>
+
+
+
+<h3>Class prototypes</h3>
+
+<p>
+A class prototype declares the class name and possibly the signature of some of
+its methods. There is not need to list the signatures of all the methods that
+will be actually declared in the actual PHP code, but only those that are
+involved in recursive declarations or recursive calls. When only the class
+name is involved in a recursive declaration, defining a forward class
+is sufficient:
+</p>
+
+<div class="code_box">
+<pre>/*.  forward class A {}  .*/
+
+class B {
+
+    private $a = /*. (A) .*/ NULL;
+
+    /*. A .*/ function getA(){ return $this->a; }
+}
+
+class A {
+
+    private $b = /*. (B) .*/ NULL;
+
+    /*. B .*/ function getB(){ return $this->b; }
+}
+</pre>
+</div>
+
+<p>
+In more complex cases of recursive dependency among classes, the A class also
+call some methods of B and vice-versa. In this case we declare the prototype of
+the first class along the methods that are required by the B class:
+</p>
+
+<div class="code_box">
+<pre>/*.
+forward class A {
+    void function __construct(mixed $x);
+    int  function someMethod();
+}
+.*/
+
+class B {
+    # Here we can use the A class
+    # and the methods A::__construct()
+    # and A::someMethod().
+}
+
+class A {
+    # Finally, here is the A class,
+    # that may fully use B and its
+    # methods.
+}
+</pre>
+</div>
+
+<p>
+Programmers accustomed to split their program source one class per file,
+may encounter a problem when defining classes that have recursive references.
+Lets take for example two classes A and B, each one declared in its own
+file A.php and B.php respectively. Now suppose both the classes need the other
+one, for example each class has a method that return an object of the other
+class. Here is structure of the source that resolves the recursive references:
+</p>
+
+File A.php:
+<div class="code_box"><pre>
+&lt;?php
+
+/*. forward class A{} .*/
+
+require_once 'B.php';
+
+class A {
+    /*. B .*/ function m(){}
+}
+</pre></div>
+
+
+File B.php:
+<div class="code_box"><pre>
+&lt;?php
+
+/*. forward class B{} .*/
+
+require_once 'A.php';
+
+class B {
+    /*. A .*/ function n(){}
+}
+</pre></div>
+
+
+We note that:
+
+<ul>
+
+<li>
+In every file, the class is declared <b>forward</b>, then the other file is
+included, and finally the <b>forward</b> class is declared in its actual PHP
+code. The order of these elements is essential.
+</li>
+
+<li>
+Every file has a <b>forward</b> declaration for the same class that is declared
+just few lines below in the same file, that make easier to maintain the source
+in case some change be made.
+</li>
+
+<li>
+Each file of this example can be parsed separately by PHPLint, as the
+<code>require_once</code> statements give to PHPLint (and to PHP as well) the
+exact loading sequence of all the classes involved. Moreover, the client
+packages can load any of the two files or even both in any order, since the
+<code>require_once</code> statement ensures all the required files be loaded.
+</li>
+
+</ul>
+
+<p>
+
+</p>
+
+</body>
+</html>

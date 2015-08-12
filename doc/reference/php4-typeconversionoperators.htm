@@ -1,0 +1,204 @@
+<HTML>
+<HEAD>
+<TITLE>PHPLint Reference Manual</TITLE>
+<META name=description content="PHPLint Reference Manual">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<LINK rel=stylesheet type='text/css' href='../styles.css'>
+</HEAD><BODY>
+
+<h2>PHP4 - Type conversion operators</h2>
+
+<p>
+A <i>type conversion operator</i> is a formal conversion of the type of a
+term. Neither the value of the term, nor its type are really changed.
+These type conversion operators are often required because some functions
+return a generic type <b>mixed</b>, <b>array</b> or <b>object</b> that
+does not fit the type of the expression where these function are called.
+Another typical case where a type conversion operator is required
+is to set the correct type for the <code>NULL</code> constant and the
+empty array <code>array()</code>: we already seen some examples in the
+chapter <u>Functions</u>.
+<p>
+
+<pre>
+
+</pre>
+
+<table cellspacing=0 cellpadding=3 border=2>
+
+<tr bgcolor=ccccff>
+<th>Type conversion operator</th>
+<th>Applied to</th>
+<th>Description</th>
+</tr>
+
+<tr>
+<td valign=top><code>/*. (string) .*/<br>/*.&nbsp;(array)&nbsp;.*/<br>/*.&nbsp;(array&nbsp;...)&nbsp;.*/<br>/*. (resource)
+.*/<br>/*. (object) .*/<br>/*.&nbsp;(</code><i>CLASS_NAME</i>&nbsp;<code>)&nbsp;.*/
+</code>
+</td>
+
+<td valign=top><b>null</b></td>
+
+<td valign=top>
+The <code>NULL</code> value can be formally converted into any
+type which is a reference in the PHPLint type model (see chapter
+<u>Types</u>).
+</td>
+</tr>
+
+
+
+<tr>
+<td valign=top><code>
+/*. (bool) .*/<br>
+/*. (int) .*/<br>
+/*. (float) .*/<br>
+/*. (string) .*/<br>
+/*.&nbsp;(array)&nbsp;.*/<br>
+/*.&nbsp;(array&nbsp;...)&nbsp;.*/<br>
+/*. (resource) .*/<br>
+/*. (object) .*/<br>
+/*.&nbsp;(</code><i>CLASS_NAME</i>&nbsp;<code>)&nbsp;.*/
+</code></td>
+
+
+
+<td valign=top><b>mixed</b></td>
+
+<td valign=top>
+A value of the type <b>mixed</b> can be formally converted to any type.
+The program should take care to check the type of the value
+before to do the conversion using one of these functions:
+<code>is_bool()</code>,
+<code>is_int()</code>,
+<code>is_float()</code>,
+<code>is_string()</code>,
+<code>is_array()</code>,
+<code>is_resource()</code>,
+<code>is_object()</code>.
+The class to which an object belong to can be checked with the function
+<code>is_a()</code> (PHP 4) or the binary operator <code>instanceof</code>
+(PHP 5).<br>
+Note that the exact structure of an array cannot be checked easily at
+run-time, so that the correcness of the conversion is in charge to the
+internal logic of the program.<br>
+Note that a value of the type <b>mixed</b> might be <b>NULL</b>;
+you can check this value either using the logical expression
+<code>\$value===NULL</code> or the function <code>is_null(\$value)</code>;
+note that the original type to which this value belonged to cannot be
+guessed at run-time.
+Please, note the <code>is_string()</code>,
+<code>is_array()</code>,
+<code>is_resource()</code>,
+<code>is_object()</code> give <code>FALSE</code> if their argument is the
+value <code>NULL</code>.
+</td>
+</tr>
+
+
+
+<tr>
+<td valign=top><code>/*. (array ... ) .*/</code></td>
+
+<td valign=top><b>array</b></td>
+
+<td valign=top>
+This operator lets to declare
+the structure of a term of the generic type <b>array</b>. Note that
+this operator cannot be applied to an array of a known structure; an
+array of a given structure can be converted to an array of a different
+structure using a specific algorithm.
+</td>
+</tr>
+
+
+
+<tr>
+<td valign=top><code>/*. (object) .*/<br>
+/*. (</code><i>CLASS_NAME</i>&nbsp;<code>)&nbsp;.*/</code>
+</td>
+
+<td valign=top><b>object</b></td>
+
+<td valign=top>
+This operator converts the type of a generic <b>object</b> value to the
+instance of the given class name. Before to apply this operator, the
+program should check the actual class to which the object belong to using
+the <code>instanceof</code> binary operator (PHP 5) or the <code>is_a()</code>
+function (PHP 4).
+</td>
+</tr>
+
+</table>
+
+<pre>
+
+</pre>
+
+Examples:
+
+<blockquote><pre>
+$abc = array("a", "b", "c");
+$cba = /*. (array[int]string) .*/ array_reverse($abc);
+/* Reverse the order of the elements of the array $abc.
+   Note that the formal type-cast conversion operator is
+   required because the function array_reverse() returns
+   a generic array, so loosing info about the actual
+   structure of the resulting array. */
+
+class A { }
+$obj = /*. (A) .*/ NULL;
+/* This variable is an object initially NULL. Since NULL
+   is not a well defined type, a formal type-cast is required. */
+
+$arr = /*. (array[int]string) .*/ array();
+/* An array of strings with int index, initially empty. Since
+   the empty array does not allows to PHPLint to guess neither the
+   type of the index nor the type of the elements, a formal
+   type-cast is required. */
+
+
+class A_DOG { function bark(){} }
+class A_CAT { function miaow(){} }
+
+function Play(/*. object .*/ $obj)
+/*
+    Since this function accepts an object of different
+    classes, type conversion operators will be required.
+*/
+{
+    if( $obj instanceof A_DOG ){
+        echo "It's a dog";
+        $dog = /*. (A_DOG) .*/ $obj;
+        $dog->bark();
+        /* NOTE: $obj->bark() would be correct for PHP, but
+           it would not for PHPLint, since a generic object
+           does not has the method bark().  That's why a new
+           variable $dog needs to be introduced. */
+    } else if( $obj instanceof A_CAT ){
+        echo "It's a cat";
+        $cat = /*. (A_CAT) .*/ $obj;
+        $cat->miaow();
+    } else {
+        echo "It's an unexpected animal";
+    }
+}
+
+Play(new A_DOG());
+Play(new A_CAT());
+</pre></blockquote>
+
+
+<p>
+The last example involving cats and dogs is a typical example of how programs
+<b>should not</b> be written. PHP 5 introduces the interfaces to resolve in a
+more elegant way problems like this. PHP 4 does not has interfaces, but still
+PHPLint allows to declare abstract classes with which a similar result can be
+achieved.
+</p>
+
+</body>
+</html>

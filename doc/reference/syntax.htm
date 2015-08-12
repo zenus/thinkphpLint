@@ -1,0 +1,214 @@
+<HTML>
+<HEAD>
+<TITLE>PHPLint Reference Manual</TITLE>
+<META name=description content="PHPLint Reference Manual">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<LINK rel=stylesheet type='text/css' href='../styles.css'>
+</HEAD><BODY>
+
+<h2>The syntax of PHPLint</h2>
+
+<p>
+The language parsed by PHPLint is a (nearly complete) subset
+of the PHP language. Here the syntax is described through
+the modified BNF formalism (also known as EBNF) - see <a
+href="http://www.icosaedro.it/bnf_chk/index.html">www.icosaedro.it/bnf_chk/index.html</a>
+for more details. The elements whose name begin with "x_" belong to the
+special PHPLint meta-code and they must always appear inside a multi-line
+comment <code>/*. .*/</code>. The package (element no. 1) gives the
+structure of the file being parsed.
+</p>
+
+<blockquote>
+NOTE.
+The official BNF-like syntax of the PHP language is available in the
+file <code>Zend/zend_language_parser.y</code> of the PHP source package.
+A more readable version of this syntax converted in EBNF and formatted
+as HTML is available in the page <a href="http://www.icosaedro.it/articoli/php-syntax.html">PHP
+EBNF Syntax</a> and refers to the PHP version 5.1.1 (the comments are
+in italian language, but the EBNF is still readable by anyone).
+</blockquote>
+
+<!--EBNF_START-->1. package =  { <i>text</i><sub>2</sub> | <i>code_block</i><sub>4</sub> | <i>echo_block</i><sub>5</sub> } [ <i>unclosed_code_block</i><sub>3</sub> ] ;<p>
+2. text =  <code><b>"one or more characters excluding the special sequence &lt;?"</b></code> ;<p>
+3. unclosed_code_block =  ( <code><b>"&lt;?"</b></code> | <code><b>"&lt;?php"</b></code> ) { <i>statement</i><sub>52</sub> | <i>x_function_proto</i><sub>119</sub> | <i>x_class_proto</i><sub>122</sub> } ;<p>
+4. code_block =  <i>unclosed_code_block</i><sub>3</sub> <code><b>"?&gt;"</b></code> ;<p>
+5. echo_block =  <code><b>"&lt;?="</b></code> <i>expr</i><sub>20</sub> { <code><b>","</b></code> <i>expr</i><sub>20</sub> } [ <code><b>";"</b></code> ] <code><b>"?&gt;"</b></code> ;<p>
+6. namespace_separator =  <code><b>"\\"</b></code> ;<p>
+7. qualified_name =  [ <i>namespace_separator</i><sub>6</sub> ] <i>id</i><sub>14</sub> { <i>namespace_separator</i><sub>6</sub> <i>id</i><sub>14</sub> } ;<p>
+8. constant =  <i>qualified_name</i><sub>7</sub> ;<p>
+9. variable =  <code><b>"$"</b></code> <i>id</i><sub>14</sub> ;<p>
+10. func_name =  <i>qualified_name</i><sub>7</sub> ;<p>
+11. class_name =  <i>qualified_name</i><sub>7</sub> ;<p>
+12. class_const =  <i>id</i><sub>14</sub> ;<p>
+13. class_var =  <code><b>"$"</b></code> <i>id</i><sub>14</sub> ;<p>
+14. id =  ( <i>letter</i><sub>15</sub> | <code><b>"_"</b></code> ) { <i>letter</i><sub>15</sub> | <i>digit</i><sub>132</sub> | <code><b>"_"</b></code> } ;<p>
+15. letter =  <code><b>"a".."z"</b></code> | <code><b>"A".."Z"</b></code> | <code><b>"\x7F".."\xFF"</b></code> ;<p>
+16. static_expr =  <code><b>"FALSE"</b></code> | <code><b>"TRUE"</b></code> | <code><b>"NULL"</b></code> | <i>constant</i><sub>8</sub> | <i>literal_int</i><sub>127</sub> | <i>literal_float</i><sub>135</sub> | <i>literal_string</i><sub>138</sub> | [ <code><b>"+"</b></code> | <code><b>"-"</b></code> ] <i>static_expr</i><sub>16</sub> | <i>static_class_const</i><sub>17</sub> | <i>static_array</i><sub>18</sub> | <i>x_formal_typecast</i><sub>168</sub> <i>static_expr</i><sub>16</sub> ;<p>
+17. static_class_const =  ( <i>class_name</i><sub>11</sub> | <code><b>"self"</b></code> | <code><b>"parent"</b></code> ) <code><b>"::"</b></code> <i>class_const</i><sub>12</sub> ;<p>
+18. static_array =  <code><b>"array"</b></code> <code><b>"("</b></code> [ <i>static_array_pair</i><sub>19</sub> { <code><b>","</b></code> <i>static_array_pair</i><sub>19</sub> } [ <code><b>","</b></code> ] ] <code><b>")"</b></code> ;<p>
+19. static_array_pair =  <i>static_expr</i><sub>16</sub> [ <code><b>"=&gt;"</b></code> <i>static_expr</i><sub>16</sub> ] ;<p>
+20. expr =  <i>expr3</i><sub>21</sub> { <code><b>"or"</b></code> <i>expr3</i><sub>21</sub> } ;<p>
+21. expr3 =  <i>expr4</i><sub>22</sub> { <code><b>"xor"</b></code> <i>expr4</i><sub>22</sub> } ;<p>
+22. expr4 =  <i>expr6</i><sub>23</sub> { <code><b>"and"</b></code> <i>expr6</i><sub>23</sub> } ;<p>
+23. expr6 =  <code><b>"print"</b></code> <i>expr6</i><sub>23</sub> | <i>expr7</i><sub>24</sub> { <code><b>"?"</b></code> <i>expr</i><sub>20</sub> <code><b>":"</b></code> <i>expr</i><sub>20</sub> } ;<p>
+24. expr7 =  <i>expr8</i><sub>25</sub> { <code><b>"||"</b></code> <i>expr8</i><sub>25</sub> } ;<p>
+25. expr8 =  <i>expr9</i><sub>26</sub> { <code><b>"&amp;&amp;"</b></code> <i>expr9</i><sub>26</sub> } ;<p>
+26. expr9 =  <i>expr10</i><sub>27</sub> { <code><b>"|"</b></code> <i>expr10</i><sub>27</sub> } ;<p>
+27. expr10 =  <i>expr11</i><sub>28</sub> { <code><b>"^"</b></code> <i>expr11</i><sub>28</sub> } ;<p>
+28. expr11 =  <i>expr12</i><sub>29</sub> { <code><b>"&amp;"</b></code> <i>expr12</i><sub>29</sub> } ;<p>
+29. expr12 =  <i>expr13</i><sub>30</sub> [ ( <code><b>"=="</b></code> | <code><b>"!="</b></code> | <code><b>"&lt;&gt;"</b></code> | <code><b>"==="</b></code> | <code><b>"!=="</b></code> ) <i>expr13</i><sub>30</sub> ] ;<p>
+30. expr13 =  <i>expr14</i><sub>31</sub> [ ( <code><b>"&lt;"</b></code> | <code><b>"&lt;="</b></code> | <code><b>"&gt;"</b></code> | <code><b>"&gt;="</b></code> ) <i>expr14</i><sub>31</sub> ] ;<p>
+31. expr14 =  <i>expr15</i><sub>32</sub> [ ( <code><b>"&lt;&lt;"</b></code> | <code><b>"&gt;&gt;"</b></code> ) <i>expr15</i><sub>32</sub> ] ;<p>
+32. expr15 =  <i>expr16</i><sub>33</sub> [ ( <code><b>"+"</b></code> | <code><b>"-"</b></code> | <code><b>"."</b></code> ) <i>expr16</i><sub>33</sub> ] ;<p>
+33. expr16 =  <i>expr17</i><sub>34</sub> [ ( <code><b>"*"</b></code> | <code><b>"/"</b></code> | <code><b>"%"</b></code> ) <i>expr17</i><sub>34</sub> ] ;<p>
+34. expr17 =  ( <code><b>"!"</b></code> | <code><b>"+"</b></code> | <code><b>"-"</b></code> | <code><b>"~"</b></code> | <code><b>"@"</b></code> ) <i>expr17</i><sub>34</sub> | <i>expr18</i><sub>35</sub> ;<p>
+35. expr18 =  ( <code><b>"++"</b></code> | <code><b>"--"</b></code> ) <i>term</i><sub>36</sub> ;<p>
+36. term =  <code><b>"NULL"</b></code> | <code><b>"FALSE"</b></code> | <code><b>"TRUE"</b></code> | <i>literal_int</i><sub>127</sub> | <code><b>"INF"</b></code> | <code><b>"NAN"</b></code> | <i>literal_float</i><sub>135</sub> | <i>literal_string</i><sub>138</sub> | <code><b>"&amp;"</b></code> <i>term</i><sub>36</sub> | <i>variable</i><sub>9</sub> [ <i>dereference_var</i><sub>37</sub> ] | <i>constant</i><sub>8</sub> | <i>func_call</i><sub>44</sub> [ <i>dereference_object</i><sub>40</sub> ] | <i>class_name</i><sub>11</sub> <i>dereference_static</i><sub>38</sub> | <code><b>"self"</b></code> <i>dereference_static</i><sub>38</sub> | <code><b>"parent"</b></code> <i>dereference_static</i><sub>38</sub> | <i>new</i><sub>46</sub> | <i>clone</i><sub>47</sub> | <i>list</i><sub>42</sub> | <i>isset</i><sub>43</sub> | <i>array</i><sub>50</sub> | <i>x_formal_typecast</i><sub>168</sub> <i>term</i><sub>36</sub> | <code><b>"("</b></code> <i>php_type</i><sub>49</sub> <code><b>")"</b></code> <i>term</i><sub>36</sub> | <code><b>"("</b></code> <i>expr</i><sub>20</sub> <code><b>")"</b></code> ;<p>
+37. dereference_var =  <i>dereference_array</i><sub>39</sub> | <i>dereference_object</i><sub>40</sub> | <i>assign_op</i><sub>41</sub> <i>expr</i><sub>20</sub> | <code><b>"++"</b></code> | <code><b>"--"</b></code> | <code><b>"instanceof"</b></code> ( <i>class_name</i><sub>11</sub> | <code><b>"parent"</b></code> | <code><b>"self"</b></code> ) ;<p>
+38. dereference_static =  <code><b>"::"</b></code> ( <i>class_const</i><sub>12</sub> | <i>class_var</i><sub>13</sub> [ <i>dereference_var</i><sub>37</sub> ] | <i>class_func_call</i><sub>45</sub> [ <i>dereference_object</i><sub>40</sub> ] ) ;<p>
+39. dereference_array =  <code><b>"[]"</b></code> <code><b>"="</b></code> <i>expr</i><sub>20</sub> | <code><b>"["</b></code> <i>expr</i><sub>20</sub> <code><b>"]"</b></code> [ <i>dereference_var</i><sub>37</sub> ] ;<p>
+40. dereference_object =  <code><b>"-&gt;"</b></code> ( <i>class_var</i><sub>13</sub> [ <i>dereference_var</i><sub>37</sub> ] | <i>class_func_call</i><sub>45</sub> [ <i>dereference_object</i><sub>40</sub> ] ) ;<p>
+41. assign_op =  <code><b>"="</b></code> | <code><b>"+="</b></code> | <code><b>"-="</b></code> | <code><b>"*="</b></code> | <code><b>"%="</b></code> | <code><b>"/="</b></code> | <code><b>".="</b></code> | <code><b>"&amp;="</b></code> | <code><b>"|="</b></code> | <code><b>"^="</b></code> | <code><b>"&lt;&lt;="</b></code> | <code><b>"&gt;&gt;="</b></code> ;<p>
+42. list =  <code><b>"list"</b></code> <code><b>"("</b></code> [ <i>variable</i><sub>9</sub> [ <i>dereference_var</i><sub>37</sub> ] ] { <code><b>","</b></code> [ <i>variable</i><sub>9</sub> [ <i>dereference_var</i><sub>37</sub> ] ] } <code><b>")"</b></code> <code><b>"="</b></code> <i>expr</i><sub>20</sub> ;<p>
+43. isset =  <code><b>"isset"</b></code> <code><b>"("</b></code> <i>variable</i><sub>9</sub> [ <i>dereference_var</i><sub>37</sub> ] { <code><b>","</b></code> [ <i>variable</i><sub>9</sub> <i>dereference_var</i><sub>37</sub> ] } <code><b>")"</b></code> ;<p>
+44. func_call =  <i>func_name</i><sub>10</sub> <i>actual_args</i><sub>48</sub> ;<p>
+45. class_func_call =  <i>id</i><sub>14</sub> <i>actual_args</i><sub>48</sub> ;<p>
+46. new =  <code><b>"new"</b></code> { <i>class_name</i><sub>11</sub> | <code><b>"self"</b></code> | <code><b>"parent"</b></code> } [ <i>actual_args</i><sub>48</sub> ] ;<p>
+47. clone =  <code><b>"clone"</b></code> <i>term</i><sub>36</sub> ;<p>
+48. actual_args =  <code><b>"("</b></code> [ <i>expr</i><sub>20</sub> { <code><b>","</b></code> <i>expr</i><sub>20</sub> } ] <code><b>")"</b></code> ;<p>
+49. php_type =  <code><b>"boolean"</b></code> | <code><b>"int"</b></code> | <code><b>"integer"</b></code> | <code><b>"float"</b></code> | <code><b>"double"</b></code> | <code><b>"string"</b></code> ;<p>
+50. array =  <code><b>"array"</b></code> <code><b>"("</b></code> [ <i>element</i><sub>51</sub> { <code><b>","</b></code> <i>element</i><sub>51</sub> } ] <code><b>")"</b></code> ;<p>
+51. element =  [ <i>expr</i><sub>20</sub> <code><b>"=&gt;"</b></code> ] <i>expr</i><sub>20</sub> ;<p>
+52. statement =  <i>namespace</i><sub>54</sub> | <i>use</i><sub>55</sub> | <i>define</i><sub>64</sub> | <i>global_const5</i><sub>65</sub> | <i>global</i><sub>106</sub> | <i>static</i><sub>107</sub> | <i>echo</i><sub>108</sub> | <i>func_decl</i><sub>83</sub> | <i>class_decl</i><sub>84</sub> | <i>declare</i><sub>57</sub> | <i>if</i><sub>109</sub> | <i>for</i><sub>112</sub> | <i>foreach</i><sub>114</sub> | <i>while</i><sub>115</sub> | <i>do</i><sub>116</sub> | <i>switch</i><sub>68</sub> | <i>continue</i><sub>66</sub> | <i>break</i><sub>67</sub> | <i>exit</i><sub>117</sub> | <i>return</i><sub>118</sub> | <i>x_require_module_statement</i><sub>59</sub> | <i>require</i><sub>60</sub> | <i>require_once</i><sub>61</sub> | <i>include</i><sub>62</sub> | <i>include_once</i><sub>63</sub> | <i>expr</i><sub>20</sub> <code><b>";"</b></code> | <i>try</i><sub>73</sub> | <i>throw</i><sub>75</sub> | <i>text_block</i><sub>53</sub> | <i>empty_statement</i><sub>76</sub> | <i>compound_statement</i><sub>77</sub> ;<p>
+53. text_block =  <code><b>"?&gt;"</b></code> { <i>text</i><sub>2</sub> | <i>echo_block</i><sub>5</sub> } <code><b>"&lt;?"</b></code> ;<p>
+54. namespace =  <code><b>"namespace"</b></code> <i>qualified_name</i><sub>7</sub> ( <code><b>";"</b></code> | <i>compound_statement</i><sub>77</sub> ) ;<p>
+55. use =  <code><b>"use"</b></code> <i>use_alias</i><sub>56</sub> { <code><b>","</b></code> <i>use_alias</i><sub>56</sub> } <code><b>";"</b></code> ;<p>
+56. use_alias =  <i>qualified_name</i><sub>7</sub> [ <code><b>"as"</b></code> <i>id</i><sub>14</sub> ] ;<p>
+57. declare =  <code><b>"declare"</b></code> <code><b>"("</b></code> <i>directive</i><sub>58</sub> { <code><b>","</b></code> <i>directive</i><sub>58</sub> } <code><b>")"</b></code> <i>statement</i><sub>52</sub> ;<p>
+58. directive =  <i>id</i><sub>14</sub> <code><b>"="</b></code> <i>static_expr</i><sub>16</sub> ;<p>
+59. x_require_module_statement =  <i>x_require_module</i><sub>172</sub> <i>x_single_quoted</i><sub>177</sub> <i>x_semicolon</i><sub>145</sub> ;<p>
+60. require =  <code><b>"require"</b></code> <i>expr</i><sub>20</sub> <code><b>";"</b></code> ;<p>
+61. require_once =  <code><b>"require_once"</b></code> <i>expr</i><sub>20</sub> <code><b>";"</b></code> ;<p>
+62. include =  <code><b>"include"</b></code> <i>expr</i><sub>20</sub> <code><b>";"</b></code> ;<p>
+63. include_once =  <code><b>"include_once"</b></code> <i>expr</i><sub>20</sub> <code><b>";"</b></code> ;<p>
+64. define =  [ <i>x_private</i><sub>86</sub> ] <code><b>"define"</b></code> <code><b>"("</b></code> <i>expr</i><sub>20</sub> <code><b>","</b></code> <i>expr</i><sub>20</sub> <code><b>")"</b></code> ;<p>
+65. global_const5 =  [ <i>x_private</i><sub>86</sub> ] <code><b>"const"</b></code> <i>id</i><sub>14</sub> <code><b>"="</b></code> <i>static_expr</i><sub>16</sub> { <code><b>","</b></code> <i>constant</i><sub>8</sub> <code><b>"="</b></code> <i>static_expr</i><sub>16</sub> } <code><b>";"</b></code> ;<p>
+66. continue =  <code><b>"continue"</b></code> [ <i>expr</i><sub>20</sub> ] <code><b>";"</b></code> ;<p>
+67. break =  <code><b>"break"</b></code> [ <i>expr</i><sub>20</sub> ] <code><b>";"</b></code> ;<p>
+68. switch =  <code><b>"switch"</b></code> <code><b>"("</b></code> <i>expr</i><sub>20</sub> <code><b>")"</b></code> <code><b>"{"</b></code> { <i>case</i><sub>69</sub> | <i>default</i><sub>70</sub> | <i>x_missing_default</i><sub>72</sub> } <code><b>"}"</b></code> ;<p>
+69. case =  <code><b>"case"</b></code> <i>static_expr</i><sub>16</sub> <code><b>":"</b></code> { <i>statement</i><sub>52</sub> } [ <i>x_missing_break</i><sub>71</sub> ] ;<p>
+70. default =  <code><b>"default"</b></code> <code><b>":"</b></code> { <i>statement</i><sub>52</sub> } [ <i>x_missing_break</i><sub>71</sub> ] ;<p>
+71. x_missing_break =  <i>x_missing_break</i><sub>71</sub> <i>x_semicolon</i><sub>145</sub> ;<p>
+72. x_missing_default =  <i>x_missing_default</i><sub>72</sub> <i>x_colon</i><sub>155</sub> ;<p>
+73. try =  <code><b>"try"</b></code> <code><b>"{"</b></code> { <i>statement</i><sub>52</sub> } <code><b>"}"</b></code> <i>catch</i><sub>74</sub> { <i>catch</i><sub>74</sub> } ;<p>
+74. catch =  <code><b>"catch"</b></code> <code><b>"("</b></code> { <i>class_name</i><sub>11</sub> } <i>variable</i><sub>9</sub> <code><b>")"</b></code> <code><b>"{"</b></code> { <i>statement</i><sub>52</sub> } <code><b>"}"</b></code> ;<p>
+75. throw =  <code><b>"throw"</b></code> <i>expr</i><sub>20</sub> <code><b>";"</b></code> ;<p>
+76. empty_statement =  <code><b>";"</b></code> ;<p>
+77. compound_statement =  <code><b>"{"</b></code> { <i>statement</i><sub>52</sub> } <code><b>"}"</b></code> ;<p>
+78. function =  <i>signature</i><sub>79</sub> [ <i>x_thrown_exceptions</i><sub>126</sub> ] <code><b>"{"</b></code> { <i>statement</i><sub>52</sub> } <code><b>"}"</b></code> ;<p>
+79. signature =  [ <i>x_type</i><sub>170</sub> ] <code><b>"function"</b></code> [ <code><b>"&amp;"</b></code> ] <i>id</i><sub>14</sub> <code><b>"("</b></code> [ <i>formal_args</i><sub>80</sub> ] <code><b>")"</b></code> ;<p>
+80. formal_args =  <i>x_args</i><sub>161</sub> | <i>arg</i><sub>81</sub> { <code><b>","</b></code> <i>arg</i><sub>81</sub> } [ <i>x_comma</i><sub>162</sub> <i>x_args</i><sub>161</sub> ] ;<p>
+81. arg =  [ <i>x_return</i><sub>157</sub> ] [ <i>x_type</i><sub>170</sub> | <i>php5_type_hint</i><sub>82</sub> ] [ <code><b>"&amp;"</b></code> ] <i>variable</i><sub>9</sub> [ <code><b>"="</b></code> <i>static_expr</i><sub>16</sub> ] ;<p>
+82. php5_type_hint =  <code><b>"array"</b></code> [ <i>x_index</i><sub>171</sub> { <i>x_index</i><sub>171</sub> } [ <i>x_type_name</i><sub>169</sub> ] ] | <i>class_name</i><sub>11</sub> | <code><b>"self"</b></code> | <code><b>"parent"</b></code> ;<p>
+83. func_decl =  [ <i>x_private</i><sub>86</sub> ] <i>function</i><sub>78</sub> ;<p>
+84. class_decl =  <i>class4</i><sub>85</sub> | <i>class5</i><sub>94</sub> ;<p>
+85. class4 =  [ <i>x_private</i><sub>86</sub> ] [ <i>x_final</i><sub>87</sub> ] [ <i>x_abstract</i><sub>88</sub> ] <code><b>"class"</b></code> <i>id</i><sub>14</sub> [ <code><b>"extends"</b></code> <i>class_name</i><sub>11</sub> ] <code><b>"{"</b></code> { <i>property4</i><sub>92</sub> | <i>method4</i><sub>93</sub> <i>x_method_proto</i><sub>120</sub> } <code><b>"}"</b></code> ;<p>
+86. x_private =  <code><b>"private"</b></code> ;<p>
+87. x_final =  <code><b>"final"</b></code> ;<p>
+88. x_abstract =  <code><b>"abstract"</b></code> ;<p>
+89. x_visibility =  <code><b>"public"</b></code> | <code><b>"protected"</b></code> | <code><b>"private"</b></code> ;<p>
+90. x_static =  <code><b>"static"</b></code> ;<p>
+91. x_unchecked =  <code><b>"unchecked"</b></code> ;<p>
+92. property4 =  [ <i>x_visibility</i><sub>89</sub> ] <code><b>"var"</b></code> [ <i>x_type</i><sub>170</sub> ] <i>variable</i><sub>9</sub> [ <code><b>"="</b></code> <i>static_expr</i><sub>16</sub> ] { <code><b>","</b></code> <i>variable</i><sub>9</sub> [ <code><b>"="</b></code> <i>static_expr</i><sub>16</sub> ] } <code><b>";"</b></code> ;<p>
+93. method4 =  { <i>x_abstract</i><sub>88</sub> | <i>x_visibility</i><sub>89</sub> | <i>x_static</i><sub>90</sub> | <i>x_final</i><sub>87</sub> } <i>function</i><sub>78</sub> ;<p>
+94. class5 =  <i>class_regular</i><sub>95</sub> | <i>class_interface</i><sub>97</sub> ;<p>
+95. class_regular =  [ <i>x_private</i><sub>86</sub> ] [ <i>x_unchecked</i><sub>91</sub> ] [ <code><b>"final"</b></code> ] [ <code><b>"abstract"</b></code> ] <code><b>"class"</b></code> <i>id</i><sub>14</sub> <i>class_body</i><sub>96</sub> ;<p>
+96. class_body =  [ <i>extends</i><sub>98</sub> ] [ <i>implements</i><sub>99</sub> ] <code><b>"{"</b></code> { <i>const5</i><sub>102</sub> | <i>property5</i><sub>103</sub> | <i>method5</i><sub>104</sub> | <i>x_method_proto</i><sub>120</sub> | <i>abstract_method</i><sub>105</sub> } <code><b>"}"</b></code> ;<p>
+97. class_interface =  [ <i>x_private</i><sub>86</sub> ] <code><b>"interface"</b></code> <i>id</i><sub>14</sub> [ <code><b>"extends"</b></code> <i>class_name</i><sub>11</sub> { <code><b>","</b></code> <i>class_name</i><sub>11</sub> } ] <code><b>"{"</b></code> { <i>public_const5</i><sub>101</sub> | [ <code><b>"static"</b></code> ] <i>signature</i><sub>79</sub> [ <i>x_thrown_exceptions</i><sub>126</sub> ] <code><b>";"</b></code> } <code><b>"}"</b></code> ;<p>
+98. extends =  <code><b>"extends"</b></code> <i>class_name</i><sub>11</sub> ;<p>
+99. implements =  <code><b>"implements"</b></code> <i>class_name</i><sub>11</sub> { <code><b>","</b></code> <i>class_name</i><sub>11</sub> } ;<p>
+100. visibility =  <code><b>"public"</b></code> | <code><b>"protected"</b></code> | <code><b>"private"</b></code> ;<p>
+101. public_const5 =  <code><b>"const"</b></code> <i>id</i><sub>14</sub> <code><b>"="</b></code> <i>static_expr</i><sub>16</sub> { <code><b>","</b></code> <i>constant</i><sub>8</sub> <code><b>"="</b></code> <i>static_expr</i><sub>16</sub> } <code><b>";"</b></code> ;<p>
+102. const5 =  [ <i>x_visibility</i><sub>89</sub> ] <i>public_const5</i><sub>101</sub> ;<p>
+103. property5 =  [ <i>visibility</i><sub>100</sub> ] [ <code><b>"static"</b></code> ] [ <i>x_type</i><sub>170</sub> ] <i>variable</i><sub>9</sub> [ <code><b>"="</b></code> <i>static_expr</i><sub>16</sub> ] { <code><b>","</b></code> <i>variable</i><sub>9</sub> [ <code><b>"="</b></code> <i>static_expr</i><sub>16</sub> ] } <code><b>";"</b></code> ;<p>
+104. method5 =  { <i>visibility</i><sub>100</sub> | <code><b>"static"</b></code> | <code><b>"final"</b></code> } <i>function</i><sub>78</sub> ;<p>
+105. abstract_method =  <code><b>"abstract"</b></code> { <i>visibility</i><sub>100</sub> | <code><b>"static"</b></code> } <i>signature</i><sub>79</sub> [ <i>x_thrown_exceptions</i><sub>126</sub> ] <code><b>";"</b></code> ;<p>
+106. global =  <code><b>"global"</b></code> <i>variable</i><sub>9</sub> { <code><b>","</b></code> <i>variable</i><sub>9</sub> } <code><b>";"</b></code> ;<p>
+107. static =  <code><b>"static"</b></code> [ <i>x_type</i><sub>170</sub> ] <i>variable</i><sub>9</sub> [ <code><b>"="</b></code> <i>static_expr</i><sub>16</sub> ] { <code><b>","</b></code> <i>variable</i><sub>9</sub> [ <code><b>"="</b></code> <i>static_expr</i><sub>16</sub> ] } <code><b>";"</b></code> ;<p>
+108. echo =  <code><b>"echo"</b></code> <i>expr</i><sub>20</sub> { <code><b>","</b></code> <i>expr</i><sub>20</sub> } <code><b>";"</b></code> ;<p>
+109. if =  <code><b>"if"</b></code> <code><b>"("</b></code> <i>expr</i><sub>20</sub> <code><b>")"</b></code> <i>statement</i><sub>52</sub> { <i>elseif</i><sub>110</sub> } [ <i>else</i><sub>111</sub> ] ;<p>
+110. elseif =  <code><b>"elseif"</b></code> <code><b>"("</b></code> <i>expr</i><sub>20</sub> <code><b>")"</b></code> <i>statement</i><sub>52</sub> ;<p>
+111. else =  <code><b>"else"</b></code> <i>statement</i><sub>52</sub> ;<p>
+112. for =  <code><b>"for"</b></code> <code><b>"("</b></code> [ <i>expr_list</i><sub>113</sub> ] <code><b>";"</b></code> [ <i>expr_list</i><sub>113</sub> ] <code><b>";"</b></code> [ <i>expr_list</i><sub>113</sub> ] <code><b>")"</b></code> <i>statement</i><sub>52</sub> ;<p>
+113. expr_list =  <i>expr</i><sub>20</sub> { <code><b>","</b></code> <i>expr</i><sub>20</sub> } ;<p>
+114. foreach =  <code><b>"foreach"</b></code> <code><b>"("</b></code> <i>expr</i><sub>20</sub> <code><b>"as"</b></code> [ <i>variable</i><sub>9</sub> <code><b>"=&gt;"</b></code> ] [ <code><b>"&amp;"</b></code> ] <i>variable</i><sub>9</sub> <code><b>")"</b></code> <i>statement</i><sub>52</sub> ;<p>
+115. while =  <code><b>"while"</b></code> <code><b>"("</b></code> <i>expr</i><sub>20</sub> <code><b>")"</b></code> <i>statement</i><sub>52</sub> ;<p>
+116. do =  <code><b>"do"</b></code> <i>statement</i><sub>52</sub> <code><b>"while"</b></code> <code><b>"("</b></code> <i>expr</i><sub>20</sub> <code><b>")"</b></code> <code><b>";"</b></code> ;<p>
+117. exit =  ( <code><b>"exit"</b></code> | <code><b>"die"</b></code> ) [ <code><b>"("</b></code> [ <i>expr</i><sub>20</sub> ] <code><b>")"</b></code> ] <code><b>";"</b></code> ;<p>
+118. return =  <code><b>"return"</b></code> [ <i>expr</i><sub>20</sub> ] <code><b>";"</b></code> ;<p>
+119. x_function_proto =  <i>x_forward</i><sub>144</sub> [ <i>x_private</i><sub>86</sub> ] <i>x_signature</i><sub>123</sub> [ <i>x_thrown_exceptions</i><sub>126</sub> ] <i>x_semicolon</i><sub>145</sub> ;<p>
+120. x_method_proto =  <i>x_forward</i><sub>144</sub> <i>x_method</i><sub>121</sub> ;<p>
+121. x_method =  { <i>x_visibility</i><sub>89</sub> | <i>x_abstract</i><sub>88</sub> | <i>x_final</i><sub>87</sub> | <i>x_static</i><sub>90</sub> } <i>x_signature</i><sub>123</sub> [ <i>x_thrown_exceptions</i><sub>126</sub> ] <i>x_semicolon</i><sub>145</sub> ;<p>
+122. x_class_proto =  <i>x_forward</i><sub>144</sub> { <i>x_private</i><sub>86</sub> | <i>x_abstract</i><sub>88</sub> | <i>x_unchecked</i><sub>91</sub> } <i>x_class</i><sub>146</sub> <i>x_id</i><sub>165</sub> [ <i>x_extends</i><sub>147</sub> <i>x_qualified_name</i><sub>167</sub> ] [ <i>x_implements</i><sub>148</sub> <i>x_qualified_name</i><sub>167</sub> { <i>x_comma</i><sub>162</sub> <i>x_qualified_name</i><sub>167</sub> } ] <i>x_lbrace</i><sub>153</sub> { <i>x_method</i><sub>121</sub> } <i>x_rbrace</i><sub>154</sub> ;<p>
+123. x_signature =  <i>x_type</i><sub>170</sub> <i>x_function</i><sub>156</sub> [ <i>x_by_ref</i><sub>158</sub> ] <i>x_id</i><sub>165</sub> <i>x_lround</i><sub>149</sub> [ <i>x_formal_args</i><sub>124</sub> ] <i>x_rround</i><sub>150</sub> ;<p>
+124. x_formal_args =  <i>x_args</i><sub>161</sub> | <i>x_arg</i><sub>125</sub> { <i>x_comma</i><sub>162</sub> <i>x_arg</i><sub>125</sub> } [ <i>x_comma</i><sub>162</sub> <i>x_args</i><sub>161</sub> ] ;<p>
+125. x_arg =  [ <i>x_return</i><sub>157</sub> ] <i>x_type</i><sub>170</sub> [ <i>x_by_ref</i><sub>158</sub> ] <i>x_variable</i><sub>176</sub> [ <i>x_eq</i><sub>160</sub> ] ;<p>
+126. x_thrown_exceptions =  <i>x_throws</i><sub>159</sub> <i>x_qualified_name</i><sub>167</sub> { <i>x_comma</i><sub>162</sub> <i>x_qualified_name</i><sub>167</sub> } ;<p>
+127. literal_int =  <i>literal_int_8</i><sub>128</sub> | <i>literal_int_10</i><sub>129</sub> | <i>literal_int_16</i><sub>130</sub> ;<p>
+128. literal_int_8 =  <code><b>"0"</b></code> <i>digit8</i><sub>131</sub> { <i>digit8</i><sub>131</sub> } ;<p>
+129. literal_int_10 =  <code><b>"1".."9"</b></code> { <i>digit</i><sub>132</sub> } ;<p>
+130. literal_int_16 =  <code><b>"0x"</b></code> <i>digit16</i><sub>133</sub> { <i>digit16</i><sub>133</sub> } ;<p>
+131. digit8 =  <code><b>"0".."7"</b></code> ;<p>
+132. digit =  <code><b>"0".."9"</b></code> ;<p>
+133. digit16 =  <i>digit</i><sub>132</sub> | <code><b>"a".."f"</b></code> | <code><b>"A".."F"</b></code> ;<p>
+134. digits =  <i>digit</i><sub>132</sub> { <i>digit</i><sub>132</sub> } ;<p>
+135. literal_float =  <i>digits</i><sub>134</sub> ( <i>decimals</i><sub>136</sub> | <i>scale</i><sub>137</sub> | <i>decimals</i><sub>136</sub> <i>scale</i><sub>137</sub> ) ;<p>
+136. decimals =  <code><b>"."</b></code> <i>digits</i><sub>134</sub> ;<p>
+137. scale =  ( <code><b>"e"</b></code> | <code><b>"E"</b></code> ) [ <code><b>"+"</b></code> | <code><b>"-"</b></code> ] <i>digits</i><sub>134</sub> ;<p>
+138. literal_string =  <i>single_quoted</i><sub>139</sub> | <i>double_quoted</i><sub>140</sub> | <i>here_doc</i><sub>?</sub> ;<p>
+139. single_quoted =  <code><b>"'"</b></code> { <code><b>"\\\\"</b></code> | <code><b>"\\'"</b></code> | <code><b>"any char except '\\"</b></code> } <code><b>"'"</b></code> ;<p>
+140. double_quoted =  <code><b>"\""</b></code> { <i>escaped_char</i><sub>141</sub> | <i>escaped_octal</i><sub>142</sub> | <i>escaped_hex</i><sub>143</sub> | <i>variable</i><sub>9</sub> | <code><b>"any char except \" \\ $"</b></code> } <code><b>"\""</b></code> ;<p>
+141. escaped_char =  <code><b>"\\"</b></code> ( <code><b>"n"</b></code> | <code><b>"r"</b></code> | <code><b>"t"</b></code> | <code><b>"\\"</b></code> | <code><b>"$"</b></code> | <code><b>"{"</b></code> | <code><b>"\""</b></code> ) ;<p>
+142. escaped_octal =  <code><b>"\\"</b></code> <i>digit8</i><sub>131</sub> [ <i>digit8</i><sub>131</sub> [ <i>digit8</i><sub>131</sub> ] ] ;<p>
+143. escaped_hex =  <code><b>"\\"</b></code> ( <code><b>"x"</b></code> | <code><b>"X"</b></code> ) <i>digit16</i><sub>133</sub> [ <i>digit16</i><sub>133</sub> ] ;<p>
+144. x_forward =  <code><b>"forward"</b></code> ;<p>
+145. x_semicolon =  <code><b>";"</b></code> ;<p>
+146. x_class =  <code><b>"class"</b></code> ;<p>
+147. x_extends =  <code><b>"extends"</b></code> ;<p>
+148. x_implements =  <code><b>"implements"</b></code> ;<p>
+149. x_lround =  <code><b>"("</b></code> ;<p>
+150. x_rround =  <code><b>")"</b></code> ;<p>
+151. x_lsquare =  <code><b>"["</b></code> ;<p>
+152. x_rsquare =  <code><b>"]"</b></code> ;<p>
+153. x_lbrace =  <code><b>"{"</b></code> ;<p>
+154. x_rbrace =  <code><b>"}"</b></code> ;<p>
+155. x_colon =  <code><b>":"</b></code> ;<p>
+156. x_function =  <code><b>"function"</b></code> ;<p>
+157. x_return =  <code><b>"return"</b></code> ;<p>
+158. x_by_ref =  <code><b>"&amp;"</b></code> ;<p>
+159. x_throws =  <code><b>"throws"</b></code> ;<p>
+160. x_eq =  <code><b>"="</b></code> ;<p>
+161. x_args =  <code><b>"args"</b></code> ;<p>
+162. x_comma =  <code><b>","</b></code> ;<p>
+163. x_self =  <code><b>"self"</b></code> ;<p>
+164. x_parent =  <code><b>"parent"</b></code> ;<p>
+165. x_id =  <i>id</i><sub>14</sub> ;<p>
+166. x_namespace_separator =  <code><b>"\\"</b></code> ;<p>
+167. x_qualified_name =  [ <i>x_namespace_separator</i><sub>166</sub> ] <i>x_id</i><sub>165</sub> { <i>x_namespace_separator</i><sub>166</sub> <i>x_id</i><sub>165</sub> } ;<p>
+168. x_formal_typecast =  <i>x_lround</i><sub>149</sub> <i>x_type</i><sub>170</sub> <i>x_rround</i><sub>150</sub> ;<p>
+169. x_type_name =  <code><b>"void"</b></code> | <code><b>"boolean"</b></code> | <code><b>"int"</b></code> | <code><b>"integer"</b></code> | <code><b>"float"</b></code> | <code><b>"double"</b></code> | <code><b>"string"</b></code> | <code><b>"resource"</b></code> | <code><b>"mixed"</b></code> | <code><b>"object"</b></code> | <i>x_qualified_name</i><sub>167</sub> | <i>x_self</i><sub>163</sub> | <i>x_parent</i><sub>164</sub> ;<p>
+170. x_type =  <i>x_type_name</i><sub>169</sub> { <i>x_index</i><sub>171</sub> } | <i>x_array</i><sub>175</sub> [ <i>x_index</i><sub>171</sub> { <i>x_index</i><sub>171</sub> } <i>x_type_name</i><sub>169</sub> ] ;<p>
+171. x_index =  <i>x_lsquare</i><sub>151</sub> [ <i>x_int</i><sub>173</sub> | <i>x_string</i><sub>174</sub> ] <i>x_rsquare</i><sub>152</sub> ;<p>
+172. x_require_module =  <code><b>"require_module"</b></code> ;<p>
+173. x_int =  <code><b>"int"</b></code> ;<p>
+174. x_string =  <code><b>"string"</b></code> ;<p>
+175. x_array =  <code><b>"array"</b></code> ;<p>
+176. x_variable =  <code><b>"$"</b></code> <i>id</i><sub>14</sub> ;<p>
+177. x_single_quoted =  <code><b>"'"</b></code> { <code><b>"\\\\"</b></code> | <code><b>"\\'"</b></code> | <code><b>"any char except '\\"</b></code> } <code><b>"'"</b></code> ;<p>
+<!--EBNF_END-->
+
+</body>
+</html>

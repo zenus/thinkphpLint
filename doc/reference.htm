@@ -1,0 +1,60 @@
+<html>
+<head>
+<title>PHPLint - Reference Manual</title>
+<META name=description content="PHPLint Reference Manual">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<script type="text/javascript">
+/**
+ * Global variable QueryString containing all the parameters from URL.
+ * This code proposed by "Quentin"
+ * http://stackoverflow.com/questions/979975/how-to-get-the-value-from-url-parameter
+ */
+var QueryString = function () {
+	// This function is anonymous, is executed immediately and 
+	// the return value is assigned to QueryString!
+	var query_string = {};
+	var query = window.location.search.substring(1);
+	var vars = query.split("&");
+	for (var i=0;i<vars.length;i++) {
+		var pair = vars[i].split("=");
+		// If first entry with this name
+		if (typeof query_string[pair[0]] === "undefined") {
+			query_string[pair[0]] = pair[1];
+		// If second entry with this name
+		} else if (typeof query_string[pair[0]] === "string") {
+			var arr = [ query_string[pair[0]], pair[1] ];
+			query_string[pair[0]] = arr;
+		// If third or later entry with this name
+		} else {
+			query_string[pair[0]].push(pair[1]);
+		}
+	} 
+	return query_string;
+} ();
+
+function setStartPage()
+{
+	var p = "reference/introduction.htm";
+	if ( QueryString["p"] )
+		p = "reference/" + QueryString["p"] + ".htm";
+	document.getElementById('right').src = p;
+}
+
+setTimeout(setStartPage, 0);
+</script>
+</head>
+<frameset rows="70,*">
+	<frame src="reference/top.htm" name="top">
+	<frameset cols="25%,*">
+		<frame src="reference/index.htm" name="left">
+		<frame src="reference/introduction.htm" name="right" id="right">
+	</frameset>
+</frameset>
+<body>
+<noframes>
+<a href="reference/index.html">PHPLint Reference Manual - Index</a>
+</noframes>
+</body>
+</html> 

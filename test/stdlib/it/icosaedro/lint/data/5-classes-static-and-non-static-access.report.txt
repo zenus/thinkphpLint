@@ -1,0 +1,26 @@
+BEGIN parsing of 5-classes-static-and-non-static-access.php
+1:	<?php
+2:	
+3:	class C {
+4:	static function s(){}
+5:	function ns(){}
+6:	function m(){ C::ns(); }
+7:	static function sm(){ C::ns(); } # ERR
+
+	static function sm(){ C::ns(); } # ERR
+	                            \_ HERE
+==== 7: ERROR: static access to non-static method C::ns is allowed only from non-static context of its class or subclass
+8:	}
+9:	
+10:	$o = new C();
+11:	$o->s();
+12:	$o->ns();
+13:	$o->m();
+14:	C::s();
+15:	C::ns(); # ERR
+
+	C::ns(); # ERR
+	      \_ HERE
+==== 15: ERROR: static access to non-static method C::ns is allowed only from non-static context of its class or subclass
+END parsing of 5-classes-static-and-non-static-access.php
+Overall test results: 2 errors, 0 warnings.

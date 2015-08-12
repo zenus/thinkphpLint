@@ -1,0 +1,12 @@
+BEGIN parsing of 5-final-methods.php
+1:	<?php
+2:	
+3:	# interface methods (and then, constructors too) cannot be `final':
+4:	
+5:	interface aa {
+6:		final /*. void .*/ function __construct();
+
+		final /*. void .*/ function __construct();
+	             \_ HERE
+==== 6: ERROR: (FATAL) expected `function' declaration in interface class, found symbol sym_final
+Overall test results: 1 errors, 0 warnings.

@@ -1,0 +1,177 @@
+BEGIN parsing of 5-errors-unhandled.php
+1:	<?php
+2:	
+3:	/*. require_module 'standard'; .*/
+4:	
+5:	
+6:	trigger_error("", 0);
+
+	trigger_error("", 0);
+	                    \_ HERE
+==== 6: notice: triggering 0
+
+	trigger_error("", 0);
+	                    \_ HERE
+==== 6: Warning: unhandled error 0 at global scope
+7:	
+8:	trigger_error("", E_ERROR);
+
+	trigger_error("", E_ERROR);
+	                          \_ HERE
+==== 8: notice: triggering E_ERROR
+
+	trigger_error("", E_ERROR);
+	                          \_ HERE
+==== 8: Warning: unhandled error E_ERROR at global scope
+9:	
+10:	trigger_error("", E_USER_ERROR);
+
+	trigger_error("", E_USER_ERROR);
+	                               \_ HERE
+==== 10: notice: triggering E_USER_ERROR
+
+	trigger_error("", E_USER_ERROR);
+	                               \_ HERE
+==== 10: Warning: unhandled error E_USER_ERROR at global scope
+11:	
+12:	fopen("", "");
+
+	fopen("", "");
+	              \_ HERE
+==== 12: notice: triggering E_WARNING
+
+	fopen("", "");
+	              \_ HERE
+==== 12: Warning: unhandled error E_WARNING at global scope
+13:	
+14:	
+15:	function f()
+16:	{
+17:		trigger_error("", 0);
+
+		trigger_error("", 0);
+	                            \_ HERE
+==== 17: notice: triggering 0
+18:	
+19:		trigger_error("", E_ERROR);
+
+		trigger_error("", E_ERROR);
+	                                  \_ HERE
+==== 19: notice: triggering E_ERROR
+
+		trigger_error("", E_ERROR);
+	                                  \_ HERE
+==== 19: ERROR: f: error E_ERROR must be handled or declared to be triggered
+20:	
+21:		trigger_error("", E_USER_WARNING);
+
+		trigger_error("", E_USER_WARNING);
+	                                         \_ HERE
+==== 21: notice: triggering E_USER_WARNING
+
+		trigger_error("", E_USER_WARNING);
+	                                         \_ HERE
+==== 21: ERROR: f: error E_USER_WARNING must be handled or declared to be triggered
+22:	
+23:		trigger_error("", E_USER_ERROR);
+
+		trigger_error("", E_USER_ERROR);
+	                                       \_ HERE
+==== 23: notice: triggering E_USER_ERROR
+
+		trigger_error("", E_USER_ERROR);
+	                                       \_ HERE
+==== 23: ERROR: f: error E_USER_ERROR must be handled or declared to be triggered
+24:	
+25:		fopen("", "");
+
+		fopen("", "");
+	                      \_ HERE
+==== 25: notice: triggering E_WARNING
+
+		fopen("", "");
+	                      \_ HERE
+==== 25: ERROR: f: error E_WARNING must be handled or declared to be triggered
+26:	}
+27:	
+28:	
+29:	class MyClass {
+30:		/*. void .*/ function m()
+31:		{
+32:			trigger_error("", 0);
+
+			trigger_error("", 0);
+	                                    \_ HERE
+==== 32: notice: triggering 0
+33:	
+34:			trigger_error("", E_ERROR);
+
+			trigger_error("", E_ERROR);
+	                                          \_ HERE
+==== 34: notice: triggering E_ERROR
+
+			trigger_error("", E_ERROR);
+	                                          \_ HERE
+==== 34: ERROR: MyClass::m: error E_ERROR must be handled or declared to be triggered
+35:	
+36:			trigger_error("", E_USER_WARNING);
+
+			trigger_error("", E_USER_WARNING);
+	                                                 \_ HERE
+==== 36: notice: triggering E_USER_WARNING
+
+			trigger_error("", E_USER_WARNING);
+	                                                 \_ HERE
+==== 36: ERROR: MyClass::m: error E_USER_WARNING must be handled or declared to be triggered
+37:	
+38:			trigger_error("", E_USER_ERROR);
+
+			trigger_error("", E_USER_ERROR);
+	                                               \_ HERE
+==== 38: notice: triggering E_USER_ERROR
+
+			trigger_error("", E_USER_ERROR);
+	                                               \_ HERE
+==== 38: ERROR: MyClass::m: error E_USER_ERROR must be handled or declared to be triggered
+39:	
+40:			fopen("", "");
+
+			fopen("", "");
+	                              \_ HERE
+==== 40: notice: triggering E_WARNING
+
+			fopen("", "");
+	                              \_ HERE
+==== 40: ERROR: MyClass::m: error E_WARNING must be handled or declared to be triggered
+41:		}
+42:	}
+43:	
+44:	
+45:	f();
+46:	
+47:	$o = new MyClass();
+48:	$o->m();
+49:	
+50:	@f();
+51:	
+52:	@$o->m();
+53:	
+54:	trigger_error("", 12345);
+
+	trigger_error("", 12345);
+	                        \_ HERE
+==== 54: notice: triggering 12345
+
+	trigger_error("", 12345);
+	                        \_ HERE
+==== 54: Warning: unhandled error 12345 at global scope
+55:	
+==== ?: notice: this package is not a library:
+	Unhandled error 0 at global scope in line 6.
+	Unhandled error E_ERROR at global scope in line 8.
+	Unhandled error E_USER_ERROR at global scope in line 10.
+	Unhandled error E_WARNING at global scope in line 12.
+	Unhandled error 12345 at global scope in line 54.
+END parsing of 5-errors-unhandled.php
+==== ?:?: notice: required module standard.php
+Overall test results: 8 errors, 5 warnings.

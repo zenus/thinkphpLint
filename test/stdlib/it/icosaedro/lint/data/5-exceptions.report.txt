@@ -1,0 +1,312 @@
+BEGIN parsing of 5-exceptions.php
+1:	<?php
+2:	
+3:	/*. require_module 'standard'; .*/
+4:	
+5:	class NotAnException {}
+6:	class AException extends Exception {}
+7:	class BException extends AException {}
+8:	class CException extends BException {}
+9:	
+10:	throw new NotAnException();
+
+	throw new NotAnException();
+	                           \_ HERE
+==== 10: ERROR: not an exception: NotAnException
+11:	
+12:	function f1()
+
+	function f1()
+	        \_ HERE
+==== 12: ERROR: unreachable statement
+13:	/*. throws AException, BException .*/
+14:	{ }
+15:	
+16:	
+17:	function test_good()
+18:	# More specialized exceptions should be cought first.
+19:	{
+20:		try { f1(); }
+
+		try { f1(); }
+	                   \_ HERE
+==== 20: notice: throwing BException
+
+		try { f1(); }
+	                   \_ HERE
+==== 20: notice: throwing AException
+21:		catch( BException $e ){}
+22:		catch( AException $e ){}
+
+		catch( BException $e ){}
+	                            \_ HERE
+==== 21: notice: caught exception variable $e not used
+23:	}
+
+		catch( AException $e ){}
+	                            \_ HERE
+==== 22: notice: caught exception variable $e not used
+24:	
+25:	function test_wrong_order()
+26:	# More general (i.e. parent) exceptions hide the more specialized ones.
+27:	{
+28:		try { f1(); }
+
+		try { f1(); }
+	                   \_ HERE
+==== 28: notice: throwing BException
+
+		try { f1(); }
+	                   \_ HERE
+==== 28: notice: throwing AException
+29:		catch( AException $e ){}
+30:		catch( BException $e ){}  # this branch never used
+
+		catch( AException $e ){}
+	                            \_ HERE
+==== 29: notice: caught exception variable $e not used
+
+		catch( BException $e ){}  # this branch never used
+	                          \_ HERE
+==== 30: ERROR: exception BException not thrown or already caught
+31:	}
+
+		catch( BException $e ){}  # this branch never used
+	                            \_ HERE
+==== 30: notice: caught exception variable $e not used
+32:	
+33:	function test_catch_all()
+34:	# Lazy programmers prefers to catch Exception.
+35:	{
+36:		try { f1(); }
+
+		try { f1(); }
+	                   \_ HERE
+==== 36: notice: throwing BException
+
+		try { f1(); }
+	                   \_ HERE
+==== 36: notice: throwing AException
+37:		catch( Exception $e ){}
+38:	}
+
+		catch( Exception $e ){}
+	                           \_ HERE
+==== 37: notice: caught exception variable $e not used
+39:	
+40:	function test_catch_partial()
+41:	# Uncought exceptions are exported by the func/method.
+42:	{
+43:		try { f1(); }
+
+		try { f1(); }
+	                   \_ HERE
+==== 43: notice: throwing BException
+
+		try { f1(); }
+	                   \_ HERE
+==== 43: notice: throwing AException
+44:		catch( BException $e ){}
+45:	}
+
+		catch( BException $e ){}
+	                            \_ HERE
+==== 44: notice: caught exception variable $e not used
+
+	}
+	 \_ HERE
+==== 45: notice: throwing AException
+
+	}
+	 \_ HERE
+==== 45: ERROR: test_catch_partial: exception AException must be caught or declared to be thrown
+46:	
+47:	class C1 {
+48:		public function m() /*. throws BException .*/{}
+49:	}
+50:	
+51:	class C2 extends C1 {
+52:		public function m() /*. throws BException .*/{}
+53:	}
+54:	
+55:	class C3 extends C1 {
+56:		public function m(){}
+57:	}
+58:	
+59:	class C4 extends C1 {
+60:		public function m() /*. throws AException, BException, CException .*/{}
+61:	}
+
+		public function m() /*. throws AException, BException, CException .*/{}
+	                         \_ HERE
+==== 60: ERROR: method C4::m with prototype
+	public void() throws CException, BException, AException
+	is not call-compatible with C1::m with prototype
+	public void() throws BException
+	(unexpected thrown checked exceptions)
+62:	
+63:	class C5 extends C1 {
+64:		public function m() /*. throws CException .*/{}
+65:	}
+66:	
+67:	class C6 extends C1 {
+68:		public function m() /*. throws AException .*/{}
+69:	}
+
+		public function m() /*. throws AException .*/{}
+	                         \_ HERE
+==== 68: ERROR: method C6::m with prototype
+	public void() throws AException
+	is not call-compatible with C1::m with prototype
+	public void() throws BException
+	(unexpected thrown checked exceptions)
+70:	
+71:	interface I1 {
+72:		public function m() /*. throws BException .*/ ;
+73:	}
+74:	
+75:	class CI1 implements I1 {
+76:		public function m() /*. throws BException .*/{}
+77:	}
+78:	
+79:	class CI2 implements I1 {
+80:		public function m(){}
+81:	}
+82:	
+83:	class CI3 implements I1 {
+84:		public function m() /*. throws AException, BException, CException .*/{}
+85:	}
+
+		public function m() /*. throws AException, BException, CException .*/{}
+	                         \_ HERE
+==== 84: ERROR: method CI3::m with prototype
+	public void() throws CException, BException, AException
+	is not call-compatible with I1::m with prototype
+	public void() throws BException
+	(unexpected thrown checked exceptions)
+86:	
+87:	/*. forward void function f2() throws BException, CException; .*/
+88:	
+89:	/*. void .*/ function f2()
+90:	/*. throws AException, BException .*/
+91:	{
+
+	/*. void .*/ function f2()
+	                        \_ HERE
+==== 89: ERROR: function f2 with prototype
+	void function f2() throws BException, AException
+	does not match the forward declaration in line 87 with prototype
+	void function f2() throws CException, BException
+92:	}
+93:	
+94:	class C7 {
+95:		/*.
+96:			forward void function m() throws BException, CException;
+97:			forward void function n() throws BException, CException;
+98:		.*/
+99:	
+100:		public function m()
+101:		/*. throws BException .*/
+102:		{}
+
+		public function m()
+	                         \_ HERE
+==== 100: ERROR: method C7::m with prototype
+	public void() throws BException
+	does not match the forward declaration in line 96 with prototype
+	public void() throws CException, BException
+103:	
+104:		public function n()
+105:		/*. throws AException, BException .*/
+106:		{}
+
+		public function n()
+	                         \_ HERE
+==== 104: ERROR: method C7::n with prototype
+	public void() throws BException, AException
+	does not match the forward declaration in line 97 with prototype
+	public void() throws CException, BException
+107:	}
+108:	
+109:	
+110:	# Guessed functions cannot throw exceptions:
+111:	# Ok:
+112:	guessed_func();
+
+	guessed_func();
+	             \_ HERE
+==== 112: ERROR: unresolved function guessed_func
+113:	function guessed_func(){}
+114:	# BAD:
+115:	guessed_func2();
+
+	guessed_func2();
+	              \_ HERE
+==== 115: ERROR: unresolved function guessed_func2
+116:	function guessed_func2(){ throw new Exception(); }
+
+	function guessed_func2(){ throw new Exception(); }
+	                                                \_ HERE
+==== 116: notice: throwing Exception
+
+	function guessed_func2(){ throw new Exception(); }
+	                                                \_ HERE
+==== 116: ERROR: guessed_func2: exception Exception must be caught or declared to be thrown
+117:	guessed_func3();
+
+	guessed_func3();
+	              \_ HERE
+==== 117: ERROR: unresolved function guessed_func3
+118:	function guessed_func3()/*. throws Exception .*/{ throw new Exception(); }
+
+	function guessed_func3()/*. throws Exception .*/{ throw new Exception(); }
+	                                                                        \_ HERE
+==== 118: notice: throwing Exception
+119:	
+120:	
+121:	# Guessed methods cannot throw exceptions:
+122:	class CheckExceptionsInGuessedMethods {
+123:	
+124:		function m1(){
+125:			$this->m2();
+
+			$this->m2();
+	                          \_ HERE
+==== 125: ERROR: unknown method CheckExceptionsInGuessedMethods::m2
+126:			$this->m3();
+
+			$this->m3();
+	                          \_ HERE
+==== 126: ERROR: unknown method CheckExceptionsInGuessedMethods::m3
+127:			$this->m4();
+
+			$this->m4();
+	                          \_ HERE
+==== 127: ERROR: unknown method CheckExceptionsInGuessedMethods::m4
+128:		}
+129:	
+130:		# Ok:
+131:		function m2(){}
+132:	
+133:		# BAD:
+134:		function m3(){ throw new Exception(); }
+
+		function m3(){ throw new Exception(); }
+	                                             \_ HERE
+==== 134: notice: throwing Exception
+
+		function m3(){ throw new Exception(); }
+	                                             \_ HERE
+==== 134: ERROR: CheckExceptionsInGuessedMethods::m3: exception Exception must be caught or declared to be thrown
+135:		function m4() /*. throws Exception .*/ { throw new Exception(); }
+
+		function m4() /*. throws Exception .*/ { throw new Exception(); }
+	                                                                       \_ HERE
+==== 135: notice: throwing Exception
+136:	}
+137:	
+138:	
+139:	?>
+END parsing of 5-exceptions.php
+==== ?:?: notice: required module standard.php
+Overall test results: 18 errors, 0 warnings.

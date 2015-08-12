@@ -1,0 +1,649 @@
+<HTML>
+<HEAD>
+<TITLE>PHPLint Reference Manual</TITLE>
+<META name=description content="PHPLint Reference Manual">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<LINK rel=stylesheet type='text/css' href='../styles.css'>
+<script type="text/javascript" src="../utils.js"></script>
+</HEAD><BODY onload="buildTOC('toc');">
+
+<h2 id="toc">Type-casting</h2>
+
+
+<p>
+With the word <i>type-casting</i> we mean a way to convert a given type or value
+into another type or value. This conversion can happen at validation time (and
+then it is a bare type conversion that involves PHPLint only) or at execution
+time (and then it is a type conversion or value conversion process that
+involves both PHPLint and PHP).
+</p>
+
+
+<h3>Value conversion operators</h3>
+
+<p>
+A <i>value conversion operator</i> is an internal function of the PHP
+interpreter that converts a value of a given type into a value of
+another type. The general syntax is a sub-expression of the form:
+</p>
+
+<blockquote><code>(type) term</code></blockquote>
+
+<p>
+PHPLint (and PHP) allows for these value conversion operators:
+</p>
+
+<pre>
+
+</pre>
+
+<table cellspacing=0 cellpadding=3 border=2>
+
+<tr bgcolor=ccccff>
+<th>Value conversion operator</th>
+<th>Applied to</th>
+<th>Description</th>
+</tr>
+
+<tr>
+<td valign=top><code>(int)</code></td>
+
+<td valign=top><b>boolean</b></td>
+
+<td valign=top>
+Gives <code>0</code> if the boolean term
+is <code>FALSE</code>, or <code>1</code> if <code>TRUE</code>.
+</td>
+</tr>
+
+
+
+<tr>
+<td valign=top><code>(bool)</code></td>
+
+<td valign=top><b>int</b></td>
+
+<td valign=top>
+Gives <code>FALSE</code> if the value of the
+term is zero; gives <code>TRUE</code> for any other integer value.
+</td>
+</tr>
+
+
+
+<tr>
+<td valign=top><code>(float)</code></td>
+
+<td valign=top><b>int</b></td>
+
+<td valign=top>
+Gives the floating-point representation of the
+integer number.
+</td>
+</tr>
+
+
+
+<tr>
+<td valign=top><code>(string)</code></td>
+
+<td valign=top><b>int</b></td>
+
+<td valign=top>
+Gives the string representation of the
+integer number in decimal notation; a leading minus sign is prepended
+if negative.
+</td>
+</tr>
+
+
+
+<tr>
+<td valign=top><code>(int)</code></td>
+
+<td valign=top><b>float</b></td>
+
+<td valign=top>
+Gives an integer number that is the integral
+part of the given floating-point number. If the float number is too large,
+or it is not finite, an unpredictable value results.
+</td>
+</tr>
+
+
+
+<tr>
+<td valign=top><code>(string)</code></td>
+
+<td valign=top><b>float</b></td>
+
+<td valign=top>
+Gives a string representation of the given
+floating-point number in decimal notation, possibly also \"NAN\", \"INF\" or \"-INF\". Note that in the conversion
+from the internal binary representation to the decimal representation
+we might loose precision.
+</td>
+</tr>
+
+
+
+<tr>
+<td valign=top><code>(int)</code></td>
+
+<td valign=top><b>string</b></td>
+
+<td valign=top>
+Given a string that is the decimal
+representation of an integer number, gives the corresponding integer
+number. If the string is not a valid representation of an integer number,
+or it is a number too large, the result is an undefined integer value.
+If the string is <code>NULL</code>, the result is <code>0</code>.
+</td>
+</tr>
+
+
+
+<tr>
+<td valign=top><code>(float)</code></td>
+
+<td valign=top><b>string</b></td>
+
+<td valign=top>
+Given a string that is the decimal
+representation of a floating-point number, gives the corresponding
+floating-point number. If the string is not a valid representation
+of a floating-point number, or it is too large, the result is an
+undefined floating-point value. Note that in the conversion from the
+decimal representation to the internal binary representation we might
+loose precision.
+If the string is <code>NULL</code>, the result is
+<code>0.0</code>.
+<br>
+<b>WARNING.</b> Non-finite representations of floating point numbers are not
+translated properly: the strings \"NAN\" and \"INF\" both give 0.0, while
+\"-INF\" gives -0.0. These special values must then be converted apart.
+</td>
+</tr>
+
+
+
+<tr>
+<td valign=top><code>(bool)<br>(int)<br>(float)<br>(string)</code></td>
+
+<td valign=top><b>mixed</b></td>
+
+<td valign=top>
+Since the type
+of the term is known only at run-time, the program should take care to
+detect the actual type of the value using one of the following functions
+and then apply the proper value conversion operator:
+<code>is_bool()</code>, <code>is_int()</code>, <code>is_float()</code>,
+<code>is_number()</code>, <code>is_string()</code>. Please note that
+<code>is_string(\$s)</code> will give <code>FALSE</code> if <code>\$s===NULL</code>.
+</td>
+</tr>
+
+
+
+<tr>
+<td valign=top><code>(string)</code></td>
+
+<td valign=top><b><i>object of some class</i></b></td>
+
+<td valign=top>
+In PHP 5 objects of classes providing the <code>__toString()</code> method
+can be converted to <b>string</b>. Objects that does not implement that method
+cannot be converted automatically to string and an error is reported.
+</td>
+</tr>
+
+</table>
+<pre>
+
+</pre>
+
+
+
+
+<h3>Formal type conversion operators</h3>
+
+<p>
+A <i>type conversion operator</i> allows to specify the exact type of the
+<tt>NULL</tt> value and of the empty array <tt>array()</tt>, so driving PHPLint
+to the correct interpretation of these values.
+<p>
+
+<pre>
+
+</pre>
+
+<table cellspacing=0 cellpadding=3 border=2>
+
+<tr bgcolor=ccccff>
+<th>Type conversion operator</th>
+<th>Applied to</th>
+<th>Description</th>
+</tr>
+
+<tr>
+<td valign=top><code>/*. (string) .*/<br>/*.&nbsp;(array)&nbsp;.*/<br>/*.&nbsp;(array&nbsp;...)&nbsp;.*/<br>/*. (resource)
+.*/<br>/*. (object) .*/<br>/*.&nbsp;(</code><i>CLASS_NAME</i>&nbsp;<code>)&nbsp;.*/
+</code>
+</td>
+
+<td valign=top><b>null</b></td>
+
+<td valign=top>
+The <code>NULL</code> value can be formally converted into any
+type which is a reference according to the PHPLint type model (see chapter
+<u>Types</u>).
+</td>
+</tr>
+
+
+
+<tr>
+<td valign=top><code>/*. (array ... ) .*/</code></td>
+
+<td valign=top><b>array()</b></td>
+
+<td valign=top>
+This operator allows to declare
+the structure of the empty <b>array()</b>. Note that
+this operator cannot be applied to an array of a known structure; an
+array of a given structure can be converted to an array of a different
+structure using a specific algorithm.
+</td>
+
+</table>
+<pre>
+
+
+</pre>
+
+<p>Examples:</p>
+
+<div class="code_box"><pre>
+$processed_users = <b>/*. (string[int]) .*/ array()</b>;
+
+$logger = <b>/*. (LoggerInterface) .*/ NULL</b>;
+
+
+/*. string .*/ function makeTmpFile($dir = <b>/*. (string) .*/ NULL</b>)
+{
+    if( $dir === NULL )
+        $dir = "C:\\TEMP";
+    return tempnam($dir, "dat");
+}
+</pre></div>
+
+
+
+
+
+<h3>The cast(T,V) magic function</h3>
+
+<div class="note_box">
+<b><code>cast()</code> is not available under PHP 4</b><br>
+The <code>cast()</code> magic function is available only under PHP 5. Under PHP
+4 you may stick with the unsafe formal type conversion operator <code>/*. (T)
+.*/</code> that does not perform any check at runtime, but assumes the
+programmer already made the required checks with some test code, for example:
+<pre>
+if ( $x instanceof MyClass )
+    $p = /*. (MyClass) .*/ $x;
+else
+    die("invalid value for x");</pre>
+</div>
+
+<p>
+The chapter <b>PHPLint's Standard Library</b> describes the <tt>cast.php</tt>
+package that provides the standard implementation of the <code>cast()</code>
+function. Importing this package in your programs allows then to perfom formal
+typecast that are checked at runtime:
+</p>
+
+<blockquote>
+<code>$x = cast(<i>T</i>, <i>V</i>);</code>
+</blockquote>
+
+<p>
+where <code><i>T</i></code> is a string giving the type descriptor,
+and <code><i>V</i></code> is any expression.
+The <tt>cast()</tt> magic function then provides 2 well distinct features:
+
+<ul>
+
+<li>
+<b>At parse time</b> tells to PHPLint that <code><i>T</i></code> is the
+expected type of <code><i>V</i></code>.
+</li>
+
+<li>
+<b>At runtime</b> the value <code><i>V</i></code> must be a valid value for
+the type expected. Note that the special NULL value is a valid value for
+all those types that are "references" according to the PHPLint type model,
+then string, resource, array or object.
+</li>
+
+</ul>
+
+<p>
+It is important to stress that the <tt>cast()</tt> magic function <b>does not
+perform any value conversion</b> and it either returns the same value
+<code><i>V</i></code> if valid, or it throws ErrorException if the value does
+not match the type.
+</p>
+
+<p>
+The <tt>cast()</tt> magic function is "magic" in the sense that if a function
+with this name gets defined, PHPLint handles it in a special way. First
+of all, this function must have a signature that match this prototype:
+</p>
+
+<blockquote><pre>
+mixed <b>cast</b>(string $type, mixed $value)
+    throws CastException;
+</pre></blockquote>
+
+<p>
+where <tt>$value</tt> is some expression whose type has to be checked against
+the <tt>$type</tt> descriptor specified. The type descriptor must be an
+expression of type string that PHPLint can evaluate statically; normally it is
+a literal string. Class names must be indicated with their fully qualified name,
+for example <code>it\icosaedro\bignumbers\BigInt</code>. Hint: inside a method, the PHP magic constant <code>__CLASS__</code> privides the FQN of the
+class itself, while <code>MyClass::class</code> is a more general way to get the
+FQN of a class.
+</p>
+
+<p>
+Then this function does not really return <tt>mixed</tt> as the prototype
+states, but instead always returns a value of the specified type, or a value
+whose type is compatible with it according to the specifications that follow.
+</p>
+<p>
+The syntax of the type accepted by <tt>cast()</tt> can be described
+in EBNF form as follows (the vertical bar is the alternative operator,
+while <code>{A}</code> is a part that may be repeated 0 or more times):
+</p>
+
+
+<blockquote><pre>
+type = type_name {index} | "array" index {index} [type_name];
+
+type_name = "mixed" | "boolean" | "bool" | "int" | "float" | "double" | "real"
+            | "string" | "resource" | "object" | FQN_OF_CLASS;
+
+index = "[]" | "[int]" | "[string]";
+</pre></blockquote>
+
+
+<p>
+It is important to note that:
+
+<ul>
+
+<li>
+<b>A mixed type</b> has been added to the other real PHP types; at runtime
+it matches any value.
+</li>
+
+<li>
+<code>array[]mixed</code>, <code>array[]</code> and <code>mixed[]</code> have
+the same exact meaning and match any array, with any type of index and any type
+of elements as values, or also the NULL value, which is an allowed value for
+several different types according to the type model of PHPLint.
+</li>
+
+<li>
+<tt>object</tt> matches any instance of a class, or even the NULL value for the
+same reason stated above.
+</li>
+
+<li>
+<b>Classes must be always indicated with their fully qualified name.</b> This
+requirements is due to the runtime implementation of the <code>cast()</code>
+function: in fact, at runtime, that function cannot know
+which is the namespace context from which it has been called, so partial class
+names cannot be resolved at that level. That's why the fully qualified name
+of the class must be specified in order to univocally resolve and possibly
+autoload the class. Absolute class names are not allowed, that is, the name of
+the class CANNOT start with back-slash.
+</li>
+
+</ul>
+
+<p>
+The type descriptor is a string that gets parsed at runtime, which is a quite
+expensive task. The result of the parsing is then cached internally in a
+compiled form by the <code>cast()</code> function and a fast look-up retrieves
+the same compiled form whenever the same type descriptor is required again
+later.
+</p>
+
+<p>
+	The following table summarizes the allowed type-casting operations.
+	Basically, the requested type T must be assignable to the type E as detected
+	by PHPLint, with the only exception of int that cannot be assigned to
+	float:
+</p>
+
+
+<pre>
+
+</pre>
+<table border=1 cellspacing=0 cellpadding=5 align="center">
+
+<tr>
+<th colspan=2 rowspan=2>cast(T,V)</th>
+<th colspan=8>Type of V as detected by PHPLint</th>
+</tr>
+
+<tr bgcolor="#aaaaff">
+<th>boolean</th>
+<th>int</th>
+<th>float</th>
+<th>string</th>
+<th>array</th>
+<th>resource</th>
+<th>object or<br>MyClass</th>
+<th>mixed</th>
+</tr>
+
+
+<tr>
+<th rowspan=8>T</th>
+<th bgcolor="#aaaaff">"mixed"</th>
+<td bgcolor="#aaffaa">OK</td>
+<td bgcolor="#aaffaa">OK</td>
+<td bgcolor="#aaffaa">OK</td>
+<td bgcolor="#aaffaa">OK</td>
+<td bgcolor="#aaffaa">OK</td>
+<td bgcolor="#aaffaa">OK</td>
+<td bgcolor="#aaffaa">OK</td>
+<td bgcolor="#aaffaa">OK</td>
+</tr>
+
+
+<tr>
+<th bgcolor="#aaaaff">"boolean"</th>
+<td bgcolor="#aaffaa">OK<sup>(b)</sup></td>
+<td>NO</td>
+<td>NO</td>
+<td>NO</td>
+<td>NO</td>
+<td>NO</td>
+<td>NO</td>
+<td bgcolor="#aaffaa">OK<sup>(a)</sup></td>
+</tr>
+
+
+<tr>
+<th bgcolor="#aaaaff">"int"</th>
+<td>NO</td>
+<td bgcolor="#aaffaa">OK<sup>(b)</sup></td>
+<td>NO<sup>(e)</sup></td>
+<td>NO<sup>(d)</sup></td>
+<td>NO</td>
+<td>NO</td>
+<td>NO</td>
+<td bgcolor="#aaffaa">OK<sup>(a)</sup></td>
+</tr>
+
+
+<tr>
+<th bgcolor="#aaaaff">"float"</th>
+<td>NO</td>
+<td>NO<sup>(f)</sup></td>
+<td bgcolor="#aaffaa">OK<sup>(b)</sup></td>
+<td>NO<sup>(d)</sup></td>
+<td>NO</td>
+<td>NO</td>
+<td>NO</td>
+<td bgcolor="#aaffaa">OK<sup>(a)</sup></td>
+</tr>
+
+
+<tr>
+<th bgcolor="#aaaaff">"string"</th>
+<td>NO<sup>(g)</sup></td>
+<td>NO<sup>(h)</sup></td>
+<td>NO<sup>(h)</sup></td>
+<td bgcolor="#aaffaa">OK<sup>(b)</sup></td>
+<td>NO</td>
+<td>NO</td>
+<td>NO<sup>(i)</sup></td>
+<td bgcolor="#aaffaa">OK<sup>(a)</sup></td>
+</tr>
+
+
+<tr>
+<th bgcolor="#aaaaff">"array..."</th>
+<td>NO</td>
+<td>NO</td>
+<td>NO</td>
+<td>NO</td>
+<td bgcolor="#aaffaa">OK<sup>(j)</sup></td>
+<td>NO</td>
+<td>NO</td>
+<td bgcolor="#aaffaa">OK<sup>(j)</sup></td>
+</tr>
+
+
+<tr>
+<th bgcolor="#aaaaff">"resource"</th>
+<td>NO</td>
+<td>NO</td>
+<td>NO</td>
+<td>NO</td>
+<td>NO</td>
+<td bgcolor="#aaffaa">OK<sup>(b)</sup></td>
+<td>NO</td>
+<td bgcolor="#aaffaa">OK<sup>(a)</sup></td>
+</tr>
+
+
+<tr>
+<th bgcolor="#aaaaff">"object" or<br>"MyClass"</th>
+<td>NO</td>
+<td>NO</td>
+<td>NO</td>
+<td>NO</td>
+<td>NO</td>
+<td>NO</td>
+<td bgcolor="#aaffaa">OK<sup>(c)</sup></td>
+<td bgcolor="#aaffaa">OK<sup>(a)</sup></td>
+</tr>
+
+</table>
+<p>
+<b>Legenda:</b><br>
+a) <code>code("T",<i>mixed</i>)</code> performs runtime check on the actual
+type of the mixed expression, and performs <i>unboxing</i>.
+b) <code>cast("T",<i>T</i>)</code> is useless has PHPLint already has detected
+the type of the expression.<br>
+c) In <code>cast("CLASS", $obj)</code> $obj must be NULL or CLASS must be
+subclass of $obj.<br>
+d) To convert a string representing a number into number use the PHP's typecast
+operators <code>(int)</code> and <code>(float)</code>.<br>
+e) To convert float into int you may use the PHP's typecast operator
+<code>(int)</code>.<br>
+f) To convert int into float you may use the PHP's typecast operator
+<code>(float)</code>.<br>
+g) To convert boolean into string you may use this espression:
+<code>((V?) "TRUE" : "FALSE")</code>.<br>
+h) To convert int or float into string you may use the PHP's typecast operator
+<code>(int)</code> and <code>(float)</code>. The function
+<code>sprintf()</code> provides a finer control on the result.<br>
+i) Objects that implements the <code>__toString()</code> method can be converted
+into string either using the PHP's <code>(string)</code> typecast operator or
+calling directly that method. That method is invoked automatically for objects
+that appear in string concatenation and inside the <code>echo</code> statement.
+<br>
+j) As a general rule, <code>cast("E[I]",V)</code> matches only V
+of type mixed that at runtime is NULL or an array of the specified exact type,
+or a generic array of unspecified index type and elements that at runtime
+are of the exact specified type.<br>
+
+
+
+
+
+<p>
+Examples:
+</p>
+
+
+<blockquote>
+<code>$name = cast("string", $_GET['name']);</code>
+<p>
+If <code>$_GET['n']</code> is not set this statement gives E_NOTICE and
+evaluates to NULL; if errors to exceptions remapping is enabled, an
+ErrorException is thrown. If set, it can be either a string or an array: in the
+first case that string is assigned to $name; in the latter case an
+ErrorException is thrown. The final result is that the <code>$name</code> takes
+either NULL or a string of characters.
+</blockquote>
+
+<blockquote>
+<code>$bi = cast("it\\icosaedro\\bignumbers\\BigInt", $_SESSION['v']);</code>
+<p>
+If <code>$_SESSION['v']</code> is not set, this statement gives E_NOTICE and
+evaluates to NULL; if errors to exceptions remapping is enabled, an
+ErrorException is thrown. If set, its value matches the type only if NULL or if
+it is an instance of the specified class. The final result is that the
+<code>$bi</code> variable takes either NULL or an instance of the specified
+class.
+</blockquote>
+
+<blockquote>
+<code>$names = cast("string[int]", unserialize($names_serialized));</code>
+<p>
+If the <code>unserialize()</code> function fails to decode the data, an
+E_NOTICE is raised and that function returns FALSE; if errors to exceptions
+remapping is enabled, an ErrorException is thrown. The resulting unserialized
+value must be either the NULL value or an array of strings with int indeces, or
+ErrorException is thrown. The final result is that the <code>$names</code>
+variable takes a value compatible with the expected type.
+</blockquote>
+
+<p>
+	The expression giving the type can be any statically evaluable string
+	expression, for example:
+</p>
+
+<div class="code_box"><pre>
+$a = cast(__CLASS__ . "[int]", $m);
+</pre></div>
+
+<p>
+	being __CLASS__ the magic constant giving the fully qualified name of the
+	current class; variables, functions or any other expression that cannot
+	be evaluated statically is forbidden here.
+</p>
+
+
+</body>
+</html>

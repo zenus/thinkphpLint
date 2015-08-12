@@ -1,0 +1,200 @@
+BEGIN parsing of 5-all-modules-test.php
+1:	<?php
+2:	# Formal test of all the modules:
+3:	
+4:	/*.
+5:	
+6:	require_module 'apache';
+7:	require_module 'bcmath';
+8:	require_module 'bz2';
+9:	require_module 'calendar';
+10:	require_module 'com';
+11:	require_module 'cpdf';
+12:	require_module 'ctype';
+13:	require_module 'curl';
+14:	require_module 'dba';
+15:	require_module 'dbase';
+16:	require_module 'dbx';
+17:	require_module 'dio';
+18:	require_module 'dom';
+19:	require_module 'exif';
+20:	require_module 'fam';
+21:	require_module 'fbsql';
+22:	require_module 'fdf';
+23:	require_module 'fileinfo';
+24:	require_module 'filepro';
+25:	require_module 'filter';
+26:	require_module 'ftp';
+27:	require_module 'gd';
+28:	require_module 'gettext';
+29:	require_module 'gmp';
+30:	require_module 'hash';
+31:	require_module 'hwapi';
+32:	require_module 'iconv';
+33:	require_module 'imap';
+34:	require_module 'informix';
+35:	require_module 'ingres';
+36:	require_module 'interbase';
+37:	require_module 'intl';
+38:	require_module 'ircg';
+39:	require_module 'json';
+40:	require_module 'ldap';
+41:	require_module 'libxml';
+42:	require_module 'mbstring';
+43:	require_module 'mcrypt';
+44:	require_module 'mcve';
+45:	require_module 'mhash';
+46:	require_module 'ming';
+47:	require_module 'mnogosearch';
+48:	require_module 'msession';
+49:	require_module 'msql';
+50:	require_module 'mssql';
+51:	require_module 'mysql';
+52:	require_module 'mysqli';
+53:	require_module 'ncurses';
+54:	require_module 'nsapi';
+55:	require_module 'oci';
+56:	require_module 'odbc';
+57:	require_module 'openssl';
+58:	require_module 'oracle';
+59:	require_module 'ovrimossql';
+60:	require_module 'pcntl';
+61:	require_module 'pcre';
+62:	require_module 'pdo';
+63:	require_module 'pfpro';
+64:	require_module 'pgsql';
+65:	require_module 'phar';
+66:	require_module 'posix';
+67:	require_module 'pspell';
+68:	require_module 'readline';
+69:	require_module 'recode';
+70:	require_module 'regex';
+71:	require_module 'session';
+72:	require_module 'shmop';
+73:	require_module 'simplexml';
+74:	require_module 'snmp';
+75:	require_module 'soap';
+76:	require_module 'sockets';
+77:	require_module 'spl';
+78:	require_module 'sqlite';
+79:	require_module 'sqlite3';
+80:	require_module 'standard';
+81:	require_module 'standard_reflection';
+82:	require_module 'streams';
+83:	require_module 'sybase';
+84:	require_module 'sysvmsg';
+85:	require_module 'sysvsem';
+86:	require_module 'sysvshm';
+87:	require_module 'tidy';
+88:	require_module 'tokenizer';
+89:	require_module 'variant';
+90:	require_module 'wddx';
+91:	require_module 'xdebug';
+92:	require_module 'xml';
+93:	require_module 'xmlreader';
+94:	require_module 'xmlrpc';
+95:	require_module 'xmlwriter';
+96:	require_module 'xsl';
+97:	require_module 'yp';
+98:	require_module 'zip';
+99:	require_module 'zlib';
+100:	
+101:	.*/
+102:	
+103:	# Done.
+END parsing of 5-all-modules-test.php
+==== ?:?: notice: unused module mbstring.php
+==== ?:?: notice: unused module com.php
+==== ?:?: notice: unused module fileinfo.php
+==== ?:?: notice: unused module pfpro.php
+==== ?:?: notice: unused module recode.php
+==== ?:?: notice: unused module hwapi.php
+==== ?:?: notice: unused module gmp.php
+==== ?:?: notice: unused module calendar.php
+==== ?:?: notice: unused module pcre.php
+==== ?:?: notice: unused module phar.php
+==== ?:?: notice: unused module xmlreader.php
+==== ?:?: notice: unused module standard_reflection.php
+==== ?:?: notice: unused module dio.php
+==== ?:?: notice: unused module dba.php
+==== ?:?: notice: unused module pspell.php
+==== ?:?: notice: unused module sqlite3.php
+==== ?:?: notice: unused module xmlwriter.php
+==== ?:?: notice: unused module ming.php
+==== ?:?: notice: unused module exif.php
+==== ?:?: notice: unused module odbc.php
+==== ?:?: notice: unused module ncurses.php
+==== ?:?: notice: unused module iconv.php
+==== ?:?: notice: unused module dbx.php
+==== ?:?: notice: unused module cpdf.php
+==== ?:?: notice: unused module sqlite.php
+==== ?:?: notice: unused module msql.php
+==== ?:?: notice: unused module fbsql.php
+==== ?:?: notice: unused module interbase.php
+==== ?:?: notice: unused module sockets.php
+==== ?:?: notice: unused module bcmath.php
+==== ?:?: notice: unused module wddx.php
+==== ?:?: notice: unused module regex.php
+==== ?:?: notice: unused module readline.php
+==== ?:?: notice: unused module ovrimossql.php
+==== ?:?: notice: unused module filepro.php
+==== ?:?: notice: unused module xmlrpc.php
+==== ?:?: notice: unused module gettext.php
+==== ?:?: notice: unused module ingres.php
+==== ?:?: notice: unused module soap.php
+==== ?:?: notice: unused module ctype.php
+==== ?:?: notice: unused module pcntl.php
+==== ?:?: notice: unused module sysvshm.php
+==== ?:?: notice: unused module curl.php
+==== ?:?: notice: unused module libxml.php
+==== ?:?: notice: unused module informix.php
+==== ?:?: notice: unused module simplexml.php
+==== ?:?: notice: unused module zlib.php
+==== ?:?: notice: unused module xsl.php
+==== ?:?: notice: unused module mysql.php
+==== ?:?: notice: unused module shmop.php
+==== ?:?: notice: unused module oracle.php
+==== ?:?: notice: unused module oci.php
+==== ?:?: notice: unused module hash.php
+==== ?:?: notice: unused module apache.php
+==== ?:?: notice: unused module pdo.php
+==== ?:?: notice: unused module sybase.php
+==== ?:?: notice: unused module streams.php
+==== ?:?: notice: unused module json.php
+==== ?:?: notice: unused module yp.php
+==== ?:?: notice: unused module mcrypt.php
+==== ?:?: notice: unused module tidy.php
+==== ?:?: notice: unused module gd.php
+==== ?:?: notice: unused module ldap.php
+==== ?:?: notice: unused module sysvsem.php
+==== ?:?: notice: unused module intl.php
+==== ?:?: notice: unused module mcve.php
+==== ?:?: notice: unused module ircg.php
+==== ?:?: notice: unused module mssql.php
+==== ?:?: notice: unused module zip.php
+==== ?:?: notice: unused module snmp.php
+==== ?:?: notice: unused module openssl.php
+==== ?:?: notice: unused module sysvmsg.php
+==== ?:?: notice: unused module fam.php
+==== ?:?: notice: unused module fdf.php
+==== ?:?: notice: unused module pgsql.php
+==== ?:?: notice: unused module mnogosearch.php
+==== ?:?: notice: unused module xdebug.php
+==== ?:?: notice: unused module filter.php
+==== ?:?: notice: unused module bz2.php
+==== ?:?: notice: unused module msession.php
+==== ?:?: notice: unused module variant.php
+==== ?:?: notice: unused module xml.php
+==== ?:?: notice: unused module ftp.php
+==== ?:?: notice: unused module session.php
+==== ?:?: notice: unused module imap.php
+==== ?:?: notice: unused module nsapi.php
+==== ?:?: notice: unused module posix.php
+==== ?:?: notice: unused module mysqli.php
+==== ?:?: notice: unused module dbase.php
+==== ?:?: notice: unused module tokenizer.php
+==== ?:?: notice: unused module mhash.php
+==== ?:?: notice: required module standard.php
+==== ?:?: notice: required module spl.php
+==== ?:?: notice: required module dom.php
+Overall test results: 0 errors, 0 warnings.

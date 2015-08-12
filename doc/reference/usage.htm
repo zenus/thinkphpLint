@@ -1,0 +1,449 @@
+<HTML>
+<HEAD>
+<TITLE>PHPLint Reference Manual</TITLE>
+<META name=description content="PHPLint Reference Manual">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<LINK rel=stylesheet type='text/css' href='../styles.css'>
+<script type="text/javascript" src="../utils.js"></script>
+</HEAD><BODY onload="buildTOC('toc');">
+
+<h2 id="toc">Usage</h2>
+
+<p>
+The distributed package comes with a script file in the root directory of
+the distributes package named
+<code>phpl</code> (Unix, Linux) or <code>phpl.bat</code> (Windows) that
+starts the PHPLint validator. The <code>README.txt</code> file explains
+how to configure the PHP interpreter and how to start the program.
+</p>
+
+
+<h3>Syntax of the command line</h3>
+</a>
+
+<p>
+The general syntax of the command is:
+</p>
+
+<blockquote>
+<code>phpl [ option | file ] ...</code>
+</blockquote>
+
+<p>
+where the arguments are any combination of files and options. Options
+start with an hyphen "-", so that file names cannot start with this
+character. All the arguments are parsed from left to right, and the files are
+parsed in the order, so that every option affects only the files to its right.
+</p>
+
+<p>
+Normally only one source file at a time should be parsed, leaving to PHPLint
+to follow recursively other required packages included with
+<code>require_once</code>.
+</p>
+
+<p>
+Several files can also be provided as well, and they are parsed in the
+order. But be careful because PHPLint collects items defined in each source
+parsed, so it cannot detect if some of these files omits to include any of
+the sources already scanned. It is ok to scan several, unrelated, files at once
+in order to detect possible collisions among global items: this test can
+be useful if you plan, later, to include all these files in some application.
+</p>
+
+<p>
+Many options are flags and have the form <code>--xxxx</code> to enable,
+and the corresponding <code>--no-xxxx</code> to disable a feature.
+</p>
+
+
+<h3>Parsing options</h3>
+</a>
+
+<dl>
+
+<dt><code>--version</code></dt>
+<dd>Print version and copyright notice of the program.</dd>
+
+<dt><code>--help</code></dt>
+<dd>Print a brief description of the command and of the options.</dd>
+
+<dt>
+<code>--php-version 4</code><br>
+<code>--php-version 5</code> (default)</dt>
+<dd>
+The PHP version, 4 or 5. The differences among PHP 4 and 5 are mostly
+limited to the OOP, but there are also some differences in the extension
+modules that are available with a version of the language and not in
+the other. The source is parsed according to the version specified, and
+this version is also reported in the documentation so generated.
+</dd>
+
+<dt><code>--is-module</code><br>
+<code>--no-is-module</code> (default)</dt>
+<dd>
+This flag should never be used when checking regular user's packages; it was
+introduced just as a trick to generate the documentation about extension
+modules avoiding several errors from being displayed.
+Enabling this flag, the parsed files are considered as files of prototypes
+describing extension modules of the PHP language and then:
+<ul>
+<li>
+Missing <code>return&nbsp;</code><i>EXPR</i><code>;</code> statements are not
+signaled as error because prototypes are not actual code to be executed.
+</li>
+<li>
+The <code>trigger_error();</code> statement may raise error codes that are
+otherwise forbidden in regular user's packages, as <code>E_DEPRECATED</code>.
+</li>
+</ul>
+This flag is effective until disabled by <code>--no-is-module</code>, so
+several modules can be parsed at once with the flag enabled.
+</dd>
+
+
+<dt>
+<code>--recursive</code> (default)<br>
+<code>--no-recursive</code></dt>
+<dd>Parse recursively every <code>require_once</code> statement that appears at
+scope level zero. If disabled, does not follows require_once statements that
+may appear in the sorce files given from command line; autoloading is still
+available and files autoloaded may, in turn, use the require_once statement.
+THis option serves only for obvious security reasons just to implement the
+PHPLint-on-line mask available in the www.icosaedro.it WEB site, and should not
+be used elsewhere.
+<dd>
+
+<dt>
+<code>--parse-phpdoc</code> (default)<br>
+<code>--no-parse-phpdoc</code></dt>
+<dd>
+With this option enabled, PHPLint will parse DocBlocks
+comments and will collect short/long descriptions, variables, parameters, etc.
+herein declared. Sources not intended to be phpDocumentor-compliant often uses
+<code>/******/</code> or alike as visual markers, but these markers are not
+valid DocBlocks and an error is raised: in this case it is required to disable
+DocBlock parsing.
+</dd>
+
+</dl>
+
+
+<h3>Error detection</h3>
+</a>
+
+<dl>
+
+<dt>
+<code>--ctrl-check</code> (default)<br>
+<code>--no-ctrl-check</code></dt>
+<dd>
+Reports control characters found in strings.
+</dd>
+
+<dt>
+<code>--ascii-ext-check</code> (default)<br>
+<code>--no-ascii-ext-check</code></dt>
+<dd>
+Reports "extended ASCII" characters (ISO-xxx, UTF-8, etc.) found in the
+source, either in the literal strings and in IDs. The bare HTML code
+outside the PHP code is not checked.
+</dd>
+
+<dt>
+<code>--print-notices</code> (default)<br>
+<code>--no-print-notices</code><br>
+<code>--print-warnings</code> (default)<br>
+<code>--no-print-warnings</code><br>
+<code>--print-errors</code> (default)<br>
+<code>--no-print-errors</code></dt>
+<dd>
+Print error/warning/notice messages.
+<i>Errors</i> are problems that might involve safety or security issues,
+or that may prevent the program from running at all.  <i>Notices</i>
+have mostly informational purpose, but are still useful to "fine tuning"
+the source (unused variables, misspelled case-insensitive names, etc.).
+<i>Warnings</i> are all the other cases that PHPLint was not able to resolve
+neither as error nor as notice, anyhow human attention is required.
+</dd>
+
+</dl>
+
+
+<h3>Format of the report</h3>
+</a>
+
+<p>
+The report generated on standard output is a sequence of lines having this
+general structure:
+</p>
+
+<blockquote>
+<code>
+<i>file_name</i>:<i>line_no</i>:<i>col_no</i>: <i>severity</i>: <i>description</i>
+</code>
+</blockquote>
+
+<p>
+where
+</p>
+
+<blockquote>
+
+	<p>
+	<code><i>file_name</i></code> is the absolute path of the file the
+	message is referring to or the relative path depending on the
+	current options chosen. File names are locale-encoded.
+	Set to <code>?</code> if the message is not related to a specific source
+	file.
+	</p>
+
+	<p>
+	<code><i>line_no</i></code> is the line number, the first line of the
+	source being the number 1. Set to <code>?</code> if the message is
+	not related to a specific line of the source file, or it is not
+	related to any source file at all.
+	</p>
+	
+	<p>
+	<code><i>col_no</i></code> is the column number on the line, being
+	the first character of the line the no.1. Set to <code>?</code> if
+	the message is not related to a specific position on the line, or
+	it is not related to a specific line, or it is not related to any
+	source file at all.
+	</p>
+
+	<p>
+	<code><i>severity</i></code> can be <code>ERROR</code>,
+	<code>ERROR</code>, <code>Warning</code> or <code>notice</code>.
+	Errors are pathological issues detected by PHPLint that can affect
+	the safety, or the security or the general formal consistency of
+	the program and that should be fixed. Warnings messages about
+	potential issues, but PHPLint failed to establish if are actual
+	errors or not, but attention from the programmer is required
+	anyway. Notices are informative messages that can be safely ignored.
+	</p>
+	
+	<p>
+	<code><i>description</i></code> is the textual description of
+	the errors found. It may extends over several lines, every
+	continuation line starting with a tabulator character which is not
+	part of the message itself.
+	Basically, the diagnostic messages are plain ASCII, but may also contain
+	parts from the source being parsed that are in an unspecified, arbitrary
+	character encoding.
+	</p>
+
+</blockquote>
+
+<p>
+	Lines are terminated by the platform-depended "new line" sequence encoded
+	by the PHP_EOL constant, that is <code>"\n"</code> on Unix/Linux and
+	<code>"\r\n"</code> on Windows.
+</p>
+
+<p>
+A final line summarizes the total number of errors and warnings found (see also the <code>--overall</code> option):
+</p>
+
+<blockquote>
+<code>
+Overall test results: <i>number</i> errors, <i>number</i> warnings.
+</code>
+</blockquote>
+
+<p>
+The format described here is suitable to be post-processed by other programs.
+Several options can modify the format of the report, mostly to render it
+more readable:
+</p>
+
+<dl>
+
+<dt>
+<code>--print-source</code><br>
+<code>--no-print-source</code> (default)</dt>
+<dd>Print the source, line by line, every line with its number. Source and
+diagnostic messages are so mixed in a human-readable form.</dd>
+
+<dt>
+<code>--print-line-numbers</code> (default)<br>
+<code>--no-print-line-numbers</code>
+</dt>
+<dd>
+Enable/disable the line numbers printed along the source, when
+<code>--print-source</code> is enables. Disabling line numbers the shorter
+report so generated is suitable to be compared with an old one to see the
+differences and to monitor the improvements of the source, avoiding to confuse
+the <code>diff</code> program even if the source gets slightly changed adding
+or removing lines.
+</dd>
+
+<dt>
+<code>--print-file-name</code> (default)<br>
+<code>--no-print-file-name</code></dt>
+<dd>
+Every error message marks the message with the name of the file, the line
+number and the column number. The resulting report file might become very
+long and difficult to read, especially if absolute file names are printed.
+When this option gets disabled the file name gets printed only if the
+message involves errors found in imported packages and not in the package
+specified in the command line.
+</dd>
+
+<dt>
+<code>--print-column-number</code><br>
+<code>--no-print-column-number</code> (default)</dt>
+<dd>
+If to print also the column number next to the file name and the line number.
+The first character in a source line is the column number 1.
+Off by default to improve human readability. External tools may instead
+enable this option to recover the exact position of the error in the source
+(see also the <code>--tab-size</code> option).
+</dd>
+
+<dt>
+<code>--print-path absolute</code> (default)<br>
+<code>--print-path relative</code><br>
+<code>--print-path shortest</code>
+</dt>
+<dd>
+By default file names are always displayed as absolute paths, so to simplify
+the work of automated programs to which the report has to be submitted
+for further processing.
+The report can be made more human readable enabling the displaying of
+paths relative to the current working directory (the directory from
+which PHPLint was started). The option <code>shortest</code> automatically
+choose the shortest representation between the absolute and the relative
+path.
+</dd>
+
+<dt>
+<code>--report-unused</code> (default)<br>
+<code>--no-report-unused</code></dt>
+<dd>Report unused items. Items collected from here on are reported
+in a notice message if not used. This include both global entities
+(constants, global variables, functions, classes, class constants,
+properties and methods) and local variables inside functions and methods.
+</dd>
+
+<dt>
+<code>--print-context</code> (default)<br>
+<code>--no-print-context</code></dt>
+<dd>
+When an error is detected, the line of the source involved is printed
+along the error message. The exact point of the line where the error
+was detected is visually marked with "<code>\_HERE</code>".
+</dd>
+
+<dt>
+<code>--tab-size N</code> (default: 8)</dt>
+<dd>Set the size of the tabulation character (ASCII HT) typically used
+to indent the code. Every error message raised by PHPLint is preceded
+by the file name, the line number and column number. The tabulation size
+is required to exactly calculate the column where the problem was detected.
+External tools may want to set 1 here so that the column number (see option
+<code>--print-column-number</code>) will be the byte offset + 1 on the
+source line.
+</dd>
+
+<dt>
+<code>--overall</code> (default)<br>
+<code>--no-overall</code></dt>
+<dd>Displays the last line of the report that summarizes the total number of
+errors and warning. This option is useful in scripts that perform validation of
+a large number of sources.
+</dd>
+
+</dl>
+
+
+
+<h3>Exit status</h3>
+</a>
+
+
+<dl>
+
+<dt>
+<code>--fails-on-warning</code><br>
+<code>--[no-]fails-on-warning</code> (default)</dt>
+<dd>
+Normally the program exits status is 0 if no errors were detected, or 1 if
+errors were. If this option is enabled, also warnings contribute to the exit
+status of 1, which may be useful in automated scripts if you want to be very
+strict in validating you code base.
+</dd>
+
+</dl>
+
+
+<h3>Generating the document from the source</h3>
+</a>
+
+<p>
+	Once a PHP source file has been parsed and successfully checked, PHPLint
+	can also generate a document in HTML format containing a detailed
+	descriptions of all the public items exported by the program, the
+	required modules and the required packages; hand-written DocBlocks are
+	also reported and properly formatted. This HTML file is generated only
+	if the <tt>--doc</tt> option is added to the command line along with the
+	other options, and before the name of the source file:
+</p>
+
+<blockquote><pre>
+phpl --doc MyProg.php
+</pre></blockquote>
+
+<p>
+	The generated file <tt>MyProg.html</tt> is saved in the same directory
+	of its source file, but there are options to change this behavior.
+</p>
+
+<p>
+	Another important rule is that all the references to external items
+	are made relative to the current source, so that a hierarchy of related
+	documents can be moved to another directory (or even to another computer)
+	without breaking the references. 
+</p>
+
+<dl>
+	<dt><tt>--doc</tt></dt>
+	<dd>
+		Enable document generation.
+	</dd>
+
+	<dt><tt>--doc-extension EXT</tt></dt>
+	<dd>
+		Sets the file name extension of the generated file, the default
+		being <tt>.html</tt>.
+	</dd>
+
+	<dt><tt>--doc-page-header H</tt></dt>
+	<dd>
+		Sets the header of the HTML page, the default being simply <tt>&lt;HTML&gt;&lt;BODY&gt;</tt>.
+	</dd>
+
+	<dt><tt>--doc-page-footer F</tt></dt>
+	<dd>
+		Sets the footer of the HTML page, the default being something like
+		<tt><i>signatureofphplint</i>&lt;/BODY&gt;&lt;/HTML&gt;</tt>.
+	</dd>
+
+	<dt>--doc-ref-remap A B</dt>
+	<dd>
+		Maps any link that starts with A into B.
+	</dd>
+
+	<dt><tt>--doc-help</tt></dt>
+	<dd>
+		Displays a summary of all the options related to the generation of
+		the documents.
+	</dd>
+</dl>
+
+
+</body>
+</html>

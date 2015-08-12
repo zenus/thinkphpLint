@@ -1,0 +1,73 @@
+BEGIN parsing of 5-exceptions-finally.php
+1:	<?php
+2:	/*. require_module 'standard'; .*/
+3:	
+4:	function ex() /*. throws Exception .*/{}
+5:	
+6:	function f1() {
+7:		try { ex(); }
+
+		try { ex(); }
+	                   \_ HERE
+==== 7: notice: throwing Exception
+8:		finally { $v = 1; }
+
+		finally { $v = 1; }
+	               \_ HERE
+==== 8: notice: throwing Exception
+
+		finally { $v = 1; }
+	               \_ HERE
+==== 8: ERROR: f1: exception Exception must be caught or declared to be thrown
+9:		echo $v; // $v is defined
+10:	}
+11:	
+12:	
+13:	function f2() {
+14:		try { ex(); }
+
+		try { ex(); }
+	                   \_ HERE
+==== 14: notice: throwing Exception
+15:		finally { return; }
+
+		finally { return; }
+	               \_ HERE
+==== 15: notice: throwing Exception
+
+		finally { return; }
+	               \_ HERE
+==== 15: ERROR: f2: exception Exception must be caught or declared to be thrown
+16:		echo ""; // unreachable
+
+		echo ""; // unreachable
+	            \_ HERE
+==== 16: ERROR: unreachable statement
+17:	}
+18:	
+19:	function f3() {
+20:		try { ex(); $v = 1; return; }
+
+		try { ex(); $v = 1; return; }
+	                   \_ HERE
+==== 20: notice: throwing Exception
+21:		catch(Exception $e){ $v = 1; }
+22:		//finally { return; }
+23:		echo $v;
+
+		catch(Exception $e){ $v = 1; }
+	                          \_ HERE
+==== 21: notice: caught exception variable $e not used
+
+		echo $v;
+	               \_ HERE
+==== 23: ERROR: variable $v might not have been assigned
+24:	}
+25:	
+
+		try { ex(); $v = 1; return; }
+	                      \_ HERE
+==== 20: notice: variable $v assigned but never used
+END parsing of 5-exceptions-finally.php
+==== ?:?: notice: required module standard.php
+Overall test results: 4 errors, 0 warnings.

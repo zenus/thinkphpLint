@@ -1,0 +1,1205 @@
+<HTML>
+<HEAD>
+<TITLE>PHPLint Reference Manual</TITLE>
+<META name=description content="PHPLint Reference Manual">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<LINK rel=stylesheet type='text/css' href='../styles.css'>
+<script type="text/javascript" src="../utils.js"></script>
+</HEAD><BODY onload="buildTOC('toc');">
+
+<h2 id="toc">Classes</h2>
+
+<h3>Introduction</h3>
+
+<p>
+PHP 5 introduces many new features in its OOP model: class constants,
+the visibility attributes (public, protected, private), the "static"
+and "final" attributes, object introspection, etc.  PHPLint generally
+supports all the features of PHP5, but it adds some restrictions and
+detects some weakness of the language: the differences are here detailed.
+</p>
+
+<p>
+Lets see an example:
+</p>
+
+<div class="code_box"><pre>
+class A {
+    const a_string = "The current value is ";
+    public $an_int = 1;
+    private /*. mixed .*/ $anything;
+
+    public function __construct(/*. int .*/ $n)
+    { 
+        $this-&gt;an_int = $n;
+    }
+
+    public function Get()
+    {
+        return A::a_string . $this-&gt;an_int;
+    }
+}
+</pre></div>
+
+<p>
+The only entities that require an explicit type are the property
+<code>$anything</code> and the formal argument <code>$n</code>.
+Constructors always return <code>void</code>, while the <code>Get()</code>
+method returns <code>string</code> as guessed from the <code>return</code>
+statement.
+</p>
+
+
+<h3>Class constants</h3>
+
+<p>
+Class constants can be declared using a syntax similar to this one:
+</p>
+
+<blockquote>
+<pre>
+/*. <i>visibility</i> .*/ const
+    CONSTNAME1 = STATICEXPR1,
+    CONSTNAME2 = STATICEXPR2,
+    CONSTNAME3 = STATICEXPR3;
+</pre>
+</blockquote>
+
+<p>
+Class constants never require (nor <b>PHPLint</b> will allow to provide)
+an explicit type: the type of a constant is always given implicitly by
+its value.
+</p>
+
+<p>
+Class constants are <b>public</b> by default, but an explicit visibility
+attribute can be provided as PHPLint meta-code.
+<b>private</b> class constants are not reported by the PHPLint Documentator.
+</p>
+
+<p>
+<b>Accessing.</b>
+Class constants can be accessed in several ways, depending on the context:
+</p>
+
+<blockquote>
+
+<p>
+<code>self::CONSTNAME</code>
+<br>
+Inside a class to access a local constant or an inherited non-private
+constant.
+</p>
+
+<p>
+<code>parent::CONSTNAME</code>
+<br>
+Inside a class to access a non-private constant of a parent class, possibly
+re-defined inside the current class.
+</p>
+
+<p>
+<code>CLASSNAME::CONSTNAME</code>
+<br>
+Everywhere to access a public constant of a class.
+</p>
+
+</blockquote>
+
+<p>
+<b>Collisions.</b>
+A class can extend another class and can re-define some of the inherited
+constants.
+A class can also implement several interfaces, but constants inherited from all
+these classes cannot collide and need to be all distinct.
+Example:
+</p>
+
+<div class="code_box"><pre>
+# All these interfaces and classes define the same constant:
+interface IF1 { const x = 0; }
+interface IF2 { const x = 1; }
+abstract class ABS { const x = 2; }
+class A { const x = 3; }
+
+# Now testing collisions:
+
+class B extends A {
+    const x = "hello";  # re-defining A::x is allowed
+                        # Note the different type
+}
+
+class C extends ABS implements IF1, IF2 {
+    # ERROR: collision among inherited
+    # consts ABS::x, IF1::x, IF2::x
+
+    const x = 5;  # ERROR: collides with all the consts above
+}
+</pre></div>
+
+<p>
+The <code>/*.private.*/</code> meta-code attribute does not help to limit the
+scope of visibility of a constant because it is not supported by PHP, so
+also private constants can collide in derived classes.
+</p>
+
+<p>
+<b>Re-defining.</b>
+Class constants declared in interfaces and abstract classes cannot
+be re-defined. Only constants inherited from concrete classes can be
+re-defined.	 In this latter case the operators <code>self::CONSTNAME</code>
+and <code>parent::CONSTNAME</code> allow to access the desired value in
+the current or in the parent class, respectively.
+</p>
+
+<p>
+<b>Overriding.</b>
+Class constants cannot be overridden. From the point of view of PHPLint,
+this implies that constants with the same name defined in related concrete
+classes can have different types (see example above).
+</p>
+
+
+
+<h3>Properties</h3>
+
+<p>
+Classes and abstract classes can define several properties, basically
+variables bound to the class (if <b>static</b>) or bound to every object
+instantiated from this class (if non-static).  A property can be declared
+using a syntax similar to this one:
+</p>
+
+<blockquote>
+<pre>
+<i>visibility</i> [<b>static</b>] [ /*. <i>x_type</i> .*/ ]
+    $name1 = STATICEXPR1,
+    $name2 = STATICEXPR2,
+    $name3 = STATICEXPR3;
+</pre>
+</blockquote>
+
+where:
+
+<blockquote>
+
+    <p>
+    The visibility attributes are: <b>public</b>, <b>protected</b>
+    or <b>private</b>.
+	</p>
+
+    <p>
+    The <b>static</b> attribute marks the property to be a proper <i>class
+    property</i> rather than <i>object property</i>, i.e. there is only one
+    instance of this property for all the objects of this class.
+    </p>
+
+	<p>
+	The visibility and the <b>static</b> attributes can be indicated in
+	any order. Properties that are both <b>public</b> and <b>static</b>
+	can be indicated simply being <b>static</b> omitting the other attribute.
+    </p>
+
+    <p>
+    The type is optional. It is simpler and shorter to indicate a proper
+    initial value, since PHPLint guesses the type of the property from the
+    type of the expression. Providing both the type and the initial value
+    is allowed for clearness if desired, but it is redundant. For example,
+    writing
+    </p>
+
+<pre>
+public $counter = 0;
+public $status = array("off", "on");
+public $file = /*.(resource).*/ NULL;
+</pre>
+
+    is equivalent to
+
+<pre>
+public /*. int .*/ $counter = 0;
+public /*. array[int]string .*/ $status = array("off", "on");
+public /*. resource .*/ $file = NULL;
+</pre>
+
+    <p>
+	The initial value <code>STATICEXPRn</code> is optional and, if provided,
+	its type must match the x_type. Remember that properties without an
+	initial value are initialized to the value NULL; in this case the
+	responsibility to assign them a proper initial value is left to the
+	constructor method.
+    </p>
+
+</blockquote>
+
+<p>
+<b>private</b> properties can be re-defined inside the derived classes,
+but this is not a proper "overriding", since the methods of the child
+and of the extended class each one access its own properties.
+</p>
+
+<p>
+<b>public</b> and <b>protected</b> properties cannot be redefined in extended
+classes (PHPLint restriction).
+</p>
+
+<div class="note_box">
+<b>boolean, in and float properties MUST be initialized with a value</b><br>
+The PHP interpreter initializes all the properties that lack an initial value
+to the NULL value. According to the type model of PHPLint, the NULL value is
+not allowed for variables of simple type <b>boolean</b>, <b>int</b> or
+<b>float</b>. In these cases PHPLint requires that an initial value be always
+specified, for example <code>FALSE</code>, <code>0</code> or <code>0.0</code>
+respectively otherwise an error is signaled.
+</div>
+
+<p>
+<b>Accessing.</b>
+Properties can be accessed in several ways, depending on the context
+and on their attributes:
+</p>
+
+<blockquote>
+
+<p>
+<code>$this-&gt;v</code>
+<br>
+Inside a non-static method to access a local non-static property, or an
+inherited <b>public</b>|<b>protected</b>, non-static property.
+</p>
+
+<p>
+<code>$obj-&gt;v</code>
+<br>
+Everywhere to access a non-static, <b>public</b> property.  Note that
+<b>protected</b> properties are not accessible this way, but only through
+$this-&gt;v or self::$v.  Accessing via $obj-&gt; to <b>protected</b>
+properties is forbidden (PHPLint restriction).
+</p>
+
+<p>
+<code>self::$v</code>
+<br>
+Inside a method to access a local <b>static</b> property, or an inherited
+<b>public</b>|<b>protected</b>, <b>static</b> property.
+</p>
+
+<p>
+<code>parent::$v</code>
+<br>
+Inside a method to access an inherited <b>public</b>|<b>protected static</b>
+property. Since in PHPLint the non-private properties cannot be re-defined,
+nor public|protected properties can be overridden, this gives the same
+as <code>self::$v</code>.
+</p>
+
+<p>
+<code>CLASSNAME::$v</code>
+<br>
+Everywhere to access a <b>static</b>, <b>public</b> property.
+</p>
+
+</blockquote>
+
+
+<p>
+<b>Re-defining.</b>
+Only <b>private</b> properties can be re-defined in extended classes.
+</p>
+
+<p>
+<b>Overriding.</b>
+Properties cannot be overridden (PHPLint restriction).
+</p>
+
+<table align=center width="70%"><tr><td>
+NOTE. PHP allows to override properties, but the overridden property gets
+shadowed by the new one and cannot be accessed anymore, neither from its
+own class.
+</td></tr></table>
+
+
+
+<h3>Methods</h3>
+
+<p>
+A method can be declared using a syntax similar to this one:
+</p>
+
+<blockquote>
+<pre>
+<i>[visibility]</i> <i>[</i>static<i>]</i> <i>[</i>final<i>]</i> /*. <i>x_type</i> .*/
+function methodName(<i>arguments</i>)
+{
+    // the code here
+}
+</pre>
+</blockquote>
+
+<p>
+As of PHP 5.3.3, in namespaced classes the constructor method must be called
+<tt>__construct()</tt>. In PHPLint the constructor method must be always
+called <tt>__construct()</tt> and a warning is raised on methods that have the
+same name of the class.
+</p>
+
+
+<h4>Methods attributes</h4>
+
+<p>
+A method is basically a function that can have several attributes,
+in any order.
+</p>
+
+<p>
+The allowed visibility attributes for methods are:
+<b>public</b> (the default), <b>protected</b> or <b>private</b>.
+</p>
+
+<p>
+The <b>static</b> attribute marks the method to be a proper <i>class
+method</i> rather than an <i>instance method</i>, so this methods
+is not bound to a particular object. <b>static</b> methods cannot use
+the special variable <code>$this</code> (PHPLint restriction).
+</p>
+
+<p>
+The <b>final</b> attribute marks methods that cannot be overridden.
+</p>
+
+<p>
+The type of the returned value isn't mandatory since PHPLint can guess
+the type from the <code>return</code> statement, but it is recommended
+be always indicated explicitly.
+Methods that do not return a value should be <b>void</b>.
+</p>
+
+
+<h4>Inheritance and methods overriding</h4>
+
+<p>
+A class B is said to be a <i>subclass</i> of the class A if the class
+B extends the class A or if the class B extends a class X that is a
+subclass of A (note the recursive definition). For example:
+</p>
+
+<div class="code_box">
+<pre>
+class A {
+    function a() {}
+}
+
+class B extends A {
+    function a() {}
+}
+</pre>
+</div>
+
+<p>
+Normally, the names of the methods of a subclass differ from any other
+method of its parent class.  However, the subclass B can override
+the method A::a() of its parent class defining the overriding
+method B::a().
+</p>
+
+<p>
+The basic rule of the polymorphism in OOP is that <i>overridden methods
+must be usable exactly as the original ones</i>. For example, if A::a()
+is expected to return a string, the overriding method B::a() must return
+a string; if A::a() requires two mandatory arguments, also B::a() must be
+callable with two arguments.
+PHPLint checks accurately every overridden method: the signature, the
+attributes and the thrown exceptions are compared and possible
+incompatibilities are detected.
+PHP 5 already does some checks on the attributes and on the number of
+mandatory and default arguments, but PHPLint enhance these restrictions to
+the types of the arguments,
+and the possible presence of optional arguments <code>/*.args.*/</code>,
+the type of the returned value,
+and the exceptions thrown.
+Lets start defining what a signature is.
+</p>
+
+<p>
+The <i>signature</i> of a method is composed of:
+</p>
+
+<ul>
+<li>the type of the returned value, possibly <b>void</b></li>
+<li>the ordered list of the types of the mandatory arguments</li>
+<li>the ordered list of the types of the default arguments</li>
+<li>possible presence of a variable number of arguments  <b>/*.args.*/</b></li>
+</ul>
+
+<p>
+For example, the signature of the method
+</p>
+
+<div class="code_box">
+<code>/*.int.*/ function a(/*.int.*/ $a, $b=3.14 /*., args.*/)
+</code></div>
+
+<p>
+is <code>int(int,[float],...)</code> with one mandatory argument ($a), one
+default argument ($b) and possibly a list of more optional arguments.
+</p>
+
+<p>
+The attributes, the signature and the list of the exceptions thrown
+of the overriding method B::a() are subject to these restrictions:
+</p>
+
+<ul>
+
+<li>The two methods must have the same name (ok, that's obvious...).
+</li>
+
+<li><b>final</b> methods cannot be overridden (PHP 5 restriction).
+</li>
+
+<li><b>private</b> methods cannot be re-defined (PHP 5 limitation,
+    but see the note 1).
+</li>
+
+<li>The visibility of the new method must be the same or greater:
+    if A::a() is protected, B::a() can be either protected or public;
+    if A::a() is public, B::a() must be public (PHP 5 restriction).
+</li>
+
+<li>The two methods must be both non-static or both <b>static</b>
+    (PHP 5 restriction).
+</li>
+
+<li>
+The signature of the overriding method must be compatible with the
+signature of the overridden method, that is:
+
+	<ul>
+
+	<li>
+	The return type must be the same of the overridden method.
+	If the return type is an object, it may also be a sub-class.
+	</li>
+
+	<li>
+	For each matching formal argument, the passing method (by value, return
+	by reference or by reference) must be the same.
+	</li>
+
+	<li>
+	The type of each argument must be the same of the overridden method.
+	If the argument is an object passed by value, it may also be a sub-class.
+	</li>
+
+	<li>
+	If the parent method has only mandatory arguments (or no arguments
+	at all), the overriding method can add default arguments and
+	optional arguments.
+	</li>
+
+	<li>
+	If the parent method has default arguments, the overriding method can
+	add more default arguments and optional arguments.
+	</li>
+
+	</ul>
+</li>
+
+<li>
+	The new method can throw the same exceptions inherited from the
+	original method, or even subclasses of them; throwing other exceptions
+	is not allowed. The chapter devoted to the exceptions provides more
+	details about this topic.
+</li>
+
+<li>
+	The set of declared thrown exceptions must be a class subset of the
+	the set of the declared exceptions in the original method.
+	In particular, note that is the original method does not declares
+	any thrown exception, the new method cannot throw checked exceptions
+	at all.
+	See the chapter devoted to the exceptions for more details.
+</li>
+
+
+</ul>
+
+<p>
+In this example, the subclass B overrides all the methods of its parent class
+A. The body of all the methods is left empty, since it does not matter in
+our discussion. Note that B::g() adds a default argument $y, while B::h()
+adds a variable number of optional arguments and raises its visibility from
+<b>protected</b> to <b>public</b>.
+</p>
+
+<div class="code_box">
+<pre>
+class A {
+    public /*. void .*/ function f(){}
+
+    public /*. int  .*/ function g(/*. int .*/ $i){}
+
+    protected /*. void .*/ function h(/*. int .*/ $x){}
+}
+
+class B extends A {
+    public /*. void .*/ function f(){}
+
+    public /*. int  .*/ function g(
+        /*. int .*/ $x,
+        /*. int .*/ $y = 0)
+    {}
+
+    public /*. void .*/ function h(/*. int .*/ $x /*., args .*/){}
+}
+</pre>
+</div>
+
+
+<pre>
+
+</pre>
+<hr width="20%" align=left>
+<blockquote>
+<p>
+<b>NOTE 1.</b> PHP 5 does not allow to re-define a private method, and it
+checks the new method as it were an overriding one. This implies that a
+different number of arguments generates a warning when the E_STRICT mode
+is enabled.  It seems to me a little bug, since I'm used to split complex
+methods into several little private functions with short, trivial names;
+these utility functions should not be visible outside the class.
+</p>
+
+<p>
+Workaround: avoid trivial names for private methods. For example, if the
+method <code>Items::printList()</code> needs an utility function that
+sort the list before be printed, you can call this private function
+something like <code>Items::printList_sort()</code>, and not simply
+<code>Items::sort()</code>: not only this prevent collisions with possible
+other private methods of extended classes, but it also make clear to
+the human reader of the source that this is an utility method bound to
+<code>printList()</code>.
+</blockquote>
+<pre>
+
+</pre>
+
+
+
+<h4>Accessing to the methods</h4>
+
+<p>
+Methods can be accessed in several ways, depending on the context
+and on their attributes:
+</p>
+
+<blockquote>
+
+<p>
+<code>$this-&gt;f()</code>
+<br>
+Inside a non-static method to access a local non-static method, or an
+inherited <b>public</b>|<b>protected</b>, non-static method.
+</p>
+
+<p>
+<code>self::f()</code>
+<br>
+Inside a method to access a local <b>static</b> method, or an inherited
+<b>public</b>|<b>protected</b>, <b>static</b> method.
+</p>
+
+<p>
+<code>parent::f()</code>
+<br>
+Inside a method to access an inherited <b>public</b>|<b>protected</b>
+<b>static</b>|non-static method. Useful if the inherited method has
+been overridden, so <code>parent::f()</code> is the original method,
+while <code>$this->f()</code> (if non-static) or <code>self::f()</code>
+(if static) is the overriding one. Note the usage of the <i>static
+resolution operator</i> "<code>::</code>" also for non-static methods:
+in fact in this case the dynamic binding does not take place since the
+method we are referring to is statically determined.  The typical
+usage is calling the parent constructor from the derived class using
+<code>parent::__construct();</code> (remember that if the derived class
+has a constructor, the parent constructor isn't called automatically, but
+it must be called explicitly from the constructor of the derived class).
+</p>
+
+<p>
+<code>CLASSNAME::f()</code>
+<br>
+Everywhere to access a static, public method.
+</p>
+
+<p>
+<code>$obj-&gt;f()</code>
+<br>
+Everywhere to access a non-static, <b>public</b> method.
+<b>protected</b> methods are not accessible this way (PHPLint restriction).
+</p>
+
+</blockquote>
+
+
+<p>
+PHPLint will raise an error message if a <b>static</b> method does use the
+special variable <code>$this</code> (PHPLint restriction).
+</p>
+
+
+<h3>Special methods</h3>
+
+<p>
+<b>Constructors.</b>
+A constructor method <code>__construct()</code> can have a visibility
+attribute, then the usual visibility rules apply. For example, note that if
+the constructor is <b>private</b> or <b>protected</b>, objects of its class
+can be instantiated only inside the class itself (if <b>private</b>) and
+the constructor can be called by the extended classes (if <b>protected</b>).
+</p>
+
+<p>
+A class constructor cannot be <b>abstract</b> nor <b>static</b>.
+</p>
+
+<p>
+The signature of a class constructor must return <code>void</code> and it
+may contain arbitrary formal arguments, since its signature is not compared
+with that of the parent class (constructors do not "override" constructors).
+</p>
+
+<p>
+A class constructor is called implicitly by the <b>new</b> operator; it
+cannot be called explicitly with the only exception of the constructor of
+the derived classes (PHPLint restriction).
+</p>
+
+<p>
+A constructor must call explicitly its parent constructor if one exists,
+since in this case PHP would not call automatically the constructor of the
+parent class.  It is an error if the constructor of the derived class omits
+to call the parent constructor through <code>parent::__construct();</code>
+(PHPLint restriction).
+</p>
+
+<p>
+<b>Destructors.</b>
+A class destructor <code>__destruct()</code> can have a visibility attribute.
+Destructors are invoked automatically by the PHP interpreter once the object
+has no more references. Destructors cannot be called explicitly by the program
+(with the only exception of the destructor of the derived class; see below).
+</p>
+
+<p>
+Note that <b>private</b> and <b>protected</b> destructors cannot be invoked
+outside their class or their derived classes, so that if the destruction
+of an object occurs outside the visibility context of this method, the
+PHP interpreter raises a warning message. Since PHPLint cannot practically
+determine in which context the object of this class will be destroyed,
+it cannot check the proper usage of the <b>private</b> and <b>protected</b>
+attributes applied to destructors, so it imposes these methods be always
+<b>public</b> (PHPLint limitation).
+</p>
+
+<p>
+A class destructor cannot be <b>abstract</b> nor <b>static</b>.
+</p>
+
+<p>
+A class destructor must return <code>void</code> and it cannot have formal
+arguments.
+</p>
+
+<p>
+Thus the only allowed signature of a destructor is as follows:
+</p>
+
+<blockquote><pre>
+function __destruct(){ ... }
+</pre></blockquote>
+
+<p>
+A destructor must call explicitly its parent destructor if one exists,
+since in this case PHP would not call automatically the destructor of the
+parent class.  It is an error if the destructor of the derived class omits
+to call the parent destructor through <code>parent::__destruct();</code>
+(PHPLint restriction).
+</p>
+
+
+<p>
+<b>Other special methods.</b>
+This table summarizes the other special methods and their expected visibility
+and signature:
+</p>
+
+<table border=1 align=center cellpadding=5 cellspacing=0>
+
+<tr>
+<th>Visibility and Signature</th>
+<th>Notes</th>
+</tr>
+
+<tr>
+<td><code>public [final] mixed __call(string, array[]mixed)</code></td>
+<td>This special method is parsed but actually not supported.
+You can't call undefined methods.
+</td>
+</tr>
+
+<tr>
+<td><code>public [final] static mixed __callStatic(string, array[]mixed)</code></td>
+<td>
+Not supported by PHPLint: static methods must be always explicitly declared.
+</td>
+</tr>
+
+<tr>
+<td><code>public [final] void __clone()</code></td>
+<td>&nbsp;</td>
+</tr>
+
+<tr>
+<td><code>public [final] mixed __get(string)</code></td>
+<td>Not supported by PHPLint.</td>
+</tr>
+
+<tr>
+<td><code>public [final] void __invoke(args)</code></td>
+<td>Not supported by PHPLint: objects cannot be called as functions.</td>
+</tr>
+
+<tr>
+<td><code>public [final] boolean __isset(string)</code></td>
+<td>Not supported by PHPLint.</td>
+</tr>
+
+<tr>
+<td><code>public [final] void __set(string, mixed)</code></td>
+<td>Not supported by PHPLint.</td>
+</tr>
+
+<tr>
+<td><code>public [final] object __set_state(array[string]mixed)</code></td>
+<td>Dangerous with PHPLint as it has no control on the actual values assigned
+to the properties.</td>
+</tr>
+
+<tr>
+<td><code>public [final] static __set_static(array[string]mixed)</code></td>
+<td>&nbsp;</td>
+</tr>
+
+<tr>
+<td><code>public [final] array[int]string __sleep()</code></td>
+<td>&nbsp;</td>
+</tr>
+
+<tr>
+<td><code>public [final] string __toString()</code></td>
+<td>&nbsp;</td>
+</tr>
+
+<tr>
+<td><code>public [final] void __unset(string)</code></td>
+<td>Not supported by PHPLint.</td>
+</tr>
+
+<tr>
+<td><code>public [final] void __wakeup()</code></td>
+<td>&nbsp;</td>
+</tr>
+
+</table>
+
+
+<h3>Abstract classes</h3>
+
+<p>
+The general syntax of an abstract class can be informally described as
+follows:
+</p>
+
+<blockquote><pre>
+/*. private .*/ abstract class CLASSNAME
+    extends ANOTHER_ABSTRACT_CLASS
+    implements INTERFACE1, INTERFACE2
+{
+	<i>constants
+	properties
+	abstract methods
+	concrete methods</i>
+}
+</pre></blockquote>
+
+<p>
+An abstract class is similar to any other concrete class, but with three
+important differences: 1. it can contain abstract methods; 2. it cannot be
+instantiated with the <b>new</b> operator; 3. derived, concrete classes must
+implement all the abstract methods defined inside the abstract class; if the
+abstract class extends another abstract class, or implements some interfaces,
+the concrete class must also implement the inherited abstract methods.
+
+<p>
+The basic properties of abstract classes are:
+</p>
+
+<ul>
+
+<li>
+Abstract classes are intended to be a model for other "concrete" classes,
+so that all the extended classes derived from them share a common behavior. As
+a logical consequence, abstract classes cannot be <b>final</b>.
+</li>
+
+
+<li>
+An abstract class can extend another abstract class and can implement
+several interfaces.  The extended abstract class inherits the properties, the
+methods and the abstract methods of its parent class and parent interfaces.
+</li>
+
+<li>
+A concrete (i.e. non-abstract) class MUST implement all the abstract
+methods inherited from the abstract class it extends.
+</li>
+
+<li>
+Your program can process abstract objects that belong to an abstract
+class, whatever the concrete class to which they actually belong may
+be.
+</li>
+
+<li>
+Objects cannot be instantiated from an abstract class.
+</li>
+
+</ul>
+
+<p>
+Abstract classes can be private to the package: in this case also any
+derived class must be private.	Abstract classes cannot be <b>final</b>,
+since they are useful only if they can be extended.
+</p>
+
+<p>
+Abstract classes can extend another abstract class, and can implement
+several interfaces. The abstract class itself may implement some of the
+inherited abstract methods.
+</p>
+
+<p>
+Constants inherited from the implemented interfaces and from the extended
+class, and properties inherited from the extended class cannot collide
+together nor they can collide with the items defined inside the abstract
+class.
+</p>
+
+<p>
+Instead, a method can override or implement several methods inherited from the
+extended classes and from implemented interfaces, provided that this method be
+compatible with all them.
+</p>
+
+<p>
+An abstract method is a public, non-static, non-final method that has the
+<b>abstract</b> qualifier, and its body is substituted by a semicolon:
+</p>
+
+<div class="code_box"><pre>
+abstract class Shape
+{
+    const DEF_SCALE = 1.0;
+
+    public $x = 0.0, $y = 0.0;
+
+    function moveTo(/*. float .*/ $x, /*. float .*/ $y)
+    {
+        $this-&gt;x = $x;
+        $this-&gt;y = $y;
+    }
+
+    abstract /*. void .*/ function scale(/*. float .*/ $factor) ;
+}
+</pre></div>
+
+<p>
+This class describes a generic geometric shape that can be moved and
+scaled.	 The position is a property that can be defined for any shape,
+so the <code>moveTo()</code> method can be <i>concrete</i>. On the contrary,
+scaling a generic shape cannot be implemented in a general way and the
+method implementing this feature only declares its interface but not its code,
+i.e. it is <i>abstract</i>.
+</p>
+
+<p>
+Since the method <code>scale()</code> is abstract, it must be
+implemented in any derived, concrete, class:
+</p>
+
+<div class="code_box"><pre>
+class Circle extends Shape
+{
+    public $radius = 1.0;
+
+    function scale(/*. float .*/ $factor)
+    {
+        $this-&gt;radius *= $factor;
+    }
+}
+
+class Rectangle extends Shape
+{
+    public $side_a = 1.0, $side_b = 2.0;
+
+    function scale(/*. float .*/ $factor)
+    {
+        $this-&gt;side_a *= $factor;
+        $this-&gt;side_b *= $factor;
+    }
+}
+</pre></div>
+
+
+<p>
+Abstract classes are useful to describe data structures and deal with them
+without knowing their actual nature. For example, this chunk of code declares
+a drawing as a list of shapes and declares a function that scale them all:
+</p>
+
+
+<div class="code_box"><pre>
+$drawing = /*. (array[int]Shape) .*/ array();
+
+function scale_shapes(/*. float .*/ $factor)
+{
+    foreach($GLOBALS['drawing'] as $shape)
+        $shape->scale($factor);
+}
+
+
+$drawing[] = new Circle();
+$drawing[] = new Circle();
+$drawing[] = new Rectangle();
+scale_shapes(10.0);
+</pre></div>
+
+
+<h3>Interfaces</h3>
+
+<p>
+The syntax of an interface can be described informally as follows:
+</p>
+
+<blockquote><pre>
+/*. private .*/ interface NAME
+    extends INTERFACE1, INTERFACE2
+{
+	<i>public constants
+	abstract methods</i>
+}
+</pre></blockquote>
+
+<p>
+An interface is similar to an abstract class declaring only constants and
+abstract methods.  Basically, interfaces are used as "syntactical glue"
+between different classes, and are not really necessary for a scripting
+language as PHP is.  Nevertheless, interfaces are an important feature in
+complex applications:
+</p>
+
+<ul>
+
+<li>
+Concrete and abstract classes can extend only one class, but can implement
+several interfaces.
+</li>
+
+<li>
+PHP (and PHPLint too) ensures that all the indicated abstract methods be
+actually implemented, so that all the classes implementing a given interface
+will exhibit the same behaviour.
+</li>
+
+<li>
+Interfaces help in documenting the source, as the various relationships
+among related classes become evident.
+</li>
+
+<li>
+PHPLint and PHP 5 can understand the actual intention of the programmer,
+so they can help to debug the program both at validation-time and at
+run-time respectively.
+</li>
+
+</ul>
+
+<p>
+Constants and abstract methods inherited from the extended interfaces
+cannot collide together and cannot collide with items defined inside
+the interface.
+</p>
+
+<p>
+Properties are not allowed in interfaces (PHP 5 restriction).
+You can still force implementing classes to define some accessor methods (also
+known as "setters" and "getters") to write and read the property. The following
+example illustrates two accessor methods allowing to read and write the
+property "xxx":
+</p>
+
+<div class="code_box"><pre>
+interface IAccessorsDemo
+{
+    /*. void .*/ function setXxx(/*. int .*/ $value);
+    /*. int  .*/ function getXxx();
+}
+</pre></div>
+
+<p>
+Constructor methods are allowed in interfaces only since PHP 5.2.0.
+</p>
+
+<p>
+All the methods must be abstract, public and non-final, but the
+<b>abstract</b> attribute is not required, since all the methods of an
+interface must be abstract.
+</p>
+
+<p>
+Methods can be <b>static</b>.
+</p>
+
+<p>
+An interface can extend several other interfaces, so inheriting all their
+abstract methods.
+</p>
+
+<p>
+Interfaces cannot be instantiated into an object, so the <b>new</b> operator
+cannot be applied to an interface. Interfaces can be extended by other
+interfaces, and can be implemented by abstract and concrete classes.
+</p>
+
+<p>
+In the following example, an interface describes the methods that a generic
+"data container" must provide.  Every datum has a name and a value; the
+methods set() and get() allow to store/retrieve that value.  The abstraction
+introduced by this class is that the medium where these data have to be stored
+is left to the implementation of the interface. Several implementations
+can follow different strategies, for example data can be stored in memory,
+in the user session, inside a DB, etc.  The point is that the software
+written in terms of this interface becomes largely independent from the
+implementation we can choose.
+</p>
+
+<p>
+Two (very crude) concrete classes implementing this interface are also defined,
+then an example that stores a copy of the $_SESSION[] data is shown.
+</p>
+
+<div class="code_box">
+<pre>interface DataContainer
+{
+    /*. void .*/ function set(
+        /*. string .*/ $name,
+        /*. string .*/ $value);
+
+    /*. string .*/ function get(/*. string .*/ $name);
+}
+
+
+class MemoryBasedContainer implements DataContainer
+{
+    private $data = /*.(array[string]string).*/ array();
+
+    /*. void .*/ function set(
+        /*. string .*/ $name,
+        /*. string .*/ $value)
+    {
+        $this->data[$name] = $value;
+    }
+
+    /*. string .*/ function get(/*. string .*/ $name)
+    {
+        if( isset($this->data[$name]) )
+            return $this->data[$name];
+        else
+            return NULL;
+    }
+}
+
+
+class FileBasedContainer implements DataContainer
+{
+    private $base_dir = "";
+
+    /*. void .*/ function __construct(/*. string .*/ $base_dir)
+    {
+        $this->base_dir = $base_dir;
+    }
+
+    /*. void .*/ function set(
+        /*. string .*/ $name,
+        /*. string .*/ $value)
+    {
+        file_put_contents($this->base_dir ."/". $name, $value);
+    }
+
+    /*. string .*/ function get(/*. string .*/ $name)
+    {
+        $fn = $this->base_dir ."/". $name;
+        if( ! file_exists($fn) )  return NULL;
+        return file_get_contents($fn);
+    }
+}
+
+
+class DbBasedContainer implements DataContainer
+{
+    /* etc etc etc */
+}
+
+
+function save_session_data(/*. DataContainer .*/ $c)
+{
+    foreach($_SESSION as $k => $v)
+        $c->set($k, serialize($v));
+}
+
+
+$c = /*. (DataContainer) .*/ NULL;
+
+switch( SAVE_METHOD ){
+    case SAVE_ON_MEMORY: $c = new MemoryBasedContainer(); break;
+    case SAVE_ON_FILE:   $c = new FileBasedContainer("/tmp"); break;
+    case SAVE_ON_DBASE:  $c = new DbBasedContainer(); break;
+}
+
+save_session_data($c);
+/* ... */</pre>
+</div>
+
+
+<p>
+Note that the function <code>save_session_data()</code> formally accepts an
+object from a class that cannot be instantiated. This is obviously a
+syntactical trick that simply says: well, my dear function, whatever the actual
+object may be, that object will behave as specified by the
+<code>DataContainer</code> interface, so that the methods specified there will
+be available.
+</p>
+
+<p>
+Note that the same code would work perfectly on PHP also omitting the interface
+declaration at all, as the type of the variable $c is dynamically determined
+and the method calls are always dynamically resolved at run-time. Yet, the
+interface makes evident to the human reader (an to PHPLint) which are the
+features shared by every instance of the object $c.
+</p>
+
+</body>
+</html>

@@ -1,0 +1,314 @@
+<HTML>
+<HEAD>
+<TITLE>PHPLint Reference Manual</TITLE>
+<META name=description content="PHPLint Reference Manual">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<LINK rel=stylesheet type='text/css' href='../styles.css'>
+<script type="text/javascript" src="../utils.js"></script>
+</HEAD><BODY onload="buildTOC('toc');">
+
+<h2 id="toc">Definite assignment analysis</h2>
+
+
+<p>
+In PHPLint the properties of an object are always guaranteed to have a value,
+that is properties are always initialized to some value appropriate for their
+type. For example, an integer may be zero, while a string of characters may be
+NULL. In any case, every variable can be safely used because it has a definite
+value.
+</p>
+
+<p>
+Also mandatory arguments of function passed by value, and default arguments
+of function passed by value always are definitely assigned.
+</p>
+
+<p>
+But what about global and local variables?
+Consider for example this code, were the variable $a may be assigned or not
+only if a given condition is TRUE:
+</p>
+
+<div class="code_box">
+<pre>error_reporting(E_ALL|E_STRICT);
+
+$flag = isset($_POST['data']);
+
+if( $flag )
+    $a = 123;
+
+echo $a;  # &lt;== $a not assigned
+</pre></div>
+
+<p>
+When the code above runs, and <tt>$flag</tt> evaluates to FALSE, PHP displays
+the message below, which indicates the usage of an unassigned variable:
+</p>
+
+<blockquote><code>
+Notice: Undefined variable: a in /home/salsi/test.php on line 5
+</code></blockquote>
+
+<p>
+What PHP reports as minor bug, might reveals to be a catastrophic flaw in our
+source. That is why PHPLint performs a <i>conservative definitely assignment
+analysis</i> on local variables and on arguments of function passed by
+reference, and reports any case in which a variable might be used unassigned.
+</p>
+
+<p>
+From here on we will indicate as <i>SDAV</i> the set of variables that are
+definitely assigned after a given statement, whichever may be the execution
+path the program will actually follow at runtime.
+</p>
+
+<p>
+This analysis is said <i>conservative</i> in the sense that false positives may
+arise, at least in some particular cases, and in these cases the variable must
+be initialized to some dummy value before the involved statement.
+</p>
+
+
+
+<h2>The if() statement</h2>
+
+<p>
+We already seen that variables defined inside the "then" branch of an if()
+statement are considered unassigned in the next statement. But what if there is
+also an "else" branch? In this case only the variables that are assigned in
+both the brances are considered definitely assigned, the others remaining
+unassigned. The example illustrates this fact:
+</p>
+
+<div class="code_box">
+<pre>if( $flag ){
+    $b = 1;
+    $c = 2;
+} else {
+    $b = 4;
+    $d = 5;
+}
+
+echo $b, $c, $d;  # &lt;== $c, $d not assigned
+</pre></div>
+
+<p>
+Note that only the variable $b is considered definitely assigned, while $c and
+$d are not and cannot be used as right-hand values because it is not guaranteed
+them will have a value when this code will be executed.
+</p>
+
+<p>
+The only exception to the rule above is when the boolean expression can be
+statically evaluated to be FALSE or TRUE: in this case the branch that will be
+executed is univocally determined and the set of variables definitely
+assigned is that resulting from the parsing of this branch alone. The typical
+example is a block of conditional code that depends on some constants:
+</p>
+
+<div class="code_box">
+<pre>const DEBUG = TRUE,
+      DOLOG = FALSE;
+
+if( DEBUG or DOLOG )
+    $logfile = fopen("log.txt", "w");
+
+if( DEBUG )
+    fwrite($logfile, "Still alive!\n");
+
+fwrite($logfile, "Processing...");
+</pre></div>
+
+<p>
+where in this case $logfile results to be definitely assigned because the two
+controlling boolean expressions are statically evaluable to TRUE.
+<br>
+Note also that if both the constants were set to FALSE, then the last statement
+that write "Processing..." would not pass the validation as the variable
+$logfile in this case would not be definitely assigned. Then a source may
+or may not pass the validation of PHPLint depending on the value of some
+constants.
+</p>
+
+<p>
+Another important exception is when the if() statements includes
+statements like <code>return</code>, <code>exit</code> (also known as
+<code>die</code>) or <code>throw</code>: variables definitely assigned
+up to these statements cannot contribute to the SDAV, but the set of
+the possible execution paths reduces:
+</p>
+
+<div class="code_box">
+<pre>if( $flag )
+    $data = (string) $_POST['data'];
+else
+    die("no data");
+
+echo $data;
+</pre></div>
+
+<p>
+This code passes the validation because the <code>echo $data;</code> statement
+will be executed only if the "then" branch has been executed, so $data is
+definitely assigned.
+<br>
+Similar special cases are considered by PHPLint also for the other statements
+we will examine below.
+</p>
+
+
+<h2>The while() statement</h2>
+
+<blockquote><pre>
+while( <i>EXPR</i> )
+    <i>BLOCK</i>
+</pre></blockquote>
+
+<p>
+The SDAV is the SDAV resulting from the evaluation of the expression EXPR;
+variables assigned in the BLOCK of statements are not considered definitely
+assigned.
+Exception: when EXPR is statically evaluable to TRUE, the SDAV at the end of
+the BLOCK are also definitely assigned after the while() statement.
+</p>
+
+
+
+
+<h2>The do...while() statement</h2>
+
+<blockquote><pre>
+do
+    <i>BLOCK</i>
+while( <i>EXPR</i> );
+</pre></blockquote>
+
+<p>
+The SDAV is the SDAV after the BLOCK joined with the variables assigned in the
+expression EXPR.
+</p>
+
+
+
+<h2>The foreach() statement</h2>
+
+<blockquote><pre>
+foreach(ARRAY as $k =&gt; $v)
+    <i>BLOCK</i>
+</pre></blockquote>
+
+<p>
+The foreach() statement never adds variables to the SDAV.
+</p>
+
+
+
+<h2>The for() statement</h2>
+
+<blockquote><pre>
+for(LIST1; EXPR; LIST2)
+    <i>BLOCK</i>
+</pre></blockquote>
+
+<p>
+To the SDAV contribute LIST1 and EXPR, but not LIST2 and BLOCK.
+</p>
+
+
+
+<h2>The switch() statement</h2>
+
+<p>
+If there is a default branch, the SDAV is the intersection of the sets
+contributed by each branch, joined with the set of variables assigned in the
+expression EXPR.
+</p>
+
+<p>
+If there is not a default branch, then only the variables assigned in the
+expression are considered definitely assigned.
+</p>
+
+
+
+<h2>The try...catch statement</h2>
+
+<blockquote><pre>
+try {
+    <i>BLOCK_0</i>
+}
+catch(BException $e){
+    <i>BLOCK_1</i>
+}
+catch(AException $e){
+    <i>BLOCK_2</i>
+}
+</pre></blockquote>
+
+<p>
+The try...catch statement contributes to the SDAV with the intersection of all
+the sub-sets of variables definitely assigned in every "try" and "catch"
+branch.
+</p>
+
+
+
+
+<h2>Arguments passed by reference</h2>
+
+<p>
+<b>Arguments passed by reference</b> must be definitely assigned by the
+caller, and then these arguments are considered definitely assigned
+inside the callee:
+</p>
+
+
+<div class="code_box">
+<pre>function inc_by_one(/*. int .*/ &amp; $i)
+{
+    echo "before: $i\n";
+    $i++;
+    echo "after: $i\n";
+}
+
+$n = 0;
+inc_by_one($n);
+
+inc_by_one($n2);  # &lt;== ERROR: $n2 unassigned
+</pre></div>
+
+
+<p>
+<b>Arguments that return by value</b> may be unassigned at call time as their
+assignment is in charge of the callee; these arguments are then considered
+unassigned entering the function. PHPLint also takes care to assure that
+arguments that return by reference be actually assigned before returning from
+the function itself:
+</p>
+
+
+<div class="code_box">
+<pre>function get_hash_code(/*. return string .*/ &amp; $hash)
+{
+    if( DEBUG ){
+        $hash = DEBUG_HASH;
+        return;
+    }
+
+    if( ! isset($_REQUEST['hash']) )
+        return;   # &lt;== ERROR: $hash not assigned
+    
+    $s = (string) $_REQUEST['hash'];
+    if( strlen($s) &lt; 8 )
+        die("hash code too short");
+    
+    $hash = $s;
+}
+
+get_has_code($valid_form);
+</pre></div>
+
+</body>
+</html>

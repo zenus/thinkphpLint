@@ -1,0 +1,342 @@
+<HTML>
+<HEAD>
+<TITLE>PHPLint Reference Manual</TITLE>
+<META name=description content="PHPLint Reference Manual">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<LINK rel=stylesheet type='text/css' href='../styles.css'>
+<script type="text/javascript" src="../utils.js"></script>
+</HEAD><BODY onload="buildTOC('toc');">
+
+<h2 id="toc">Namespaces</h2>
+
+<p>
+PHP 5.3 introduces namespaces, a powerful and effective way to give longest,
+meaningful names to items so avoiding collisions among items exported
+by different packages. PHP also allows to write shorter, incomplete names:
+in this case a <i>namespace resolution algorithm</i> has to be applied in
+order to obtain the actual absolute name of the item. In this chapter
+we will describe in detail how this resolution algorithm works under PHP,
+and then under PHPLint too.
+</p>
+
+
+<h3>Terminology</h3>
+
+<center>
+	<img src="../namespace-terminology.png">
+</center>
+
+<p>
+<b>Item:</b> a constant, a function or a class. Items are univocally
+represented by an <i>fully qualified name</i> (see below). Note that variables
+are not involved in the namespace mechanism, so a thing like
+<code>$a\b\c</code> has no meaning and it is a syntactic error.
+</p>
+
+<p>
+<b>Name:</b> a sequence of one or more identifiers separated by <code>\</code>
+(back-slash), for example <code>it\icosaedro\bignumbers\BigInt</code>.
+Names can then be bare identifiers (if contain only one identifier)
+or qualified (if contain two or more identifiers).
+</p>
+
+<p>
+<b>Bare identifier</b> is a name that contains only an identifier and no
+back-slashes. Items defined in global namespace are all bare identifiers.
+In other words, the absolute name of items defined in global namespace
+are all bare identifiers.
+</p>
+
+<p>
+<b>Qualified name:</b> a name that contains at least one back-slash, then at
+least two identifiers.
+</p>
+
+<p>
+<b>Fully qualified name (FQN):</b> the complete name of an item with which PHP
+univocally identifies that item. Obviously, the fully qualified names of items
+defined in global namespace are all bare identifiers, for example
+<code>strlen</code>. Instead, the FQN of items defined in any other namespace
+are composed by a path part (the namespace) and the proper identifier specific
+for that item defined in the namespace. For example, the FQN
+</p>
+<center><code>it\icosaedro\bignumbers\BigInt</code></center>
+<p>
+is the <code>BigInt</code> class (the identifier) defined in the
+<code>it\icosaedro\bignumbers</code> namespace (the path part of the FQN).
+
+<p>
+<b>Leading identifier</b> is the first identifier of a name. If the name is a
+bare identifier, then the leading identifier is the identifier itself.
+</p>
+
+<p>
+<b>Trailing identifier</b> is the last identifier in a name.
+</p>
+
+<p>
+<b>Absolute name</b> is a FQN with a leading back-slash added in
+front to it, for example <code>\strlen</code> or
+<code>\it\icosaedro\bignumbers\BigInt</code>. This leading back-slash is the
+syntactic trick with which the programmer tells to PHP that the following name
+is already the fully qualified name of an item and then the <i>resolution
+algorithm</i> has not to be applied to it.
+</p>
+
+<p>
+Lets take for example the <code>BigInt</code> class:
+</p>
+
+<center>
+<table border="0">
+	
+	<tr><td align="left">Fully qualified name:</td>
+	<td><code>it\icosaedro\bignumbers\BigInt</code></td></tr>
+	
+	<tr><td align="left">Absolute name:</td>
+	<td><code>\it\icosaedro\bignumbers\BigInt</code></td></tr>
+	
+	<tr><td align="left">Qualified name:</td>
+	<td><code>bignumbers\BigInt</code></td></tr>
+	
+	<tr><td align="left">Leading identifier:</td>
+	<td><code>it</code></td></tr>
+	
+	<tr><td align="left">Trailing identifier:</td>
+	<td><code>BigInt</code></td></tr>
+	
+</table>
+</center>
+
+<p>
+All the definitions above are summarized below in EBNF syntax:
+</p>
+
+<blockquote>
+<p>
+name = qualified_name | absolute_name;<br>
+qualified_name = id "\" id {"\" id};<br>
+fully_qualified_name = qualified_name;<br>
+absolute_name = "\" fully_qualified_name;<br>
+</p>
+</blockquote>
+
+<p>
+To summarize, any name that starts with a back-slash is absolute, and the
+rest of the name is the FQN of the item.
+</p>
+
+
+<h3>Names and case sensitiveness</h3>
+
+<p>
+In PHP names are all case-insensitive, with the only exception of
+the last identifier of the name of constants which is case-sensitive.
+</p>
+
+<p>
+PHPLint checks the exact spelling of names as they were all case-sensitive,
+and reports an error if the name does not match exactly its definition.
+So for example this chunk of code:
+</p>
+
+<div class="code_box"><pre>
+namespace it\icosaedro\bignumbers { ... }
+namespace it\Icosaedro\BigNumbers { ... }
+namespace { $zero = \It\IcoSAedro\BigNUmbERS\ZERO(); }
+</pre></div>
+
+<p>
+gives several errors under PHPLint because the namespaces listed here does not match exactly those defined in other packages.
+</p>
+
+
+
+<h3>The namespace statement</h3>
+
+<p>
+The <tt>namespace</tt> statement (not to be confused with the
+<tt>namespace\</tt> operator) allows to define the namespace inside which the
+items are defined:
+</p>
+
+<div class="code_box"><pre>
+namespace it\icosaedro\bignumbers {
+
+    const MAX_LEN = 100;
+    class BigInt {...}
+    /*. BigInt .*/ function Zero(){...}
+
+}
+</pre></div>
+
+<p>
+All the items defined inside a namespace take that namespace as the path part
+of their name. So in the example above the following items are defined
+with FQN:
+</p>
+
+<blockquote><pre>
+it\icosaedro\bignumbers\MAX_LEN
+it\icosaedro\bignumbers\BigInt
+it\icosaedro\bignumbers\Zero
+</pre></blockquote>
+
+
+
+<h3>The use statement</h3>
+
+<p>
+The <tt>use</tt> statement declares an abbreviation for a given path,
+but it allows also to "import" the name of a single class.
+We will use the following terminology for the <code>use</code>
+statement:
+</p>
+
+<blockquote>
+<code>use</code> <i>path</i> <code>as</code> <i>target</i>;
+</blockquote>
+
+<p>
+where <i>path</i> is a name that identifies a partial namespace name or the
+FQN of a class, and <i>target</i> is a bare identifier. If the
+<code>as</code>&nbsp;<i>target</i> part of the statement is missing, then the
+last word of the <i>path</i> is assumed as <i>target</i>. Then for
+example:
+</p>
+
+<div class="code_box"><pre>
+use it\icosaedro\bignumbers as BN;
+use it\icosaedro\bignumbers\BigInt;
+</pre></div>
+
+<p>
+define the target <code>BN</code> which stands for the qualified name
+<code>it\icosaedro\bignumbers</code> and the target <code>BigInt</code> which
+stands for the FQN <code>it\icosaedro\bignumbers\BigInt</code>. The <code>use</code>
+statements are applied by the namespace name resolver algorithm in the order
+to resolve a partial name into a FQN.
+</p>
+
+
+
+
+<h3>Name resolution algorithm</h3>
+
+<p>
+In the source text of the program can appear bare identifiers, qualified
+names and fully qualified names. Absolute names are easily converted
+into FQNs by simply removing the leading back-slash, so for
+example the absolute name
+</p>
+
+<blockquote>
+<code>\it\icosaedro\bignumbers\BigInt</code>
+</blockquote>
+
+<p>
+is immediately recognized to identify the FQN
+</p>
+
+<blockquote>
+<code>it\icosaedro\bignumbers\BigInt</code>
+</blockquote>
+
+<p>
+The <code>namespace\</code> operator can also be used as abbreviation for the
+current namespace and can be used to build an absolute name. For example,
+if the current namespace is <code>it\icosaedro</code> then
+<code>namespace\bignumbers\BigInt</code> is equivalent to the absolute
+name <code>\it\icosaedro\bignumbers\BigInt</code>.
+</p>
+
+<p>
+Instead, bare identifiers and qualified names need to be resolved into a FQN
+applying the algorithm we well describe below. This algorithm
+depends on the nature of the item involved: constants and functions are
+resolved in a way, classes are resolved in a different way.
+</p>
+
+<p>
+<b>Resolution algorithm for constants and functions.</b> When the name
+identifies a constant or a function, these steps are applied in the order:
+</p>
+
+<blockquote>
+<p>
+<b>Bare identifier of constant or function.</b> If bare identifier: search the
+name in the current namespace, then in the global namespace, then error.
+</blockquote>
+
+<blockquote>
+<p>
+<b>Qualified name of constant or function.</b>
+If it is a qualified name, try applying the <code>use</code> statements defined
+in the current namespace, in the order, looking for the first target that
+matches the leading word of the qualified name. If a match is found, then the
+FQN of the item is formed joining the path part and the trailing part
+of the name, the trailing part of the name being the name without its leading
+word. Then for example according to the <code>use</code> statements above, the
+qualified name
+<blockquote>
+<code>BN\Zero</code>
+</blockquote>
+is resolved into the FQN
+<blockquote>
+<code>it\icosaedro\bignumbers\Zero</code>
+</blockquote>
+If no matching target is found it is a fatal error.
+</blockquote>
+
+
+<p>
+<b>Resolution algorithm for classes.</b> When the name identifies a class,
+then the following resolution algorithm applies:
+</p>
+
+<blockquote>
+<p>
+<b>Bare identifier of class.</b>
+If bare identifier (for example <code>BigInt</code>), applies all the
+<code>use</code> statements in the order, looking for the first target that
+matches the identifier. If a match is found,
+then the FQN of the class is the corresponding path part of
+the <code>use</code> statement; if a class with that name is not
+defined, and class autoloading is enabled (see
+<code>__autoload()</code> and <code>spl_autoload()</code>) try
+autoloading for that name; if the autoloading fails to resolve the FQN of the
+class, it is a fatal error.
+<p>
+If no matching target is found, then a class with this name is searched in the
+current namespace <i>namespace</i>; if no class exists with this name and
+autoloading is enabled, try autoloading of
+<code><i>namespace</i>\BigInt</code>.
+If the class cannot be resolved, it is
+a fatal error.
+</blockquote>
+
+
+<blockquote>
+<p>
+<b>Qualified identifier of class.</b>
+If the name of the class is a qualified name, for example
+<code>BN\BigInt</code>, all the <code>use</code> statements are applied to
+the leading word <code>BN</code> of the name; if a matching target is found,
+then the leading word is substituted with the corresponding path part of the use
+statement to finally obtain the FQN of the class
+<code>it\icosaedro\bignumbers\BigInt</code>; if the class with this absolute
+name is not currently defined, and autoloading is enabled, try to autoload of
+that class; if also autoload fails, it is a fatal error.
+<p>
+If no matching <code>use</code> statement is found, the current namespace
+name <i>namespace</i> is added to the qualified name to obtain the absolute
+name <code><i>namespace</i>\BN\BigInt</code> and then search for this
+absolute name; if class autoloading is enabled, also tries autoloading;
+if also autoloading fails, it is a fatal error.
+</blockquote>
+
+
+</body>
+</html>

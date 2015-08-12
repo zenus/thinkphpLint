@@ -1,0 +1,605 @@
+<HTML>
+<HEAD>
+<TITLE>PHPLint Reference Manual</TITLE>
+<META name=description content="PHPLint Reference Manual">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<LINK rel=stylesheet type='text/css' href='../styles.css'>
+<script type="text/javascript" src="../utils.js"></script>
+</HEAD><BODY onload="buildTOC('toc');">
+
+<h2 id="toc">Exceptions</h2>
+
+
+<p>
+PHPLint knows about exceptions and checks for their proper usage. Exceptions
+can be explicitly raised by the <code>throw</code> statement, then PHPLint
+tracks their propagation through the call three of functions and methods.
+PHPLint also accurately checks <code>try...catch</code> blocks and shows
+improperly sorted <code>catch</code> branches and uncaught exceptions.
+</p>
+
+<p>
+PHPLint handles exceptions thrown by a method as part of its signature, just
+like the return type and its arguments. To be more precise, being the list of
+the exceptions part of the interface that the method exhibits, overriding (or
+implementing) methods must comply with the signature of the original method.
+So, overriding (or implementing) methods cannot throw more exceptions than the
+original method; nevertheless the new method can throw more specialized
+exceptions derived from the exceptions already thrown by the original method
+without violating the interface contract.
+</p>
+
+<p>
+PHPLint also introduces unchecked exceptions, a variant of exceptions that are
+not part of the contract of the interface of a function or method and have a
+quite different semantic.
+</p>
+
+
+
+
+<h3>The Exception base class</h3>
+
+<p>
+Exceptions are only the classes derived from the <code>Exception</code> base
+class, declared in the <code>standard</code> module. In the following example,
+PHPLint forbids to use a generic class as exception:
+</p>
+
+<div class="code_box"><pre>
+class NotAnException {}
+
+throw new NotAnException();  # <b>&lt;= ERROR: not an Exception</b>
+</pre></div>
+
+
+<h3>Extending Exception</h3>
+
+<p>
+The base <code>Exception</code> can be extended to get even more specialized
+exception classes. In the following example the CException specializes
+BException, that in turn specializes BException and so on. All these classes
+are valid exceptions that will be used in the following examples:
+</p>
+
+
+<div class="code_box"><pre>
+/*. require_module 'standard'; .*/
+class AException extends Exception {}
+class BException extends AException {}
+class CException extends BException {}
+class DException extends CException {}
+</pre></div>
+
+<p>
+Given two sets of exceptions A and B, we will say that B is a <b>class
+subset</b> of A if all the classes of B are also classes of A or classes
+extending classes of A. In other words, if an object belongs to any of the
+classes of the set B, then the object also belongs to at least one of the
+classes of the set A.
+</p>
+
+
+
+<h3>Declaring thrown exceptions</h3>
+
+<p>
+The following example declares a function that raises an exception.
+This function is obviously completely useless, but will be used only
+as a prototype of a function that generates an exception:
+</p>
+
+<div class="code_box"><pre>
+function f1()
+<b>/*. throws BException, CException .*/</b>
+{
+    if( true )
+        throw new BException();
+    else
+        throw new CException();
+}
+</pre></div>
+
+<p>
+A function can throw exceptions with the <code>throw</code> statement but may
+also inherit exceptions from other functions or methods he calls inside its
+body. We will call all the exceptions a function (or method) may throw as
+the <b>set of thrown exceptions.</b>
+</p>
+
+<p>
+The <code>throws</code> statement must list all the exceptions the function can
+throw. This is called the <b>set of declared thrown exceptions.</b> Normally
+the list of the declared thrown exceptions is simply the list of the thrown
+exceptions, but more in general the set of the thrown exceptions may be a class
+subset of the declared thrown exceptions. So for example, the function
+<code>f1()</code> might also throw <code>DException</code> because it is an
+extension of <code>CException</code> and this latter already appears in the
+<code>throws</code> declaration.
+</p>
+
+<p>
+The signature of the function <code>void()</code> and the list of the declared
+thrown exceptions are all part of the interface contract of this function, and
+the client code that calls this function must comply with this contract. In
+particular, the client code must either catch the declared thrown exceptions,
+or it must propagate them, but it cannot ignore them.
+</p>
+
+<p>
+The <code>throws</code> statement may also list others exceptions the function
+does not currently throws, but the programmer is planning to add later as far
+as the project evolves and new features are added.
+</p>
+
+<p>
+The list of the declared thrown exceptions can also be provided by
+the <code>@throws</code> line tag of a DocBlock:
+</p>
+
+<div class="code_box"><pre>
+/**
+ *  Test function that simply raises some exceptions.
+ *
+ *  @return void
+ *
+ *  <b>@throws BException</b> If the B event occurs.
+ *  <b>@throws CException</b> If the C event occurs.
+ */
+function f1(){ ... }
+</pre></div>
+
+<p>
+PHPLint collects and joins the exceptions declared in the <code>@throws</code>
+DocBlock line tag along with the exceptions declared in the <code>throws</code>
+PHPLint meta-tag. The difference among the two styles is that the
+<code>@throws</code> line tag allows to indicate a description of the
+conditions under which the given exception might be thrown.
+</p>
+
+
+<h3>Exceptions and prototypes, methods and inheritance</h3>
+
+<p>
+There are several contexts in which the declaration of a function must be
+repeated: methods that implements an abstract method, methods that override an
+inherited method, and functions and methods that implements a prototype
+declared in a <code>forward</code> declaration. In all these cases there may be
+a set of declared thrown exceptions in the first declaration of the method or
+function (that we will call <i>original</i> for short) and another set of
+declared thrown exceptions in the second declaration (that we will call
+<i>new</i> for short). The new declaration must be compatible with the original
+one, that is <b>the set of declared thrown exceptions in the new declaration
+must be a class subset of the original declared thrown set.</b>
+</p>
+
+<p>
+When function prototypes are needed, the <code>throws</code> declaration must
+list all the exceptions the actual function throws.
+The implementing function must then repeat this list of thrown exceptions:
+</p>
+
+<div class="code_box"><pre>
+/*. forward void function f2() throws BException; .*/
+
+function f2()
+<b>/*. throws BException .*/</b>
+{
+    # can throw BException or even any derived class
+}
+</pre></div>
+
+<p>
+The <code>throws</code> declaration may also list more exceptions that are not
+currently thrown by the function, but that the programmer plans to add later
+as far as the project evolves.
+</p>
+
+<p>
+The following example illustrates the <code>throws</code> declaration used in
+interface and classes:
+</p>
+
+<div class="code_box"><pre>
+interface I1 {
+    public function m() <b>/*. throws BException .*/</b> ;
+}
+
+class C1 implements I1 {
+    public function m()
+    <b>/*. throws BException .*/</b>
+    {
+        # This method may throw BException or even
+        # any extension of BException.
+    }
+}
+</pre></div>
+
+<p>
+In the following example PHPLint detects that the overriding method C2::m()
+throws an incompatible exception, and it raises an error:
+</p>
+
+<div class="code_box"><pre>
+class C2 extends C1 {
+    public function m()
+    <b>/*. throws CException, AException .*/</b>  # <b>&lt;= ERROR: invalid AException</b>
+    {
+        if( true )
+            throw new CException();
+        else
+            throw new AException();  # <b>&lt;= ERROR: incompatible</b>
+    }
+}
+</pre></div>
+
+<p>
+In the example above, note that CException is a valid extension of BException
+and then it is accepted. On the contrary, AException does not extend any of the
+inherited exceptions (it is, by the way, a parent class) and must be rejected:
+then C2::m() is not a valid overriding method of C1::m().
+</p>
+
+
+
+
+<h3>Detecting the exceptions</h3>
+
+<p>
+PHPLint checks the proper order of the <code>catch()</code> branches, and
+warns about useless branches and uncaught exceptions.
+As a general rule, the <code>catch()</code> branches must be ordered
+so that the more specialized exceptions come first, and then the more
+general exceptions next, so the correct order is CException, BException,
+AException and then Exception.
+The following chunk of code illustrates several cases:
+</p>
+
+<div class="code_box"><pre>
+f1(); # <b>&lt;= Warning: uncaught exceptions CException, BException</b>
+
+# Full handling:
+try { f1(); }
+catch( CException $e ){ }
+catch( BException $e ){ }
+
+# Incomplete handling:
+try { f1(); }
+catch( CException $e ){ }  # <b>&lt;= Warning: uncaught exception BException</b>
+
+# Improper order of the branches:
+try { f1(); }
+catch( BException $e ){ }
+catch( AException $e ){ }  # <b>&lt;= ERROR: CException already caught by BException</b>
+</pre></div>
+
+<p>
+Note that PHPLint raises a Warning message on unhandled exceptions that can
+be thrown at global scope, that is in the main program; exceptions in
+error messages are always sorted in the suggested catching order, then
+<code>CException</code> first and <code>BException</code> next.
+</p>
+
+<p>
+Instead, unhandled exceptions that can be thrown inside a function
+or inside a method are accounted as exceptions thrown and then checked
+against the set of the declared thrown exceptions.
+</p>
+
+<p>
+Note also how PHPLint accounts for all the exceptions thrown inside the
+<code>try{}</code> block and then checks every <code>catch(){}</code> branch
+agains the list of exceptions involved. Exceptions not handled by any of the
+<code>catch(){}</code> branches are processed just like any other exception
+that can be thrown there, as explained above.
+</p>
+
+
+<h3>Checked exceptions</h3>
+
+<p>
+All the exceptions we seen so far are <i>checked</i> because PHPLint accurately
+checks the context in which them are generated and how they propagate through
+the code and sets some restrictions on their usage.
+Basically, checked exceptions are part of the contract between functions and
+methods and their client code.
+</p>
+
+<p>
+Moreover, packages that are libraries cannot throw checked exceptions at global
+scope, that is including these libraries cannot expose the client package to
+unexpected abnormal termination of the program.
+</p>
+
+<p>
+Checked exceptions are intended to simplify the structure of a program in order
+to deal with exceptional situations that normally should not happen.
+Programmers and designers of libraries can then choose if a function must
+return FALSE or another special value to indicate a failure, or if it should
+throw a checked exception instead. The choice depends on several factors
+we will not analyze here.
+</p>
+
+<p>
+The important point to stress here is that checked exceptions are part of the
+contract of the method or function, and then PHPLint helps the programmer to be
+always aware these exceptions should be properly caught and handled, or
+declared to be thrown, but cannot be ignored.
+</p>
+
+
+
+<h3>Unchecked exceptions</h3>
+
+<p>
+Moreover, PHPLint also allows to declare <i>unchecked</i> exceptions
+using the <code>/*. unchecked .*/</code> attribute:
+</p>
+
+<div class="code_box"><pre>
+<b>/*. unchecked .*/</b> class UncheckedException extends Exception {}
+</pre></div>
+
+<p>
+Unchecked exceptions do not contribute to the contract of the function or
+method, and then their propagation through the code is not tracked. Unchecked
+exceptions can be thrown in any context. Unchecked exceptions are normally not
+reported in the generated documentation; only unchecked exceptions for which a
+non-empty description is provided in a <code>@throws</code> DocBlock line tag
+are reported, the others are not.
+</p>
+
+<p>
+Unchecked exceptions are not part of the contract of the function or method,
+rather are thrown when this contract if broken. Typically this happens when the
+values submitted as arguments are not appropriate according with the
+documentation of the method, or when the method is called in the wrong context
+(for example, trying to access above the last item of a list when the iterator
+already reported the scan is finished). The following example illustrates a
+function that may throw either a checked exception or an unchecked exception:
+</p>
+
+<div class="code_box"><pre>
+class IOException extends Exception {}
+<b>/*. unchecked .*/</b> class InvalidArgumentException extends Exception {}
+
+/**
+ *  Log the message.
+ *  @param int $level  Severity: 0=error, 1=warning, 2=notice.
+ *  @param string $msg  The message.
+ *  @return void
+ *  <b>@throws IOException  Failed access to the log file.</b>
+ */
+function doLog($level, $msg)
+{
+    if( $level &lt; 0 or $level &gt; 2 )
+        throw new InvalidArgumentException("level=$level");
+    $f = @fopen("log.txt", "a");
+    if( $f === FALSE )
+        throw new IOException($php_errormsg);
+    $a = array("ERROR", "Warning", "Notice");
+    $w = fwrite($f, $a[$level] . ": $msg\n");
+    if( $w === FALSE ){
+        fclose($f);
+        throw new IOException($php_errormsg);
+    }
+    if( ! fclose($f) )
+        throw new IOException($php_errormsg);
+}
+</pre></div>
+
+<p>
+In this case the programmer decided to throw a checked exception
+<code>IOException</code> if the log message cannot be appended to the file, so
+that the client code can take an alternative action, for example to display the
+error on the screen rather than try to save it on a file. Then the client code
+has the opportunity to either catch the exception, or to declare it as thrown.
+</p>
+
+<p>
+Instead this function throws the unchecked exception
+<code>InvalidArgumentException</code> if the client code passed an invalid
+argument $level, for example calling <code>doLog(4, "xyz");</code>: being this
+a violation of the contract of usage of the function as stated in its
+description, the designer of this function cannot pretend the client code be
+prepared to handle a failure which himself created, so there is no reason to
+make this exception checked; it is the client code that needs to be fixed. The
+normal destiny of the program if this case happens is an abrupt termination.
+</p>
+
+<p>
+According to this premise, normally there is no need to catch unchecked
+exceptions as these should be thrown only on bugged programs.
+</p>
+
+<p>
+On the contrary, checked exceptions are typically due to exceptional events
+that are external to the program (file system error, lost of network
+connection, missing reply from the database system, etc.) and that the program
+should be interested to handle in the appropriate way.
+</p>
+
+
+
+
+<h3>May overriding methods throw new exceptions?</h3>
+
+<p>
+As a consequence of the strict inheritance model PHPLint implements, new
+methods that implements or override an original method can only throw
+the same exceptions of the original method or even more specialized
+extensions of these latter.
+</p>
+
+<p>
+We will consider the following example, where an interface is defined
+in order to access the elements of a list of strings:
+</p>
+
+<div class="code_box"><pre>
+class OutOfBoundException extends Exception {}
+
+interface MyList {
+    /*. string .*/ function getElement(/*. int .*/ $index)
+        <b>/*. throws OutOfBoundException .*/</b>
+}
+</pre></div>
+
+<p>
+The interface provided by the <code>getElement</code> method perfectly
+fits an implementation in which the list is stored in memory, but what
+if the same interface has to be implemented on a file? Accessing files
+may raise exceptions like <code>IOException</code> or something alike,
+but such an exception can't be thrown by <code>getElement</code> without
+violating its interface contract.
+So how to cope with this restriction when the new method really needs to throw
+another, new exception? Here there are some suggestions and alternative
+solutions:
+</p>
+
+
+<ul>
+
+
+<li>
+<p>
+<b>Exception translation.</b>
+The new method might throw a new exception, provided that this new exception be
+an extension of any of the exceptions already raised by the original method.
+For example, we may define a new exception that will be thrown if an
+<code>IOException</code> occurs:
+</p>
+
+<div class="code_box"><pre>
+class OutOfBoundDueToIOException extends OutOfBoundException {}
+
+class MyListOnFile {
+
+    /*. string .*/ function getElement(/*. int .*/ $index)
+    {
+        try {
+            <i>try_to_read_the_element_from_file</i>
+        }
+        catch( IOException $e ){
+            throw new OutOfBoundDueToIOException( $e-&gt;getMessage() );
+        }
+    }
+
+}
+</pre></div>
+
+<p>
+In newest releases of PHP, the Exception class also implements a `previous'
+exception property with which you can also report to the caller the original
+exception that was thrown:
+</p>
+
+<div class="code_box"><pre>
+throw new OutOfBoundDueToIOException(
+    $e-&gt;getMessage(), $e-&gt;getCode(), $e);
+</pre></div>
+
+</li>
+
+
+
+<li>
+<p>
+<b>More specialized method.</b>
+We may create a new method with another name; this new method can now throw
+any exception it needs. The original method should then
+be disabled calling <code>die()</code> and made deprecated:
+</p>
+
+<div class="code_box"><pre>
+class MyListOnFile {
+
+    /** @deprecated Please use getElementFromFile() instead. */
+    /*. string .*/ function getElement(/*. int .*/ $index)
+	{ die("this method disabled; use getElementFromFile instead"); }
+
+    /*. string .*/ function getElementFromFile(/*. int .*/ $index)
+		/*. throws IOException .*/
+    {
+        <i>try_to_read_the_element_from_file</i>
+    }
+
+}
+</pre></div>
+</li>
+
+
+<li>
+<p>
+<b>Simply die if the caller cannot handle the exception.</b>
+Simply call <code>die()</code> when the new exception occurs:
+</p>
+
+<div class="code_box"><pre>
+class MyListOnFile {
+
+    /*. string .*/ function getElement(/*. int .*/ $index)
+    {
+        try {
+            <i>try_to_read_the_element_from_file</i>
+        }
+        catch( IOException $e ){
+            die( $e-&gt;getMessage() );
+        }
+    }
+
+}
+</pre></div>
+
+<p>
+The rationale behind this radical choice is that client of the
+<code>MyList</code> interface cannot be aware of the new exception this
+particular implementation can throw, so dying is the only logical choice.
+</p>
+</li>
+
+
+<li>
+<p>
+<b>Move any new exception you may need in the constructor of the new class.</b>
+Typically, constructors are not implementation of another constructor
+(the only exception being a constructor defined inside an interface,
+but usually there is no any need to do that). So, a constructor can throw
+any new exception it needs. In our example, the constructor of
+the <code>MyListOnFile</code> might read in advance all the data from the
+file, and then the <code>getElement</code> method reduces to a bare access
+to the CPU memory, so it does not need to throw <code>IOException</code>
+anymore:
+</p>
+
+<div class="code_box"><pre>
+class MyListOnFile {
+
+    /. void .*/ function __construct(/*. string .*/ $filepath)
+        /*. throws IOException, OutOfBoundException .*/
+    { ... }
+
+    /*. string .*/ function getElement(/*. int .*/ $index)
+        /*. throws OutOfBoundException .*/
+    { <i>read_the_element_from_memory</i> }
+
+}
+</pre>
+</div>
+</li>
+
+
+<li>
+<b>Re-throw the checked exception as unchecked exception.</b> This is the last
+resort to be considered, as checked exceptions should be be handled properly by
+the client code, while re-throwing them as unchecked exception hides the actual
+meaning of the exception.
+</li>
+
+
+</ul>
+
+</body>
+</html>

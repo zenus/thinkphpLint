@@ -1,0 +1,443 @@
+<HTML>
+<HEAD>
+<TITLE>PHPLint Reference Manual</TITLE>
+<META name=description content="PHPLint Reference Manual">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<LINK rel=stylesheet type='text/css' href='../styles.css'>
+<script type="text/javascript" src="../utils.js"></script>
+</HEAD><BODY onload="buildTOC('toc');">
+
+<h2 id="toc">Autoloading classes</h2>
+
+<p>
+PHP raises a fatal error at runtime if we try to use an undefined
+class, so the programmer must take care to load in advance any class the
+code that follows may require:
+</p>
+
+<div class="code_box"><pre>
+&lt;?php
+
+require_once '/path/to/classes/MyClass.php';
+require_once '/path/to/classes/YourClass.php';
+require_once '/path/to/classes/HisInterface.php';
+...
+
+$a = new MyClass();
+
+class OurClass extends YourClass implements HisInterface { ... }
+...
+?&gt;
+</pre></div>
+
+
+<h3>The __autoload() magic function</h3>
+
+<p>
+PHP 5 introduces a new magic function named <b>__autoload($className)</b> that
+allows to load at runtime any missing class if and only when this class is
+actually needed. Class autoloading is triggered, for example, when a new object
+is created with <tt>new MyClass()</tt>, when a class implements or extends an
+unknown class or interface, or when serialized data are recovered with the
+function <tt>unserialize()</tt> and in any other case PHP encounters a class
+still not defined. Obviously, if auto-loaded classes in turn need other
+classes, the autoload mechanism is triggered again, recursively.
+</p>
+
+<p>
+In the following example, PHP will load automatically the class
+<code>MyClass</code> from the file <code>/path/to/classes/$className.php</code>
+when the object $a is created, and will also load all the other required
+classes when the new class <code>OurClass</code> is declared:
+</p>
+
+<div class="code_box"><pre>
+&lt;?php
+
+function __autoload(/*. string .*/ $className)
+{
+    require_once "/path/to/classes/$className.php";
+}
+
+$a = new MyClass();
+
+class OurClass extends YourClass implements HisInterface { ... }
+...
+?&gt;
+</pre></div>
+
+<p>
+Unfortunately this source cannot be submitted to PHPLint as-is because PHPLint
+is not smart enough to understand how the trick works, so we need to provide
+some hint to it. To this aim PHPLint introduces the concept of <i>resolution
+schema</i> that can be specified through the special
+<b>pragma&nbsp;'autoload'</b> meta-code statement.
+</p>
+
+<p>
+The autoload pragma must appear inside the body of the <tt>__autoload()</tt>
+function and it is not allowed elsewhere. This pragma tells to PHPLint how to
+build the full file name of the file that contains the definition of a class.
+Here is and example of how it can be used:
+</p>
+
+<div class="code_box"><pre>
+&lt;?php
+
+function __autoload(/*. string .*/ $className)
+{
+    <b>/*. pragma 'autoload'
+               'schema1'
+               '/path/to/classes/'
+               '/'
+               '.php';
+    .*/</b>
+
+    require_once "/path/to/classes/"
+        . (string) str_replace("\\", "/", $className)
+        . ".php";
+}
+
+$obj = new MyClass();
+...
+?&gt;
+</pre></div>
+
+<p>
+The resolution schema explains to PHPLint how the name of the missing class
+should be processed in order to get the name of the file where the class is
+defined: <code>/path/to/classes/</code> is the string to prepend to the name of
+the class, and <code>'.php'</code> is string to append to the name of the
+class. The substitution operated by <code>str_replace</code> has effect only
+when classes and namespaces are involved.
+</p>
+
+<p>
+Note that the <code>__autoload</code> function has then two parts: the
+pragma is the resolution schema as used by PHPLint, and the PHP code
+that follows is the resolution schema that will be actually applied
+by PHP at runtime.  PHPLint has no way to check if the two schemas do
+match, and in fact often they do not, as the first schema is used on the
+computer where the source validation is performed, whereas the latter
+must match the file system layout of the WEB server where the source will
+be deployed and the program executed.
+</p>
+
+<p>
+The <tt>schema1</tt> resolution schema is very simple but it forces
+to collect all the classes of a project in a single, flat directory.
+Another way to organize classes among a structured hierarchy of directories
+is by achieved using namespaces as explained below.
+</p>
+
+
+<h3>Resolution schema with namespaces</h3>
+
+<p>
+When namespaces are involved, the name of the class as passed to the
+<tt>__autoload()</tt> function contains the fully qualified name of the
+class with identifiers separated by backslash.  Here is where the
+<code>'/'</code> parameter of the autoload pragma comes into play:
+in fact this parameter is the string into which the backslashes of the
+absolute name of the class has to be converted, so that
+</p>
+
+<div class="code_box"><pre>
+$zero = it\icosaedro\bignumbers\BigInt(0);
+</pre></div>
+
+<p>
+will causes the file
+<code>/path/to/classes/it/icosaedro/bignumbers/BigInt.php</code> to be
+automatically loaded by PHP and parsed by PHPLint.
+</p>
+
+
+<h3>General form of the autoload pragma</h3>
+
+<p>
+The general form of the autoload pragma is then the following:
+</p>
+
+<blockquote>
+<code>pragma 'autoload' 'schema1' '<i>prepend</i>' '<i>separator</i>' '<i>append</i>';</code>
+</blockquote>
+
+<p>
+where <tt><i>prepend</i></tt> is the base directory of the classes tree.
+If a relative path is given, it is resolved against the directory of the
+file where the pragma is located, so that normally a bare dot <tt>'.'</tt>
+here does the job provided that the file where the pragma is located
+(normally <tt>autoload.php</tt>) be the root directory of the classes root.
+</p>
+
+<p>
+All the strings specified in the <code>pragma</code> statement are <b>locale
+encoded</b>. On Unix with the UTF-8 locale set, any directory is accessible.
+On Windows only paths that can be encoded using the current locale are
+accessible. Anyway, libraries should be always stored in directories whose
+names contain only ASCII characters to avoid encoding issues.
+With this setting:
+</p>
+
+<blockquote><tt>pragma 'autoload' 'schema1' '/home/www/libs/' '/' '.php';</tt>
+</blockquote>
+
+<p>
+the class <tt>MyClass</tt> would be mapped into the file name
+</p>
+
+<blockquote><tt>/home/www/libs/MyClass.php</tt></blockquote>
+
+<p>
+whereas the class <tt>it\icosaedro\bignumbers\BigInt</tt> would be mapped
+into the file name
+</p>
+
+<blockquote><tt>/home/www/libs/it/icosaedro/bignumbers/BigInt.php</tt></blockquote>
+
+<p>
+The autoload pragma MUST appear inside the <b>__autoload</b> function, and then
+only one resolution schema is allowed at a time.
+</p>
+
+<p>
+Currently PHPLint supports only the <code>'schema1'</code> resolution schema
+described here. Others resolution schemas, for example to support the PEAR
+naming schema, might be added later.
+</p>
+
+
+
+<h3>When PHPLint and PHP trigger autoloading of class</h3>
+
+<p>
+As a general rule, PHPLint triggers class autoloading anywhere an unknown class
+is found in the source code, including PHPLint meta-code and DocBlocks, with
+the only exclusion of some very special functions that are listed below in the
+table. PHP, instead, triggers class autoloading only in some contexts where
+this is really necessary for the correct execution of the program. The
+following table lists all the cases in which class autoloading is triggered,
+also specifying when only PHPLint or only PHP perform class autoloading and
+not both.
+</p>
+
+
+<pre>
+</pre>
+<table border=1 cellspacing=0 cellpadding=7>
+
+<tr>
+<th width="30%">Case</th>
+<th>Example</th>
+</tr>
+
+
+<tr>
+<td valign=top>
+Creating a new object from an undefined class.
+</td>
+<td valign=top>
+<code>$obj = new <b>UndefinedClass</b>();</code>
+</td>
+</tr>
+
+
+<tr>
+<td valign=top>
+Extending or implementing undefined classes.
+</td>
+<td valign=top>
+<code>class MyClass<br>
+&nbsp;&nbsp;&nbsp;&nbsp;extends <b>UndefinedClass1</b><br>
+&nbsp;&nbsp;&nbsp;&nbsp;implements <b>UndefinedClass2</b> { ... }</code>
+</td>
+</tr>
+
+
+<tr>
+<td valign=top>
+On type hinting of argument of function or method (PHPLint only).
+</td>
+<td valign=top>
+<pre>
+function f(<b>UndefClass</b> $obj)
+{
+    ...
+}
+
+class MyClass
+{
+    function aMethod(<b>UndefClass</b> $obj)
+    { ... }
+</pre>
+</td>
+</tr>
+
+
+<tr>
+<td valign=top>
+Accessing to static members of undefined classes.
+</td>
+<td valign=top>
+<pre>
+$n = <b>UndefClass1</b>::SOME_CONST;
+<b>UndefClass2</b>::aMehtod();
+</pre>
+</td>
+</tr>
+
+
+<tr>
+<td valign=top>
+Testing if a variable contains an object instance of a given class
+(PHPLint only).
+</td>
+<td valign=top>
+<pre>
+if( $o instanceof <b>UndefClass</b> ) ...
+</pre>
+</td>
+</tr>
+
+
+<tr>
+<td valign=top>
+Checking if a class or interface does exist (PHP only). The second argument
+allows to perform the test disabling autoloading.
+</td>
+<td valign=top>
+<pre>
+if( class_exists("MyClass", FALSE) )...
+if( interface_exists("MyIF", FALSE) )...
+</pre>
+</td>
+</tr>
+
+
+<tr>
+<td valign=top>
+In <code>catch</code> brances (PHPLint only).
+(PHPLint only).
+</td>
+<td valign=top>
+<pre>
+try { ... } catch(<b>UndefClass</b> $e){ ... }
+</pre>
+</td>
+</tr>
+
+
+<tr>
+<td valign=top>
+When the name of the undefined class appears in PHPLint meta-code:
+signature of function or method; type of a variable or property;
+formal type-cast; forward declaration of functions, classes and methods
+when a reference to an undefined class occurs; /*.throws.*/ declaration.
+PHPLint only.
+</td>
+<td valign=top>
+<pre>
+/*. <b>UndefClass1</b> .*/ function f(/*. <b>UndefClass2</b> .*/ $obj)
+{
+    ...
+}
+
+/*. forward class MyClass extends <b>UndefClass</b>
+{
+    void function aMethod()
+        throws <b>UndefException1</b>, <b>UndefException2</b>;
+}
+.*/
+</pre>
+</td>
+</tr>
+
+
+<tr>
+<td valign=top>
+In DocBlocks when the name of an unknown class appears in a <code>{@link}</code>
+in-line tag, a <code>@param</code> line tag or a <code>@param</code> line tag.
+PHPLint only.
+</td>
+<td valign=top>
+<pre>
+/**
+ * Returns the next available book in {@link <b>Bookstore</b>}.
+ * @param <b>Bookstore</b> $bs  The bookstore.
+ * @return <b>Book</b>          Next book, or NULL if not available.
+ */<br>
+function nextBook($bs)
+{
+    ...<br>
+}
+</pre>
+</td>
+</tr>
+
+<tr>
+<td valign=top>
+When the <code>cast()</code> magic function requires a class.
+PHPLint only.
+</td>
+<td valign=top>
+<pre>
+$project = cast("<b>Project</b>", $a_mixed_value);
+$users = cast("array[int]<b>User</b>", $another_mixed_value);
+</pre>
+</td>
+</tr>
+
+<tr>
+<td valign=top>
+Unserializing data. Any object that appear in the unserialized data
+contains the name of the class to which it belongs, so that the definition
+of that class can be automatically loaded.
+PHP only.
+</td>
+<td valign=top>
+<pre>
+$a_mixed_value = unserialize($serialized_data);
+</pre>
+</td>
+</tr>
+
+<tr>
+<td valign=top>
+Restoring the HTTP session.
+PHP only.
+</td>
+<td valign=top>
+<pre>
+session_start();
+</pre>
+</td>
+</tr>
+
+</table>
+<pre>
+</pre>
+
+<p>
+There are also some special functions that may trigger class autoloading:
+<tt>class_implements()</tt>, <tt>class_parents()</tt>,
+<tt>spl_autoload_*()</tt>. Please note that <b>these functions are not
+supported by PHPLint, in the sense that PHPLint does not parse nor autoload the
+indicated classes.</b>
+</p>
+
+
+<h3>A more realistic __autoload() function</h3>
+
+<p>
+The PHPLint comes with a so-called "standard library" which is located in the
+<code>stdlib/</code> directory of the distributed package. This directory contains also the
+<code>autoload.php</code> package that provides a more realistic implementation
+of the autoloding mechanism. All the PHPLint's standard libraries rely on this
+package, so that this package is included by nearly all the others.
+</p>
+
+</body>
+</html>

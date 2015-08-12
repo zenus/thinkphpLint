@@ -1,0 +1,19 @@
+BEGIN parsing of 5-spl-Traversable-2.php
+1:	<?php
+2:	
+3:		/*. require_module 'spl'; .*/
+4:	
+5:		interface Test1 extends Traversable {
+6:		}
+7:	
+8:		class Test2 implements Test1 {
+
+		class Test2 implements Test1 {
+	                    \_ HERE
+==== 8: ERROR: classes that implements `Traversable' must also either implement `Iterator' or `IteratorAggregate'
+9:		}
+10:	
+END parsing of 5-spl-Traversable-2.php
+==== ?:?: notice: required module spl.php
+==== ?:?: notice: required module standard.php
+Overall test results: 1 errors, 0 warnings.

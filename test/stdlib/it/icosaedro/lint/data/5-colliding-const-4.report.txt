@@ -1,0 +1,47 @@
+BEGIN parsing of 5-colliding-const-4.php
+1:	<?php
+2:	
+3:	# class: colliding inherited constants
+4:	
+5:	interface IF1
+6:	{
+7:		const c = 1;
+8:	}
+9:	
+10:	abstract class ABS
+11:	{
+12:		const c = 1;
+13:	}
+14:	
+15:	class C extends ABS implements IF1
+16:	{ }
+
+	class C extends ABS implements IF1
+	        \_ HERE
+==== 15: ERROR: colliding inherited constants:
+	IF1::c <---> ABS::c
+17:	
+18:	
+19:	class C2 extends ABS
+20:	{
+21:		const c = 0;
+
+		const c = 0;
+	                \_ HERE
+==== 21: ERROR: cannot re-define the constant ABS::c inherited from interface or abstract class
+22:	}
+23:	
+24:	class C4
+25:	{
+26:		const c = 1;
+27:	}
+28:	
+29:	class C5
+30:	{
+31:		const c = "";
+32:	}
+33:	
+34:	
+35:	?>
+END parsing of 5-colliding-const-4.php
+Overall test results: 2 errors, 0 warnings.

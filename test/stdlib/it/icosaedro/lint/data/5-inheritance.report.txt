@@ -1,0 +1,62 @@
+BEGIN parsing of 5-inheritance.php
+1:	<?php
+2:	
+3:	/*
+4:	 * Abstract class may redefine inherited abstract method
+5:	 * (PHP bug 43200).
+6:	 */
+7:	
+8:	interface IF1 {
+9:		function m();
+10:	}
+11:	
+12:	interface IF2 {
+13:		function m();
+14:	}
+15:	
+16:	abstract class AC1 implements IF1, IF2 {
+17:		abstract function m();
+18:	}
+19:	
+20:	
+21:	/**
+22:	 * Private [non-]static method may re-define inherited private [non-]static
+23:	 * method (PHP bug 61761).
+24:	 */
+25:	
+26:	class C1 {
+27:		private function m(){}
+28:		private static function sm(){}
+29:	}
+30:	
+31:	class C2 extends C1 {
+32:		private function m(/*. int .*/ $x){}
+33:		private static function sm(/*. int .*/ $x){}
+
+		private function m(/*. int .*/ $x){}
+	                                         \_ HERE
+==== 32: notice: variable $x assigned but never used
+34:	}
+
+		private static function sm(/*. int .*/ $x){}
+	                                                 \_ HERE
+==== 33: notice: variable $x assigned but never used
+35:	
+END parsing of 5-inheritance.php
+
+		private function m(/*. int .*/ $x){}
+	                          \_ HERE
+==== 32: notice: unused private method C2::m
+
+		private static function sm(/*. int .*/ $x){}
+	                                  \_ HERE
+==== 33: notice: unused private method C2::sm
+
+		private function m(){}
+	                          \_ HERE
+==== 27: notice: unused private method C1::m
+
+		private static function sm(){}
+	                                  \_ HERE
+==== 28: notice: unused private method C1::sm
+Overall test results: 0 errors, 0 warnings.

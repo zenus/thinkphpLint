@@ -1,0 +1,49 @@
+BEGIN parsing of 5-is_a-1.php
+1:	<?php
+2:	
+3:	/*. require_module 'standard'; .*/
+4:	
+5:	error_reporting(E_ALL | E_STRICT);
+6:	
+7:	class C1 {}
+8:	class C2 extends C1 {}
+9:	class C3 extends C2 {}
+10:	
+11:	
+12:	class W2 {
+13:		function m(C2 $obj){}
+14:	}
+
+		function m(C2 $obj){}
+	                          \_ HERE
+==== 13: notice: variable $obj assigned but never used
+15:	
+16:	class W1 extends W2 {
+17:		function m(C1 $obj){}
+18:	}
+
+		function m(C1 $obj){}
+	                          \_ HERE
+==== 17: notice: variable $obj assigned but never used
+19:	
+20:	class W3 extends W2 {
+21:		function m(C3 $obj){}
+22:	}
+
+		function m(C3 $obj){}
+	                          \_ HERE
+==== 21: notice: variable $obj assigned but never used
+
+		function m(C3 $obj){}
+	                  \_ HERE
+==== 21: ERROR: method W3::m with prototype
+	public void(C3)
+	is not call-compatible with W2::m with prototype
+	public void(C2)
+	(argument no. 1 is not call-compatible)
+23:	
+24:	
+25:	?>
+END parsing of 5-is_a-1.php
+==== ?:?: notice: required module standard.php
+Overall test results: 1 errors, 0 warnings.

@@ -1,0 +1,195 @@
+
+BEGIN parsing of 4-all-modules-test.php
+1:	<?php
+2:	# Formal test of all the modules:
+3:	
+4:	/*.
+5:	
+6:	require_module 'apache';
+7:	require_module 'bcmath';
+8:	require_module 'bz2';
+9:	require_module 'calendar';
+10:	require_module 'com';
+11:	require_module 'cpdf';
+12:	require_module 'ctype';
+13:	require_module 'curl';
+14:	require_module 'dba';
+15:	require_module 'dbase';
+16:	require_module 'dbx';
+17:	require_module 'dio';
+18:	#require_module 'dom';
+19:	require_module 'exif';
+20:	require_module 'fam';
+21:	require_module 'fbsql';
+22:	require_module 'fdf';
+23:	require_module 'filepro';
+24:	require_module 'filter';
+
+	require_module 'filter';
+	                       \_ HERE
+==== 24: Warning: using deprecated module /home/salsi/src/phplint/modules/filter: Very poorly written interface with too many 'mixed' values, difficult to validate automatically, leaving to the programmer all the responsability to handle properly arguments and returned values. The returned values are also 'mixed'[...]
+25:	require_module 'ftp';
+26:	require_module 'gd';
+27:	require_module 'gettext';
+28:	require_module 'gmp';
+29:	require_module 'hash';
+30:	require_module 'hwapi';
+31:	require_module 'iconv';
+32:	require_module 'imap';
+33:	require_module 'informix';
+34:	require_module 'ingres';
+35:	require_module 'interbase';
+36:	require_module 'ircg';
+37:	require_module 'json';
+38:	require_module 'ldap';
+39:	#require_module 'libxml';
+40:	require_module 'mbstring';
+41:	require_module 'mcrypt';
+42:	require_module 'mcve';
+43:	require_module 'mhash';
+44:	require_module 'ming';
+45:	require_module 'mnogosearch';
+46:	require_module 'msession';
+47:	require_module 'msql';
+48:	require_module 'mssql';
+49:	require_module 'mysql';
+50:	require_module 'mysqli';
+51:	require_module 'ncurses';
+52:	require_module 'nsapi';
+53:	require_module 'oci';
+54:	require_module 'odbc';
+55:	require_module 'openssl';
+56:	require_module 'oracle';
+
+	require_module 'oracle';
+	                       \_ HERE
+==== 56: Warning: using deprecated module /home/salsi/src/phplint/modules/oracle: You should use the oci8 extension instead. 
+57:	require_module 'ovrimossql';
+58:	require_module 'pcntl';
+59:	require_module 'pcre';
+60:	#require_module 'pdo';
+61:	require_module 'pfpro';
+62:	require_module 'pgsql';
+63:	require_module 'posix';
+64:	require_module 'pspell';
+65:	require_module 'readline';
+66:	require_module 'recode';
+67:	require_module 'regex';
+
+	require_module 'regex';
+	                      \_ HERE
+==== 67: Warning: using deprecated module /home/salsi/src/phplint/modules/regex: Not binary safe: the NUL byte "\000" marks the end of the string, so that bytes following the NUL are ignored, with possible security issues. As of PHP 5.3.0 calling any function of this module will issue an E_DEPRECATED error. 
+68:	require_module 'session';
+69:	require_module 'shmop';
+70:	#require_module 'simplexml';
+71:	require_module 'snmp';
+72:	#require_module 'soap';
+73:	require_module 'sockets';
+74:	#require_module 'spl';
+75:	require_module 'sqlite';
+76:	require_module 'standard';
+77:	#require_module 'standard_reflection';
+78:	require_module 'streams';
+79:	require_module 'sybase';
+80:	require_module 'sysvmsg';
+81:	require_module 'sysvsem';
+82:	require_module 'sysvshm';
+83:	require_module 'tidy';
+84:	require_module 'tokenizer';
+85:	#require_module 'variant';
+86:	require_module 'wddx';
+87:	require_module 'xdebug';
+88:	require_module 'xml';
+89:	#require_module 'xmlreader';
+90:	require_module 'xmlrpc';
+91:	require_module 'xmlwriter';
+92:	#require_module 'xsl';
+93:	require_module 'yp';
+94:	require_module 'zip';
+95:	require_module 'zlib';
+96:	
+97:	.*/
+98:	
+99:	# Done.
+END parsing of 4-all-modules-test.php
+==== ?: notice: unused module `apache'
+==== ?: notice: unused module `bcmath'
+==== ?: notice: unused module `bz2'
+==== ?: notice: unused module `calendar'
+==== ?: notice: unused module `com'
+==== ?: notice: unused module `cpdf'
+==== ?: notice: unused module `ctype'
+==== ?: notice: unused module `curl'
+==== ?: notice: unused module `dba'
+==== ?: notice: unused module `dbase'
+==== ?: notice: unused module `dbx'
+==== ?: notice: unused module `dio'
+==== ?: notice: unused module `exif'
+==== ?: notice: unused module `fam'
+==== ?: notice: unused module `fbsql'
+==== ?: notice: unused module `fdf'
+==== ?: notice: unused module `filepro'
+==== ?: notice: unused module `filter'
+==== ?: notice: unused module `ftp'
+==== ?: notice: unused module `gd'
+==== ?: notice: unused module `gettext'
+==== ?: notice: unused module `gmp'
+==== ?: notice: unused module `hash'
+==== ?: notice: unused module `hwapi'
+==== ?: notice: unused module `iconv'
+==== ?: notice: unused module `imap'
+==== ?: notice: unused module `informix'
+==== ?: notice: unused module `ingres'
+==== ?: notice: unused module `interbase'
+==== ?: notice: unused module `ircg'
+==== ?: notice: unused module `json'
+==== ?: notice: unused module `ldap'
+==== ?: notice: unused module `mbstring'
+==== ?: notice: unused module `mcrypt'
+==== ?: notice: unused module `mcve'
+==== ?: notice: unused module `mhash'
+==== ?: notice: unused module `ming'
+==== ?: notice: unused module `mnogosearch'
+==== ?: notice: unused module `msession'
+==== ?: notice: unused module `msql'
+==== ?: notice: unused module `mssql'
+==== ?: notice: unused module `mysql'
+==== ?: notice: unused module `mysqli'
+==== ?: notice: unused module `ncurses'
+==== ?: notice: unused module `nsapi'
+==== ?: notice: unused module `oci'
+==== ?: notice: unused module `odbc'
+==== ?: notice: unused module `openssl'
+==== ?: notice: unused module `oracle'
+==== ?: notice: unused module `ovrimossql'
+==== ?: notice: unused module `pcntl'
+==== ?: notice: unused module `pcre'
+==== ?: notice: unused module `pfpro'
+==== ?: notice: unused module `pgsql'
+==== ?: notice: unused module `posix'
+==== ?: notice: unused module `pspell'
+==== ?: notice: unused module `readline'
+==== ?: notice: unused module `recode'
+==== ?: notice: unused module `regex'
+==== ?: notice: unused module `session'
+==== ?: notice: unused module `shmop'
+==== ?: notice: unused module `snmp'
+==== ?: notice: unused module `sockets'
+==== ?: notice: unused module `sqlite'
+==== ?: notice: unused module `streams'
+==== ?: notice: unused module `sybase'
+==== ?: notice: unused module `sysvmsg'
+==== ?: notice: unused module `sysvsem'
+==== ?: notice: unused module `sysvshm'
+==== ?: notice: unused module `tidy'
+==== ?: notice: unused module `tokenizer'
+==== ?: notice: unused module `wddx'
+==== ?: notice: unused module `xdebug'
+==== ?: notice: unused module `xml'
+==== ?: notice: unused module `xmlrpc'
+==== ?: notice: unused module `xmlwriter'
+==== ?: notice: unused module `yp'
+==== ?: notice: unused module `zip'
+==== ?: notice: unused module `zlib'
+==== ?: notice: required module `standard'
+Overall test results: 0 errors, 3 warnings.

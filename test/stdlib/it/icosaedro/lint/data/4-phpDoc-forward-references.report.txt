@@ -1,0 +1,31 @@
+
+BEGIN parsing of 4-phpDoc-forward-references.php
+1:	<?php
+2:	/**
+3:	 *  Forward references allowed in PHPLint/PHP 4: {@link MY_CONST},
+4:	 *  {@link MyFunc()}, {@link MyClass}, {@link MyClass::MyMethod()}.
+5:	 *  @package ForwardDeclsTest
+6:	 */
+7:	
+8:	define("MY_CONST", 123);
+9:	
+10:	/**
+11:	 *  @return MyClass $wrongParam  In this case the class must be resolvable,
+12:	 *          and because it is not, gives error.
+13:	 */
+==== 13: ERROR: unknown type/class `MyClass'
+14:	function MyFunc(){}
+
+	function MyFunc(){}
+	        \_ HERE
+==== 14: Warning: missing `@return TYPE' declaration in DocBlock above
+15:	
+16:	class MyClass {
+==== 14: notice: guessed signature of the function `MyFunc()' as void()
+17:		/*. void .*/ function MyMethod(){}
+18:	}
+END parsing of 4-phpDoc-forward-references.php
+==== 4-phpDoc-forward-references.php:8: notice: unused constant `MY_CONST'
+==== 4-phpDoc-forward-references.php:14: notice: unused function `MyFunc()'
+==== 4-phpDoc-forward-references.php:16: notice: unused class `MyClass'
+Overall test results: 1 errors, 1 warnings.

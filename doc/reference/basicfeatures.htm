@@ -1,0 +1,262 @@
+<HTML>
+<HEAD>
+<TITLE>PHPLint Reference Manual</TITLE>
+<META name=description content="PHPLint Reference Manual">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<LINK rel=stylesheet type='text/css' href='../styles.css'>
+</HEAD><BODY>
+
+<h2>Basic features</h2>
+
+<p>
+PHP is a great programming language suitable for rapid development of
+WEB applications and other programs. However, PHP is too "liberal",
+and lets the programmer to do many dangerous things. Some problems are
+detected by the interpreter itself in parse phase. Others are detected only
+if the interpreter goes through the bugged code at run-time. Other errors
+are not detected at all, or reveal them only in particular circumstances.
+</p>
+
+<p>
+The PHP language is weakly-typed, that is programmers can freely mix data of
+different type (numbers, strings of characters, etc.) and different data structure
+(objects, arrays, etc.). The language takes care to perform automatically at
+run-time any conversion that may be required based on the context where these
+data appears. This feature is also known as <i>type juggling</i>.
+Unfortunately, sometimes type juggling brings to unexpected results that arise
+only on particular combination of values, and it may be very difficult to
+discover where the problem originates.
+</p>
+
+<p>
+So, one of the main goals PHPLint tries to achieve is to turn a weakly-type
+language as PHP is into a strongly-typed one, but with a minimal impact on the
+programming style of the typical PHP programmer. PHPLint detects automatically
+the type of any element of the language, be it a constant, a variable or a
+function, and then it ensures this element be handled according to it type:
+numbers go with numbers, arrays with arrays and so on. The following list
+should give an idea of the strategies PHPLint follows in order to detect the
+type of an expression:
+</p>
+
+<ul>
+<li>Trying to <b>guess</b> the correct types of the expressions from
+the operands and from the operators involved, and trying to guess the
+signature of the functions from their usage.</li>
+
+<li>
+Based on known <b>prototypes</b> of functions, classes and methods.
+</li>
+
+<li>Providing <b>meta-code</b> to drive the parser. This code needs to
+be added by hand. This is the subject of the next chapters.</li>
+
+<li>Based on the declarations provided with the phpDocumentor DocBlocks.</li>
+
+</ul>
+
+
+
+
+<p>
+<b>Guessing the type from the expression.</b>
+PHPLint can guess the type of an expression tracking the propagation
+of the literal constants through each operator and each variable. For
+example, it is evident from this chunk of code
+</p>
+
+<div class="code_box"><pre>
+class A {
+    public $count = 0;  # $count is an int
+}
+
+function f()
+{
+    $a = 123;     # ==&gt; $a is an int
+    $b = 2*45;    # ==&gt; $b is another int
+    $c = $a + $b; # ==&gt; $c is int
+    $arr[$a] = "hello!";  # ==&gt; $arr is an array of strings
+                          # with int index
+    return $c;    # this functions returns int
+}
+</pre></div>
+
+<p>
+that the variables <code>$count</code>, <code>$a</code> and
+<code>$b</code> are of type integer and that the function <code>f()</code>
+does not take arguments and returns a value of type integer. The guess
+of the type of the variable <code>$c</code> requires to recall one
+interesting feature of PHP: when the intermediate result of an evaluation
+can't fit a 32-bit integer number, the value is automatically converted
+to a floating point number.  That seems to be a limitation on any guess we
+can do simply parsing the source, since we can't know how big such a variable
+will become at run-time. However, we can nearly be sure that, in a
+strong-typed language, the variable <code>$c</code> would be declared
+of type integer by the programmer, and just so PHPLint will do.  The
+operators <code>-</code> and <code>*</code> are treated in the same way.
+</p>
+
+<p>
+<b>Specifying explicitly the type of the assigned variable.</b> There are few
+cases in which explicit type declaration can be useful, for example when a
+generic NULL value is assigned, or the variable is intended to be a superclass
+of the object assigned:
+</p>
+<div class="code_box"><pre>
+/*. string .*/ $s = NULL;
+/*. Exception .*/ $e = new RuntimeException("");
+</pre></div>
+
+<p>
+Note that an explicit declaration is required when the NULL value is assigned
+because no type information is available from that expression. In the second
+case, the expression has a well defined type <code>RuntimeException</code>, but
+the variable <code>$e</code> is declared <code>Exception</code> instead so that
+it may later be assigned with others exceptions of different types extended
+from the exceptions' base class.
+</p>
+
+<p>
+<b>Guessing the type of a formal argument from the default value:</b>
+</p>
+<div class="code_box"><pre>
+function f($n = 0){...}
+</pre></div>
+
+<p>
+In this case the <code>$n</code> argument has a default value of type int, so
+PHPLint guesses this is also the type of the formal argument.
+</p>
+
+
+<p>
+<b>Explicitly indicating the type of the argument.</b> PHPLint allows both
+the DocBlock notation:
+</p>
+
+<div class="code_box"><pre>
+/**
+ * @param int $n Number of items to take.
+ */
+function f($n){...}
+</pre></div>
+
+and its special meta-code annotations:
+
+<div class="code_box"><pre>
+function f(/*. int .*/ $n){...}
+</pre></div>
+
+<p>
+The differences between the two solutions is that DocBlocks allows also to enter
+useful human-readable comments that may also be extracted from the source, while
+PHPLint meta-code is shorter to type and may be the preferred way to annotate
+the code for local and private items.
+</p>
+
+
+
+<p>
+<b>Guessing the type from the typecast.</b>
+PHP does not provide an explicit division operator among integer numbers,
+and the division operation <code>/</code> might result in a float
+value also if the arguments are both integer numbers. For example,
+<code>$x/2</code> would give the integer value <code>8</code>
+for <code>$x=16</code> and would give the floating point value
+<code>8.5</code> for <code>$x=17</code>. In general, since the value of
+the arguments are known only at runtime, PHPLint assumes that a division
+always returns a floating point number. If this is not the case, the programmer
+must to provide an explicit value conversion operator:
+</p>
+
+<div class="code_box"><code>$c = (int) ($a / $b);</code></div>
+
+<p>
+Not only this conversion is required to drive PHPLint to the correct guess,
+but it is also a good programming practice if the required result is
+intended to be an integer number.
+</p>
+
+<p>
+The values returned by the WEB client are collected into the
+superglobal arrays <code>$_GET</code>, <code>$_POST</code> and
+<code>$_REQUEST</code>. These arrays have a string as index and their
+elements are of type mixed. If the expected value is a string, a <i>value
+conversion type-cast operator</i> to string is required (see chapters
+<u>Typecasting</u> and  <u>Predefined superglobals</u> for details):
+</p>
+
+<div class="code_box"><code>$your_name = (string) $_POST['your_name'];</code></div>
+
+<p>
+If the expected value is the result of the selection of multiple options
+in a pop-up menu, a <i>formal type-cast</i> to array is required:
+<p>
+
+<div class="code_box"><code>$colors = /*.(string[int]).*/ $_POST['colors'];</code></div>
+
+<p>
+so that <code>$colors</code> results to be an array of strings with
+integer index.
+</p>
+
+<div class="note_box"><b>WARNING</b><br>
+We can't trust data coming from the client browser: there is no garanties
+that a parameter expected to be an array of strings actually be what we
+expect. The parameter might be missing, or it might be a string or even
+an array of arrays.
+</div>
+
+The example above (multiple selections from a menu)
+should then be re-written in a safer way as follows:
+
+<div class="code_box"><pre>
+$colors = /*. (string[int]) .*/ array();
+if( is_array( $_POST['colors'] ) )
+    foreach(/*. (mixed[]) .*/ $_POST['colors'] as $v)
+        $colors[] = (string) $v;
+</pre></div>
+
+Moreover, the resulting array <code>$colors</code> of the selected colors
+should now be checked for valid colors and possible duplicated values.
+
+
+<p>
+<b>Guessing the type from the <code>foreach</code> statement.</b>
+The <code>foreach</code> statement can set one or two variables, that
+is the key and the value of each element of the array we are scanning:
+</p>
+
+<div class="code_box"><pre>
+$a = array("a", "b", "c"); // type is: string[int]
+# $a is an array of strings with integer index 0, 1 and 2
+
+foreach($a as $v){
+    # $v results to be a string
+}
+
+foreach($a as $k => $v){
+    # $k results to be an int
+    # $v results to be a string
+}
+</pre></div>
+
+
+<div class="note_box">
+<b>NOTE</b><br>
+Once the type of a variable has been guessed by PHPLint, this
+variable must be always used accordingly to its type.  PHPLint does not
+allow for automatic type/value conversion: for example, numbers and
+strings cannot be mixed together.  Any conversion from a value of
+one type to the value of another type must take place by an explicit
+type-cast operator.  PHPLint provides type-cast operators that perform
+either an actual conversion of the value at run-time (for example,
+<code>(int)</code> applied to a <b>string</b>) and type-cast operators
+that only formally convert the type - see the chapter <u>Typecasting</u>
+for details.
+</div>
+
+</body>
+</html>

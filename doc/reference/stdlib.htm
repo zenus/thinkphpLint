@@ -1,0 +1,282 @@
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" content="text/html; charset=utf-8">
+<TITLE>PHPLint Reference Manual</TITLE>
+<META name=description content="PHPLint Reference Manual">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<LINK rel=stylesheet type='text/css' href='../styles.css'>
+<script type="text/javascript" src="../utils.js"></script>
+</HEAD><BODY onload="buildTOC('toc');">
+
+<h2 id="toc">PHPLint's Standard Library</h2>
+
+<p>
+PHPLint comes with its own library of real PHP code named <i>PHPLint
+Standard Library</i>. These libraries provide features intended to be
+strictly tight to the PHPLint validator. These libraries are available
+under the <tt>stdlib/</tt> directory of the PHPLint package.
+</p>
+
+
+<h3>Handling errors -- errors.h</h3>
+
+<p>
+	By including this package, the behavior of both PHPLint and PHP radically
+	changes. Basically, this package turns all the errors triggered by the
+	PHP functions and user's functions into ErrorExceptions, here including
+	even the smallest notice which is commonly ignored by PHP programmers.
+	This exception is checked, which means your application may capture and
+	handle it with try/catch or declare it as thrown, but cannot ignore it.
+	Example of functions that may throw this exception are fopen(), unserialize(),
+	array_fill(), parse_url() and many others.
+</p>
+
+<p>
+	Moreover, errors raised by the core PHP engine are translated to the unchecked
+	exception InternalException. Being unchecked, its handling is not enforced
+	by PHPLint and normally applications should not even try to handle it
+	because there errors are bugs and the application should terminate immediately.
+	Example of these errors are: division by zero; accessing an array with a key
+	that does not exits; including a source file with include() or include_once(),
+	call_user_func(), and many others.
+</p>
+
+<p>
+	For more about the errors.php package, please read its documentation.
+</p>
+
+
+
+
+<h3>Autoloading classes -- autoload.php</h3>
+
+<p>
+This package contains the magic <tt>__autoload($class)</tt> which is invoked
+automatically by PHP (and then by PHPLint too) in order to resolve unknown
+classes. Using this package you don't need to <tt>require_once</tt> every class
+your source require, as this is performed automatically by PHP at runtime.
+PHPLint applies this algorithms also to classes that appear in the meta-code,
+in DocBlocks and in the <tt>cast()</tt> function.
+</p>
+
+<p>
+This package should be located in the root directory of all your PHP sources
+as the path of the class it constructs is made relative to the
+directory where the package <tt>autoload.php</tt> resides:
+</p>
+
+<blockquote><pre>
+const SRC_BASE_DIR = __DIR__;
+
+/*. unchecked .*/ class AutoloadException extends Exception {}
+
+/*. void .*/ function __autoload(/*. string .*/ $name)
+{
+    /*. pragma 'autoload' './' '/' '.php'; .*/
+    $fn = (string) str_replace("\\", "/", $name) . ".php";
+    if( ! is_readable($fn) )
+        throw new AutoloadException("__autoload($name): file $fn does not exist or not readable");
+    require_once $fn;
+}
+</pre></blockquote>
+
+<p>
+The <code>SRC_BASE_DIR</code> constant can also be used to load packages that
+are not bare classes:
+</p>
+
+<blockquote><pre>
+require_once SRC_BASE_DIR . "/mylib/mypkg.php";
+</pre></blockquote>
+
+<p>
+To improve the safety of yours programs, this package also checks that the
+proper php.ini file had been loaded, that is the php.ini file that resides
+in the root directory.
+</p>
+
+
+
+<h3>The typecast magic function -- cast.php</h3>
+
+<p>
+The <tt>cast.php</tt> package provides the <tt>cast()</tt> magic function as
+described in the chapter <b>Typecasting</b>. It also defines the
+<tt>CastException</tt> unchecked exception derived from <tt>Exception</tt>.
+</p>
+
+
+
+
+<h3>Include all -- all.php</h3>
+
+<p>
+The <tt>all.php</tt> package simply loads all the packages above,
+so providing full support for class autoloading, safe error handling and
+safe typecasting in your programs.
+</p>
+
+
+<h3>Layout of the PHPLint Standard Library</h3>
+
+<p>
+	Brief description of the main components of the library:
+</p>
+
+<pre>
+├── AutoloadException.php
+├── CastException.php
+├── InternalException.php
+├── UnimplementedException.php
+├── all.php
+├── autoload.php
+├── bcmath-for-decimal-replacement.php
+├── bcmath-for-int-replacement.php
+├── cast.php
+├── com
+│   └── tecnick
+│       ├── barcode
+│       │   ├── Bar.php
+│       │   ├── Barcode.php
+│       │   ├── CODABAR.php
+│       │   ├── CODE11.php
+│       │   ├── CODE128.php
+│       │   ├── CODE39.php
+│       │   ├── CODE93.php
+│       │   ├── EAN.php
+│       │   ├── EANEXT.php
+│       │   ├── IMB.php
+│       │   ├── INTERLEAVED25.php
+│       │   ├── MSI.php
+│       │   ├── PHARMACODE.php
+│       │   ├── PHARMACODE2T.php
+│       │   ├── POSTNET.php
+│       │   ├── RMS4CC.php
+│       │   ├── STANDARD25.php
+│       │   ├── UPC.php
+│       │   └── ...
+│       └── barcode2d
+│           ├── Barcode2D.php
+│           ├── DataMatrix.php
+│           ├── PDF417.php
+│           ├── QRCODE.php
+│           └── ...
+├── dummy.php
+├── errors.php
+├── it
+│   └── icosaedro
+│       ├── bignumbers
+│       │   ├── BigFloat.php (decimal number of arbitrary length)
+│       │   ├── BigInt.php (integer number of arbitrary length)
+│       │   └── ...
+│       ├── containers
+│       │   ├── Arrays.php (type-safe array manipulation)
+│       │   ├── BitSet.php (set of bits of arbitrary size)
+│       │   ├── Comparable.php (interface for objects implementing equals())
+│       │   ├── Equality.php (PHPLint notion of equality)
+│       │   ├── Hash.php (convenience hash functions)
+│       │   ├── HashMap.php (hash mapping from value to value, aka "dictionary")
+│       │   ├── HashSet.php (set of values)
+│       │   ├── Hashable.php (interface for objects implementing getHash())
+│       │   ├── Printable.php (interface for objects implementing __toString())
+│       │   ├── Sortable.php (interface for objects implementing compareTo())
+│       │   ├── Sorter.php (interface for sorter object)
+│       │   ├── StringSorter.php (interface for sorter object for strings)
+│       │   └── UPrintable.php (interface for objects implementing toUString())
+│       ├── io
+│       │   ├── BZip2InputStream.php
+│       │   ├── BZip2OutputStream.php
+│       │   ├── Base64InputStream.php
+│       │   ├── Base64OutputStream.php
+│       │   ├── CorruptedException.php
+│       │   ├── DeflateInputStream.php
+│       │   ├── DeflateOutputStream.php
+│       │   ├── File.php
+│       │   ├── FileException.php
+│       │   ├── FileInputStream.php
+│       │   ├── FileName.php
+│       │   ├── FileNotFoundException.php
+│       │   ├── FileOutputStream.php
+│       │   ├── FilePermissionException.php
+│       │   ├── GZIPInputStream.php
+│       │   ├── GZIPOutputStream.php
+│       │   ├── IOException.php
+│       │   ├── InputStream.php
+│       │   ├── InputStreamAsResource.php
+│       │   ├── KeepTailInputStream.php
+│       │   ├── LineInputWrapper.php
+│       │   ├── OutputStream.php
+│       │   ├── OutputStreamAsResource.php
+│       │   ├── ResourceInputStream.php
+│       │   ├── ResourceOutputStream.php
+│       │   ├── SeekableInputStream.php
+│       │   ├── SeekableResourceInputStream.php
+│       │   ├── SkipHeadOutputStream.php
+│       │   ├── SkipTailOutputStream.php
+│       │   ├── SplitOutputStream.php
+│       │   ├── StreamWrapper.php
+│       │   ├── StringInputStream.php
+│       │   ├── StringOutputStream.php
+│       │   ├── UncloseableOutputStream.php
+│       │   ├── ZLIBCompressInputStream.php
+│       │   ├── ZLIBCompressOutputStream.php
+│       │   ├── ZipFileException.php
+│       │   ├── ZipFileReader.php
+│       │   ├── ZipFileReaderEntry.php
+│       │   └── codepage
+│       │       ├── CP1250.TXT (Windows code page tables)
+│       │       ├── CP1251.TXT
+│       │       ├── CP1252.TXT
+│       │       ├── ...
+│       │       ├── CodePageInterface.php (string encoder/decoder interface)
+│       │       ├── GenericCodePage.php (string encoder/decoder based on iconv or mbstring)
+│       │       └── WindowsCodePage.php (string encoder/decoder for Windows code page)
+│       ├── lint
+│       │   ├── Linter.php (simple programming interface to PHPLint)
+│       │   ├── PHPLint.php (the PHPLint CLI program)
+│       │   ├── ...
+│       ├── phplint (runtime tools that implements the cast() function)
+│       │   └── ...
+│       ├── regex
+│       │   ├── Pattern.php (regex for string)
+│       │   ├── UPattern.php (regex for it\icosaedro\utils\UString)
+│       │   └── ...
+│       ├── sql
+│       │   └── (abstract SQL interface with implementations for MySQL and PostgreSQL)
+│       └── utils
+│           ├── Bytes.php (string of bytes manipulation)
+│           ├── Codepoints.php (codepoints tables for case-folding, etc.)
+│           ├── Date.php (gregorian date manipulation)
+│           ├── Floats.php (floating-point specific functions)
+│           ├── Histogram.php (simple textual histogram)
+│           ├── Integers.php (int-specific functions)
+│           ├── SimpleDiff.php (text diff)
+│           ├── Statistics1D.php (simple statistics)
+│           ├── StringBuffer.php (large buffer of bytes)
+│           ├── Strings.php (string of 1-byte chars manipulation)
+│           ├── TestUnit.php (unit testing convenience class)
+│           ├── Timer.php (stopwatch with ms granularity)
+│           ├── UString.php (Unicode strings)
+│           └── UTF8 (basic UTF-8 functions)
+├── net
+│   └── sourceforge
+│       └── phpmailer
+│           ├── PHPMailer.php (mail formatter and sender)
+│           └── ...
+├── org
+│   └── fpdf
+│       ├── FPDF.php (PDF document creator)
+│       ├── Font.php (abstract font class used by FPDF)
+│       ├── FontCore.php (Adobe PDF core font concrete class)
+│       ├── FontTrueType.php (TrueType font concrete class)
+│       ├── Image.php (image to be included by FPDF)
+│       └── ...
+├── php.ini (sample PHP configuration file)
+└── utf8.php (the u() function that implements UString literal strings)
+</pre>
+
+
+</body>
+</html>

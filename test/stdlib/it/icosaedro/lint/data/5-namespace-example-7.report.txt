@@ -1,0 +1,44 @@
+BEGIN parsing of 5-namespace-example-7.php
+1:	<?php
+2:	# Accessing global classes, functions and constants from within a namespace
+3:	/*. require_module 'standard'; .*/
+4:	namespace Foo;
+5:	
+6:	/*. string .*/ function strlen(/*. string .*/ $s) { return $s; }
+7:	const INI_ALL = "my new constant";
+8:	class Exception {}
+9:	
+10:	if( \strlen('hi') ); // calls global function strlen
+
+	if( \strlen('hi') ); // calls global function strlen
+	                   \_ HERE
+==== 10: ERROR: found expression of type int, expected type is boolean. Remember that 0 evaluates to FALSE, and any other integer value evaluates to TRUE.
+11:	if( \INI_ALL ); // accesses global constant INI_ALL
+
+	if( \INI_ALL ); // accesses global constant INI_ALL
+	              \_ HERE
+==== 11: ERROR: found expression of type int, expected type is boolean. Remember that 0 evaluates to FALSE, and any other integer value evaluates to TRUE.
+12:	if( new \Exception('error') ); // instantiates global class Exception
+
+	if( new \Exception('error') ); // instantiates global class Exception
+	                             \_ HERE
+==== 12: ERROR: found expression of type Exception, expected type is boolean. Remember that an object evaluates to FALSE if it has no properties, and evaluates to TRUE if it has at least one property.
+13:	
+14:	if( strlen('xx') );
+
+	if( strlen('xx') );
+	                  \_ HERE
+==== 14: ERROR: found expression of type string, expected type is boolean. Remember that the empty string "", the string "0" and the NULL string all evaluate to FALSE and any other string evaluates to TRUE.
+15:	if( INI_ALL );
+
+	if( INI_ALL );
+	             \_ HERE
+==== 15: ERROR: found expression of type string, expected type is boolean. Remember that the empty string "", the string "0" and the NULL string all evaluate to FALSE and any other string evaluates to TRUE.
+16:	if( new Exception() );
+
+	if( new Exception() );
+	                     \_ HERE
+==== 16: ERROR: found expression of type Foo\Exception, expected type is boolean. Remember that an object evaluates to FALSE if it has no properties, and evaluates to TRUE if it has at least one property.
+END parsing of 5-namespace-example-7.php
+==== ?:?: notice: required module standard.php
+Overall test results: 6 errors, 0 warnings.

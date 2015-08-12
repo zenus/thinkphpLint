@@ -1,0 +1,97 @@
+BODY {
+	line-height: 1.5em;
+}
+
+H1 {
+  margin-top: 0.5em;
+  margin-bottom: 1.0em;
+  padding-bottom: 0px;
+}
+
+H2 {
+  margin-top: 2.0em;
+  margin-bottom: 0.5em;
+  padding-bottom: 0px;
+}
+
+H3 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  padding-bottom: 0px;
+}
+
+P {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+	line-height: 1.5em;
+}
+
+.TABLE {
+	border-collapse: collapse;
+	border: 1px solid black;
+}
+
+.TR {
+	border: 1px solid black;
+}
+
+.TH {
+	border: 2px solid black;
+	padding: 5px;
+	text-align: center;
+	font-weight: bold
+}
+
+.TD {
+	border: 1px solid black;
+	padding: 5px;
+}
+
+pre {
+	/* Fold long lines: */
+	white-space: pre-wrap;
+}
+
+li {
+	margin-top: 1em;
+	margin-bottom: 1em;
+	line-height: 1.5em;
+}
+
+dt {
+	line-height: 1.5em;
+	margin-top: 1.5em;
+	margin-bottom: 0.3em;
+}
+
+dd {
+	margin-top: 0.0em;
+	margin-bottom: 1.5em;
+	line-height: 1.5em;
+}
+
+blockquote {
+	margin: 20pt 4em 20pt 4em;
+}
+
+.code_box {
+	margin-left: 2em;
+	margin-right: 2em;
+	margin-top: 2em;
+	margin-bottom: 2em;
+	padding: 1em;
+	background-color: #eee;
+}
+
+.note_box {
+	margin-left: 2em;
+	margin-right: 2em;
+	margin-top: 2em;
+	margin-bottom: 2em;
+	padding: 1em;
+	background-color: yellow;
+}
+
+.note_box > b:first-child {
+	font-size: 200%;
+}

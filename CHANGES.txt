@@ -1,0 +1,964 @@
+Version 2.1_20150305:
+====================
++ Fix:
+  . Did not parsed <?= at global scope.
+  . Did not checked the type of the left-hand side of the .= operator, which
+    must be a string.
+  . Added missing /= operator.
+  . Static access to non-static method C::m() is allowed only in the non-static
+    context of the class C or its subclass, so that the current $this value is
+    set and appropriate. Previous behavior always allowed the expression also
+    from the wrong context.
+  . NULL value can be assigned to something of type null. Silly, but just for
+    consistency; variables and functions of type null are useless anyway because
+    they contains or return just one value: NULL.
+  . Formal arguments of type string with default value NULL were rendered
+    in the documentation as a double-quoted string "NULL" rather than NULL.
+  . DocBLock, in-line tag {@link f(arguments)} and {@link C::m(arguments)}: spelling
+    of the function and method names are now performed to enforce case-sentiveness;
+    sample arguments are reported in the documentation as expected.
+  . Detects "use NonQualifiedNonAbsolute;" statement in non namespaced code,
+    which is reported as error by PHP with the message: "the use statement with
+    non-compound name 'NonQualifiedNonAbsolute' has no effect". Whatever does it
+    means. Also suggests to either add a leading \ or remove the useless statement.
+
++ Implemented PHP language:
+  . Parenthesized subexpression dereferencing (EXPR)->... now allowed (PHP 5.6+).
+    This allows to write something like (new MyClass())->m().
+
++ DocBlocks:
+  . Links to interface, abstract class and unchecked exceptions are now rendered
+    in italic characters to make evident their specific special nature.
+  . Requirements (PHP version, modules, packages) moved to the bottom of the
+    generated document; descriptive text of the package now appears just at the
+    top of the page, which is the first thing one wishes to look at opening the
+    page. The ".php" file name extension now removed from the names of the
+    required modules.
+  . Now recognizes these HTML elements: <u>, <h1>, ..., <h6>.
+
++ Documentator: after each method, list all the implemented and overridden
+  methods.
+
++ Updates and fixes in modules: gd, standard, zip.
+
++ Updates and fixes in standard library:
+  errors.php (fix: uncaught exception now terminates execution with exit(1)).
+  utf8.php (fix: in some cases, u() ignored arguments past the first).
+  it\icosaedro\io\InputStream (add method readFully()).
+  it\icosaedro\io\ResourceInputStream (now implements SeekableInputStream).
+  it\icosaedro\io\StringInputStream (now implements SeekableInputStream).
+  it\icosaedro\utils\UString (fix: toUCS2BE() sometimes returned an empty string).
+  it\icosaedro\utils\StringBuffer (adds methods length() and setLength()).
+  errors.php (PHP core engine errors are thrown as unchecked InternalException;
+      see DocBlock of the package for details).
+
++ New tools of the stdlib:
+  bcmath-for-decimal-replacement.php (replacement for the missing BCMATH module).
+  bcmath-for-int-replacement.php (replacement for the missing BCMATH module, int only).
+  com\tecnick\barcode\Barcode (barcode generation, several specialized classes).
+  com\tecnick\barcode2d\Barcode2D (2D barcode generation, several specialized classes).
+  it\icosaedro\io\SeekableInputStream (interface to a seekable input stream).
+  org/fpdf/FPDF (PDF document generator).
+  it\icosaedro\geometry (2D geometry)
+
+Version 2.0_20141127:
+====================
++ Fix: require_module crashed if module loading failed.
++ Fix: did not properly shown the name of an undeclared global variable found
+  in `global' statement.
++ Fix: did not properly parsed DocBlock's in-line tag in short description.
++ Fix: PHPLint's Documentator reported NULL literal string in double-quote.
++ Added unimplemented keywords to the Scanner, so appropriate error message can
+  be shown: callable, insteadof, trait, yield.
++ The PHPLint program now sends its output to the php://output, rather than
+  to php://stdout, so the output undergoes to the same processing of "echo".
++ New tools of the stdlib:
+  UnimplementedException (unimplemented functions may throw this)
+  it\icosaedro\io\ZipFileReader (ZIP file reader)
+  it\icosaedro\io\Base64InputStream (Base64 stream decoder)
+  it\icosaedro\io\Base64OutputStream (Base64 stream encoder)
+  it\icosaedro\io\DeflateOutputStream (DEFLATE stream compressor)
+  it\icosaedro\io\DeflateInputStream (DEFLATE stream decompressor)
+  it\icosaedro\io\GZIPInputStream (GZIP stream decoder)
+  it\icosaedro\io\GZIPOutputStream (GZIP stream encoder)
+  it\icosaedro\io\InputStreamAsResource (Converts InputStream into PHP's resource)
+  it\icosaedro\io\KeepTailInputStream (Output stream filter that retains a given amount of trailing bytes.)
+  it\icosaedro\io\OutputStreamAsResource (Converts OutputStream into PHP's resource)
+  it\icosaedro\io\SkipHeadOutputStream (Output filter that skips initial bytes)
+  it\icosaedro\io\SkipTailOutputStream (Output filter that skips final bytes)
+  it\icosaedro\io\SplitOutputStream (Output stream filter that split)
+  it\icosaedro\io\StreamWrapper (PHP's stream wrapper class)
+  it\icosaedro\io\UncloseableOutputStream (Stream filter that prevent close)
+  it\icosaedro\io\ZLIBCompressInputStream (ZLIB decompressor)
+  it\icosaedro\io\ZLIBCompressOutputStream (ZLIB compressor)
+
++ New hierarchy of specialized IOException-s:
+  it\icosaedro\io\FileException (extends IOException for disk file exceptions)
+  it\icosaedro\io\FileNotFoundException (extends FileException)
+  it\icosaedro\io\FilePermissionException (extends FileException)
+  it\icosaedro\io\CorruptedException (extends IOException)
+  it\icosaedro\utils\StringBuffer (more efficient using the php://memory stream)
+
++ Changes to existing classes:
+  it\icosaedro\io\FileInputStream: throws more specialized IOException-s as
+  listed above: FileNotFoundException and FilePermissionException.
+  it\icosaedro\io\StringOutputStream: removed "abstract" attribute to make it
+  directly usable. Uses the new StringBuffer that makes it very efficient.
+  
++ Updated modules: bz2, standard, streams, zip.
+
+Version 2.0_20140824:
+====================
++ Fix: failed parsing statements beginning with the "namespace" operator.
++ Fix: implemented missing --[no-]parse-phpdoc option.
++ Fix: implemented missing --doc-ref-remap option.
++ Fix: did not properly detected class autoloading failure and crashed.
++ Fix: cast(T,V) crashed at runtime displaying invalid cast when V was
+  "array[int]" or was "array[string]".
++ Added "mixed" as type recognized by cast(T,V). This allows to scan unknown
+  arrays of any type, for example:
+		cast("mixed[]", $any)    (returns mixed[])
+		cast("array", $any)      (the same using the old array syntax)
+		cast("array[]", $any)    (the same using the old array syntax)
+  and so on.
++ Fix: File::getParentFile() failed on Unix.
++ Fix: crashed in Documentator searching global variable.
++ Fix: Documentator did not escaped HTML special chars in literal strings.
++ Fix: Linux shell scripts 'php' and 'phpl' now support spaces in arguments.
++ Fix: phplint.tcl did not updated the dir. of php.ini as the PHPLint package
+  changes; now the configuration panel asks for the "PHPLint directory" rather
+  than the "php.ini directory".
++ Updated modules: tokenizer.
+
+Version 2.0_20140331:
+====================
+Completely rewritten program, now in PHP >= 5.3 itself. Please, read the
+README.txt file for installation and usage.
+
++ Abstract class may re-define inherited abstract method (PHP bug #43200).
++ Private [non-]static method may re-define inherited private [non-]static
+  method (PHP bug 61761).
++ A class can now implement the same method inherited from different interfaces,
+  but the signature must be equal (PHP >= 5.3.9). Under PHPLint, this means the
+  2 inherited methods must have the exact same prototype (same return type,
+  arguments types, errors and exceptions).
++ Redundant implemented interfaces is detected and forbidden. PHP allows to
+  list "... implements BaseInterface, ExtendedInterface" in that order, but
+  gives a fatal error if the order is reversed. PHPLint is more conservative
+  and forbids any redundancy (in the example, only ExtendedInterface should be
+  listed because already includes BaseInterface).
++ Support array short syntax "[E1,E2,E3]".
++ Added the "triggers" meta-code (see example below; also see the @triggers
+  DocBlock line-tag below).
++ int can be compared with float, no need to cast int to float.
+
++ DocBlock:
+  . DocBlocks referring to the current file as a whole MUST have the @package
+    line tag.
+  . Missing @param for formal arguments are not signaled as error anymore.
+    The type of the argument is can be guessed from the default value (if
+	available) or from the PHPLint meta-code /*.T.*/. Finally, and only if the
+	type cannot be determine, an error is reported.
+  . Missing @return is not signaled as error anymore. The returned type can be
+    read from the PHPLint meta-code (if available) or from the first "return"
+	statement, or "void" if not "return" statement is found. Using the value
+	returned when still not determined (example: recursive call) is signaled
+	as error; in this case, an explicit declaration is required.
+  . In-line tags {@xxx} are now resolved immediately, so the same name
+    resolution that applies to PHP items holds; in particular, forward
+	references to source code that follows cannot be made.
+  . Added the "@triggers ERROR DESCR" line tag, where ERROR is any PHP error
+    label (E_NOTICE, E_WARNING, etc.).
+  . Removed the "@global TYPE $VAR" line-tag. Global variable must be always
+    assigned in global scope, and there can be documented as usual.
+  . "@var TYPE DESCR" is now "@var TYPE" (removed DESCR part; short and long
+    descriptions already do the job).
+  . Allows &nbsp; &lt; &gt; $le; and &ge; escape codes.
+
+  . In-line tags:
+    . Are now resolved only if the documentation gets generated. This way,
+      {@link ITEM} any item, for example the DocBlock of a class may refer
+      a method which is declare below. This behavior differs from types in
+      line-tags, that are resolved *while* parsing the file and then cannot
+      make reference to items that are still undefined at the time that line
+      gets parsed. In-line tags have offer more freedom and flexibility, for
+      example while documenting a class:
+      
+      /**
+       * My class. So, so, and so. Try the beautiful
+       * method {@link self::hello()} that prints hello.
+       */
+      class MyClass {
+          function hello(){ echo "Hello!"; }
+      }
+
+    . "self" and "parent" can be used.
+    . Absolute file paths /usr/www or C:/User are not allowed anymore; only
+      relative file paths starting with ./xxx and ../xxx are.
+    . Added https:// protocol to {@link https://xxx}.
+    
++ Old style annotations blocks /*. DOC xxxx .*/ support removed and signaled
+  as error by the scanner. Use DocBlock or PHPLint meta-code instead.
+
++ Undefined constants, variables, functions, classes, and class members are
+  always signaled as error (previously only the first occurrence was signaled
+  and further messages about the same item were avoided, so the programmer
+  had to fix an error at a time).
+
++ Parsing of the signature of function and method:
+  . Always tries to guess the return type from the return statement, no more
+    log messages if the declaration is missing. Explicit return type must be
+    indicated in DocBlock or meta-code only if the function/method is called
+    before the parsing of the first "return" be completed, otherwise an error
+    is reported.
+  . Formal arguments for which a type cannot be determined are signaled and
+    their type is set to "unknown" (not mixed as before). So, for example:
+
+          /**
+           * @param int $a
+           */
+          function f($a, $b, $c = 0){...}
+
+    an error is signaled only for $b whose type cannot be determined, while
+    $a and $c are obviously int.
+    Constructors and destructors methods always return "void".
+  . New meta-code keyword "triggers" added to support declaration of triggered
+    errors in prototypes, functions and methods and abstract methods. Example:
+
+        interface MyIF {
+            function m() /*. triggers E_WARNING throws Exception .*/ ;
+        }
+
+        /*. forward function f() triggers E_USER_ERROR; .*/
+
+  . Un-handled errors and un-caught exceptions must always explicitly declared
+    in DocBLock and/or meta-code. This example shows both the usages for
+    brevity, but you should choose one in your code:
+
+          /**
+           * @triggers E_NOTICE  A bit of problems.
+           * @triggers E_WARNING Something went wrong.
+           * @throws   Exception Something else went wrong.
+           */
+          function f() /*. triggers E_NOTICE, E_WARNING  throws Exception .*/
+          {...}
+
++ Support for the new ::class virtual constant: ClassName::class, self::class,
+  parent::class (PHP 5).
+
++ The type T in the cast(T,V) magic function is not limited to a literal string
+  or named constant, but it may be any static expression of type string.
+  Example:  $other2 = cast(self::class, $other);
+
++ Command line interface:
+  . Removed --debug option (reason: unimplemented).
+  . Removed --modules-path (reason: require_once always specifies abs. dir.)
+  . Removed --packages-path DIRS command line option (reason: packages must be
+    included either with require_once and an absolute path, or through the
+    autoloader).
+  . Added option --[no-]print-column-number, so that entries of the report
+    may have form "FILE:LINE:COL: SEVERITY: DESCRIPTION" allowing external
+    tools to display the exact point of the error.
+  . The diagnostic messages reported may span over several lines (see reference
+    manual, chapter "Usage" for details about the format of the report).
+
++ GUI tool phplint.tct:
+  . "phplint.tk" changed name into "phplint.tcl".
+  . Now calls the PHP CLI interpreter and then runs PHPLint.php.
+  . Can displays file paths relative to the source being parsed (use the
+    "relative" option).
+
++ utils/GenerateDoc.php helps to generate the documentation from a directory of
+  source files. See the README.txt file for more details.
+
++ PHPLint standard library:
+  . it\icosaedro\regex\Pattern: fixed bug that causes RuntimeException.
+  . New classes of the stdlib:
+    it\icosaedro\lint\PHPLint.php (PHPLint program)
+    it\icosaedro\io\File (filename abstraction)
+    it\icosaedro\io\ResourceInputStream (turns resource into InputStream)
+    it\icosaedro\io\ResourceOutputStream (turns resource into OutputStream)
+    it\icosaedro\io\LineInputWrapper (read line-by-line from InputStream)
+    it\icosaedro\utils\SimpleDiff (determines text file differences)
+    it\icosaedro\utils\StringBuffer (dynamic buffer of bytes)
++ PHP modules files modules/*.php:
+  . Module files now have their *.php extension, although being not real PHP
+    programs (editors with syntax highlight signal syntax errors just
+    for this reason, but these errors can be safely ignored because modules
+    are never actually executed by the PHP interpreter). Nothing changes
+    for the require_module statement, where the name of the module without
+    extension must be indicated. So, "standard.php" must be included with
+    "/*. require_module 'standard'; .*/" as usual.
+  . Updated: json, standard, spl (removed definition of class SimpleXMLIterator
+    because relies on the simplexml module which is deprecated by PHPLint),
+    zip, zlib.
+
+
+Version 1.1-201xxxxx:
+====================
++ Harald Lapp patch to "compile" script.
+
+
+Version 1.1-20130803:
+====================
++ Updated PHP modules: curl, mysqli, session, spl, standard.
+
+Version 1.1-20120402:
+====================
++ FIX: failed to detect positive signed literal constants `const X=+123;' in
+  static expressions generating an infinite loop.
++ FIX: in concrete classes, failed to check if all the methods inherited from
+  all the interfaces at any deep level were actually implemented.
++ FIX: flow analysis: failed to recognize actual execution path in nested
+  do/while loops.
++ FIX: on autoloading, did not properly restored the context of the
+  thrown exceptions, possibly forgetting already detected exceptions.
++ Short tag <?= deprecation reverted in PHP>=5.4.0 so it does not generate
+  Warning under PHPLint anymore.
++ Updated PHP modules: iconv, pcre, standard.
++ Added modules: fileinfo, intl, phar.
++ Removed modules: mime_magic (replaced by fileinfo).
++ Update PHPLint Standard Libraries:
+  it\icosaedro\utils\UString (trimming, case-insensitive comparisons, case
+  conversion);
++ Added libraries:
+  utf8 (convenience function for UTF-8 encoded source files);
+  it\icosaedro\io\InputStream (interface to a generic source of bytes);
+  it\icosaedro\io\OutputStream (interface to a generic drain of bytes);
+  it\icosaedro\io\BufferInputStream (string of bytes as source of bytes);
+  it\icosaedro\io\BufferOutputStream (string of bytes as drain of bytes);
+  it\icosaedro\io\FileInputStream (file as source of bytes);
+  it\icosaedro\io\FileOutputStream (file as drain of bytes);
+  it\icosaedro\io\FileName (Unicode file name manipulation);
+  it\icosaedro\regex\Pattern (parses strings with regular expressions);
+  it\icosaedro\regex\UPattern (parses Unicode strings with regular expressions);
+  it\icosaedro\utils\BitSet (set of non-negative numbers);
+  it\icosaedro\utils\Histogram (generates an histogram);
+  it\icosaedro\utils\UTF8 (handling of UTF-8 encoded strings);
+  net\sourceforge\phpmailer\PHPMailer (sends e-mail; GNU LGPL license);
+  net\sourceforge\phpmailer\SMTP (supports SMTP protocol; GNU LGPL license);
+
+Version 1.1-20120202:
+====================
++ FIX: class autoloading triggered inside function failed to restore the stack
+  of the local variables and the list of the thrown exceptions and DocBlock
+  parsing.
++ FIX: when errors-to-exceptions mapping enabled, complained missing thrown
+  exception declaration in module's functions triggering errors.
++ FIX: bare "array" and "array[]" are now assumed "array[]mixed" as it should
+  be, and not "array[]UNKNOWN". This fixes several errors that where signaled
+  in assignment and return from function.
++ FIX: arrays of the same type can be added together. Note for non-PHP
+  programmers: array("a","b") + array("c") gives array("a","b") and NOT
+  array("a","b","c") is you may think so carefully read the PHP manual for
+  more details.
++ FIX: statements can now start with the silencer operator "@", so
+        @unlink($tmp_file);
+  is valid. Restrictions: the silencer operator is not allowed for require*,
+  include* and define* statements; the silencer operator cannot be used if
+  errors-to-exceptions mapping is enabled, in which case you may use
+        try { unlink($tmp_file); } catch(ErrorException $e){...}
++ Supports new syntax "T[]", so that "string[int]" is equivalent to
+  "array[int]string" and "float[string][int]" is equivalent to
+  "array[string][int]float". This new syntax is supported in any context,
+  including PHPLint meta-code, DocBlocks and type descriptor of the cast()
+  magic function. This new syntax is preferred under PHPLint over the old form
+  "array[]T" because it is shorter and forces to specify the index and the type
+  of the elements, avoiding "array[]" or even worse "array". The old form can
+  still be useful for PHP type-hinting, where PHP code can be mixed with
+  PHPLint meta-code like in this example: function f(array /*. [int]string .*/
+  $names){...}.
++ The require_once statement now requires an absolute path, otherwise an error
+  is raised. The require, include and include_once now require an absolute
+  path, otherwise a warning is raised. Under PHP5, you may use __DIR__ to
+  retrieve the directory of the current script.
++ Class name \Exception is now reserved as root of the exceptions tree,
+  whickever the module or package it may be declared in.
++ Uppercase/lowercase misspelled keywords, namespaces, contants, functions,
+  classes and methods are signaled as errors, not notices. Misspelled
+  namespaces and class names prevent class autoloading from working properly on
+  case-sensitive file systems (Unix, Linux).
++ Generated documents: also specify which methods any given method implements
+  or overrides.
++ Command line options:
+    + Add --[no-]fails-on-warning (exit status 1 also on warnings).
+    + Add --[no]overall (no final line summarizing total err+warn).
+    + Changed behavior of the --[no-]recursive option (see manual for more).
++ On Windows, UNC file names now supported and recognized as absolute paths.
++ Documentator:
+  + FIX: exit status did not accounted for errors detected generating docs
+    with the --doc option.
+  + FIX: in named anchors of the generated URLs, replace \ by / in namespace,
+    so internal links become "YourClass.html#na/me/spa/ce::method()"
+    (newer releases of FF complained about backslashes).
+  + FIX: did not resolved inline tags in "throws" section.
+  + DocBlocks:
+    + FIX: properly renders line leading spaces (see <pre>) and empty lines.
+    + Adds support for array type syntax T[][].
+    + Adds non-standard new inline tag {@img URL} to add image.
+    + Adds non-standard entities <sup> <sub> <blockquote> <center>.
+    + Adds support for Unicode escape sequences &#DDD; and &#xHHH; so arbitrary
+      codepoints can be entered.
++ Generated documentation about modules and PHPLint standard library now come
+  along the distributed package.
++ phplint.tk:
+  + FIX: handles properly white spaces in file names.
+  + HTML links to the modules now references the local documents, not the
+    www.icosaedro.it WEB site.
++ Updated modules: dom, exif, imap, json, mysqli, pgsql, simplexml, spl,
+  standard, streams, zlib.
++ PHPLint Standard Library:
+  + cast.php: parsed type descriptors in cast(T,...) are compiled and cached
+    for better runtime performances.
+  + Adds namespace it\icosaedro\containes (HashSet, HasMap, Arrays).
+  + Adds namespace it\icosaedro\sql with support for MySQL and PostgreSQL.
+  + Adds several utilities to the it\icosaedro\utils namespace (Bytes, Date,
+    Statistics1D, Timer, UString).
+
+Version 1.0-20110223:
+====================
++ FIX: magic constants were reported as defined in the first package parsed,
+  now are in the 'standard' core module.
+
+Version 1.0-20110206:
+====================
+ATTENTION! Updated M2 Development System 1.5_20110205 is required in order to
+succesfully compile this release of PHPLint from the M2 sources.
++ FIX: crash parsing DocBlock after import of module or library, mostly due
+  to a bug in the "buffer" module of M2. The new, fixed, M2 development
+  system is now required.
++ FIX: variables are definitely assigned only after the assignment, so that
+  things like this one "$x=$x;" gives error if $x isn't already assigned.
++ The magic constants __DIR__, __CLASS__, __FILE__, __FUNCTION__, __LINE__,
+  __METHOD__, __NAMESPACE__ are now defined built-in and do not require to
+  include the standard module anymore. This is expecially useful for __DIR__
+  to build absolute library paths with require_once __DIR_ . "/mypkg.php"
+  even before the inclusion of the standard module itself.
++ Add special constants STDIN, STDOUT, STDERR available in PHP CLI that
+  cannot be defined in regular PHP code because their type is "resource"
+  and not scalar.
++ 'autoload' pragma now allows to specify the directory of the classes as a
+  path relative to the autoload.php package, so that a bare '.' usually does
+  the right job provided that the autoload.php package be located in the
+  root directory of the classes tree.
++ Add modules: sqlite3 (Joan Llosas).
++ Updated modules: curl.
+
+Version 1.0-20101024:
+====================
++ FIX: support "static::..." as a statement outside expression (Jirka Grunt).
++ FIX: cast("SOMECLASS", $obj) with $obj bare object is allowed and,
+  at runtime, $obj must be instace of SOMECLASS (Jirka Grunt).
++ FIX: cast("SOMECLASS", $obj) is allowed if $obj evaluates to null (Jirka
+  Grunt).
++ FIX: meta-code keyword "missing_break" must be followed by meta-code
+  semicolon, so /*. missing_break ; .*/ is the correct syntax (Petr Kostka).
++ FIX: in the autoload pragma added the 'schema1' parameter according to the
+  reference manual. ATTENTION! your custom __autoload() function must now add
+  this parameter as well.
++ Fixed and updated modules: dom (Dominic Sayers), spl (Jirka Grunt).
+
+Version 1.0-20100808:
+====================
++ FIX: "object" is not a valid type-hint for formal arguments in PHP.
++ FIX: class prototype now supports "implements" (Jirka Grunt).
++ FIX: add __callStatic() magic method (Jirka Grunt).
++ FIX: support for the static late binding operator (Jirka Grunt).
++ FIX: the comma before "args" must be inside meta-code, not PHP code.
++ In namespaced classes, warns about methods that have the same name of the
+  class and suggests to call them `__construct' (PHP >= 5.3.3 restriction).
++ Add magic function cast() that mostly replaces the formal typecast
+  operators. Now under PHP 5 formal typecast /*.(T).*/ allowed only if
+  applied to empty array() and NULL in non-static expressions.
++ Add pragma "error_throws_exception" that maps errors into exceptions.
++ Adds the "PHPLint standard library" under the stdlib directory, that
+  includes:
+  + runtime magic function cast() in cast.php package;
+  + error mapping into ErrorException in errors.php package;
+  + classes autoloading function in autoload.php package.
++ DocBlock:
+  + Leading asterisk in line now no more mandatory and, if present,
+    it is simply skipped.
+  + Unused @param(s) are reported.
+  + Parse the WORD syntactic element also if in the next line.
++ phphlint.tk:
+  + "Monitors" the target source, displaying an updated report whenever the
+    file changes.
+  + Add "Is module" checkbox that allows to parse modules too.
+  + Add error color markers bar bar that marks where errors are located.
++ Fixed and updated modules: curl, dom (Dominic Sayers), fdf, filter, ftp, gd,
+  json, hash, imap, ldap, mysql, nsapi, pcntl, pcre, pgsql, simplexml, sockets,
+  spl (Jirka Grunt, U.S.), sqlite, standard (Jirka Grunt, Dominic Sayers),
+  standard_reflection, streams, sysmsg, syssem, sysshm, tidy, xml, xmlreader,
+  xmlrpc, xmlwriter, zip, zlib.
+
+Version 0.9-20090802:
+====================
+Fixed bugs:
++ Namespace resolution: `use' declarations are applied to bare identifiers only
+  if are classes; bare identifiers of constants and functions are not resolved
+  with `use'.
++ $obj[INDEX] on object implementing ArrayAccess: search offsetGet() method
+  also between extended and implemented classes.
++ foreach($obj ...) on object implementing Iterator or IteratorAggregate:
+  search magic methods also between extended and implemented classes.
++ Check forbidden DocBlock line tags in class constant, property, method.
++ Implementation of concrete and abstract classes declared forward: the forward
+  declaration and the actual declaration must have the same attributes private,
+  abstract, final and unchecked; moreover, if the forward declaration extends a
+  class, then the actual declaration must extend the same exact class too.
++ Attributes of classes must match their forward declaration.
++ The `echo' statement, the `print' statement, the `.=' assignment operator
+  and the `.' operator now accept objects that implement __toString().
++ The `print' statement accepts any simple type, not only strings.
++ PHP 4, DocBlock: {@link} can make forward references because these are
+  resolved only at the end of the package. Instead, in PHP 5 still reference
+  must be resolvable in place because there are the namespace/ operator and the
+  `use' declarations to be applied.
++ PHP 4: modules mysql, mysqli and tidy corrected for PHP 4.
++ DocBlocks:
+  + In <pre> block, retains leading spaces in lines.
+  + Empty lines are properly rendered as paragraph separators.
+PHPLint specific features:
++ Checked exceptions MUST be declared either in the `throws' PHPLint meta-code
+  or in the `@throws' line tag DocBlock. Actual functions and actual methods
+  that implement a prototype must be declare a compatible set of thrown checked
+  exceptions.
++ Methods that implements abstract methods or that override inherited methods
+  must declare a compatible set of thrown exceptions. Uncought checked
+  exceptions in global scope are signaled with a Warning. Uncought checked
+  exceptions in function or method must be declared thrown.
++ New meta-code attribute `unchecked' marks exceptions that are unchecked:
+  /*. unchecked .*/ class MyException extends Exception {}
+  Unchecked exceptions are just like any other exception, but catching them is
+  not mandatory. Uncought unchecked exceptions are not signaled anymore.
+  Exceptions extending unchecked exceptions must be unchecked.
+  Classes `Exception' and `ErrorExceptions' are checked exceptions.
+  Exceptions declared in the SPL module are all unchecked.
++ Documentator: for functions and methods, prints a short line that lists all
+  the checked exceptions thrown, and a detailed list with all the checked and
+  unchecked exceptions for which a description is available.
++ Variables used to catch exceptions as $e in catch(SomeException $e) changes
+  their type from a catch() branch to the other, so them are handled in a
+  special way: 1. cannot be already in use entering the catch() branch and 2.
+  are deleted exiting from the catch() branch so that can be re-used. Flaw: if
+  try/catch statements appear in global scope the generated document contains
+  some private variables named $catch#1, $catch#2, etc. as an artifact.
++ Updated modules: dom, mysql, mysqli, spl, standard_reflection, tidy.
+
+Version 0.9-20090714:
+====================
+Fixed bugs:
++ Fixed bug in DocBlock: line tags are now allowed also in DESCR field.
++ Fixed bug in error messages reporting non-ASCII characters (actually a bug
+  in the m2runtime.StringToLiteral function corrected in the new release of
+  the M2 development system).
+PHP syntax:
++ Namespaces (PHP 5.3):
+  + Add "namespace" statement.
+  + Add "namespace" operator.
+  + Add "use" statement.
+  + Add "const" statement.
+  + Add support for autoloading of classes with __autoload().
+  + Support for namespaces in DocBlock.
++ Short tags <? and <?= are now deprecated, use <?php instead.
++ Double-quoted string: added new escape sequences \v \f.
++ Now-doc with double-quoted label and here-doc now supported (PHP 5.3).
++ Parse (but ignores) declare(encoding='xxx').
+PHPLint specific features:
++ Packages are now classified as: modules, libraries and programs (see the
+  reference manual for details).
++ Class autoloading with __autoload() and the /*.pragma 'autoload'.*/ PHPLint
+  meta-code (see the reference manual for details).
++ Detects unsupported BOM leading bytes in source files. ASCII, ISO-8859 and
+  UTF-8 without BOM are the only allowed encodings for PHP sources.
++ Detects duplicated labels in `case' branches.
++ Magic constants are resolved into dynamically determinated values: __DIR__,
+  __FILE__, __LINE__, __NAMESPACE__, __FUNCTION__, __CLASS__, __METHOD__.
+  Expressions whose value can be determinated statically are then allowed also
+  in statements as in
+      require_once __DIR__."/autoload.php";
+  which can be useful for CLI scripts where the CWD is set to the user's CWD.
++ For properties whose type does not allow the NULL value (that is boolean,
+  int and float) the initial value must be specified otherwise PHP would
+  initialize them to the invalid value NULL. Then, for example:
+  private $n = 0;
+  private /*. string .*/ $s;
++ For static local variables whose type does not allow the NULL value (that
+  is boolean, int and float) the initial value must be specified otherwise PHP
+  would initialize them to the invalid value NULL. Then, for example:
+  static $count = 0;
+  static /*. string .*/ $prefix;
++ Concrete classes that implement Traversable must also implement either
+  Iterator or IteratorAggregate, not both (Jirka Grunt).
++ Added new attribute `return' for arguments of function that return a value by
+  reference, in addition to the arguments by value and arguments by reference
+  that already exists in PHP.
++ $obj[INDEX] for $obj implementing ArrayAccess is allowed, with INDEX of any
+  type (the implemented methods should take care to perform any required
+  check). The resulting value is the type returned by offsetGet(); since this
+  method return mixed in its definition, only string, array, resource and
+  objects are allowed as overriding return types. Then bool, int and float
+  still have to be returned boxed inside a `mixed'. (Jirka Grunt)
++ foreach($obj as $k => $v): if $obj implements Iterator or IteratorAggregate,
+  the type of $k is the return type of the implemented Iterator::key() method
+  and the type of $v is the return type of the implemented Iterator::current()
+  method; since key() and current() both returns mixed in their definition,
+  only string, array, resource and objects are allowed as overriding return
+  types. Then bool, int and float still have to be returned boxed inside a
+  `mixed'.
++ Flow analysis: handles special cases if(EXPR), while(EXPR), do...while(EXPR)
+  whenever EXPR can be statically evaluated to TRUE or FALSE.
++ Definitely assigned variables detection. This feature is under
+  development and it is still incomplete: it assumes the variables
+  conditionally assigned in expressions as definitely assigned, which is not
+  the case as in if(true or ($i = 3) > 0) echo $i; where $i is never assigned.
++ Updated modules: cpdf, dom, gmp, hash, json, ldap, libxml, mysql, mysqli,
+  ncurses, oci, openssl, pcntl, pcre, pdo, regex, sockets, spl (Jirka Grunt),
+  standard, sysvmsg, tidy, xml, xmlreader.
++ phplint.tk: fixed editor setting.
+
+Version 0.8-20090517:
+====================
++ Perform static flow analysis and detect unreachable code and missing return
+  statements.
++ In `switch' statement: `case' branches and `default' branch now allowed
+  in any order (previously `default' had to be the last).
++ Compound statement {...} now allowed.
++ phpDocumentator DocBlock:
+  + Fixed bug in list rendering.
+  + Added inline tag {@link}.
+  + Added <kbd> speudo-HTML entity.
+  + Short description now allows speudo-HTML entities and inline tags.
+  + Unimplemented and unknown line tags and inline tags are signaled and then
+    rendered verbatim.
++ Added option --[no-]is-module.
++ Updated modules: pdo, spl, standard.
+
+Version 0.8-20090428:
+====================
++ Bug fix: in some cases did not correctly built inheritance path of
+  extended/implemented methods, causing a program abort.
++ Bug fix: inherited abstract methods cannot be redeclared as abstract
+  (PHP restriction).
++ Bug fix: detects circular references in class declarations.
++ Detects redundant class extension and implementation of classes that are
+  already in the inheritance tree of the class or interface being declared.
++ Prototypes: `extends' for concrete and abstract classes now supported
+  (`implements' still is not) (Jirka Grunt).
++ Prototypes: interface prototypes now supported (but `extends' still
+  unimplemented) (Jirka Grunt).
++ DocBlock: @throws line tag added (extension to phpDocumentator commonly
+  accepted) (Jirka Grunt).
++ `final' special methods (__construct, __set, __get, ...) now allowed (Jirka
+  Grunt).
++ Documentator: fully documents class hierarchy with inheritance tree.
++ Documentator: fully documents descriptions of thrown exceptions (see @throws).
++ Updated modules: curl, ftp, gd, mhash, mysqli, standard (Jirka Grunt),
+  spl (Jirka Grunt), standard_reflection, variant.
++ Added modules: xdebug (Jirka Grunt).
+
+Version 0.8-20090102:
+====================
++ Class constants now support the visibility flags as meta-code (Jirka Grunt).
++ "... instanceof $str | $obj" now supported (Jirka Grunt).
++ "... instanceof self" and "... instanceof parent" now supported.
++ "new CLASS_NAME();" is now accepted as valid statement.
++ Constructor signature now allowed in interfaces as required by PHP >= 5.2.0
+  (Jirka Grunt).
++ Relaxed signature compatibility rule: sub-classes allowed.
++ Missing ?> at the end of the file now allowed (Jirka Grunt).
++ Removed the dummy type `number' because it is not a proper PHP type; use
+  `float' instead.
++ Exceptions:
+  + Added meta-code 'throws' declaration for functions, methods and protos.
+  + Checks exceptions inherited from overridden and implemented methods.
+  + Checks branches in try...catch statement.
++ In DocBlock: lines missing the leading `*' are ignored, but following lines
+  are handled correctly (fix).
++ Standard module: changed `number' with `float'.
++ Modules mysqli, readline, session, standard: calbacks are now `mixed'
+  to support for both functions and methods (Jirka Grunt).
++ Updated modules: standard_reflection, spl.
+
+Version 0.8-20080621:
+====================
++ BUG FIX in DocBlock support for interface methods: now parses return type.
++ BUG FIX in standard module: array accessors reset(), next(), etc. use
+  argument passed by value, not by reference.
+
+Version 0.8-20080519:
+====================
++ Bug fix: now detect single line comments ending with close tag "?>".
++ Bug fix in module standard: "dir" class now is "Directory".
++ Bug fix: DocBlocks are now allowed also in interface classes.
++ PHP bugs fixed:
+  Bug #43523: standard module, strrchr(), strstr() and stristr() funcs.
+  Bug #45000: standard module, Exception::getTrace() method signature.
++ New: meta-code prototypes allow for forward declared functions, methods
+  and classes. See manual ch. "Recursive declarations" for details.
+
+Version 0.7-20071008:
+====================
++ The option --modules-path now allows to specify several directories.
++ New option --packages-path that allows to specify the directories of
+  the required_once packages.
++ phplint.tk: now supports multiple dirs for the options above.
++ Documentator: added label "include_path", that lists packages found through
+  the --packages-path option.
+
+Version 0.7-20070922:
+====================
++ Updated modules (PHP 5.2.3): curl, gmp, mysqli, pdo, standard_reflection,
+  tidy.
++ phplint.tk: now allows to specify the charset of the generated HTML doc.
++ type hinting `array' was not parsed properly; now it is.
+
+Version 0.7-20070607:
+====================
++ Detect collisions between items inherited from extended and
+  implemented classes (BUG FIX).
++ Interfaces cannot define a constructor (PHPLint restriction).
++ PHP4: private properties cannot be re-defined in extended class (BUG FIX).
++ PHP5: __clone() must be "public" (BUG FIX).
++ Overriding method cannot make abstract a non-abstract method (BUG FIX).
++ Spaces are forbidden after here-doc label `<<LABEL[SP]' (BUG FIX).
++ Updated modules: standard_reflection.
++ New semantics for option --[no-]print-file-name: if disabled, avoid to print
+  the file name of the file whose source is being printed (see --print-source)
+  in order to keep the report more readable (BUG FIX).
++ New option --print-path absolute|relative|shortest.
++ phplint.tk: support for option --print-path.
++ phplint.tk: sets proper URL for items imported from extensions (BUG FIX).
+
+Version 0.7-20070529:
+====================
++ Added simple GUI phplint.tk (requires the Tcl/Tk interpreter).
++ DocBlocks:
+    + Complete support for HTML entities and check for proper usage.
+    + Added support for @global.
+    + The syntax of the following line tags modified to better match
+      that of phpDocumentor: @license, @link, @version.
+    + Removed line tag @licence (use @license instead).
+
+Version 0.7-20070521:
+====================
++ Abstract methods cannot be static.
++ define(..., VALUE): "NULL" is now allowed as VALUE.
++ Code that may produce error/exception now generates a Notice rather
+  than a Warning message.
++ Warning message on functions beginning with two underscore chars (these
+  names are reserved for future extensions of the PHP language).
++ Updated modules: curl (PHP 5.2.1), streams (PHP 5.2.1), standard (PHP 5.2.1),
+  mbstring (mb_check_encoding()), simplexml.
++ Keywords INF and NAN moved to the module 'standard' as regular constants.
++ PHP4:
+    + Added the /*.abstract.*/ keyword for classes and methods.
+    + Abstract methods: the body must be empty, i.e. "{}".
+    + The auto-magical detection of static methods was buggy: removed.
+      Static methods must be marked explicitly either using the PHPLint
+      meta-code /*. static .*/ or the DocBlock @static line tag.
++ PHP5: objects providing the __toString() method are allowed in:
+  literal strings; argument of the 'echo' statement; argument of the
+  (string) type-cast.
++ New option --[no--]print-line-numbers to suppress line numbers from report.
++ DocBlock parsing mostly reworked:
+    + Short/long descr. are now detected accordingly to phpDoc specs.
+    + Support for the HTML entities allowed.
+    + Now raises an Error on invalid/misspelled line tags, and raises
+      a notice on unsupported line tags.
+    + New supported line tags: @link, @todo.
+    + @licence and @license are both valid.
+    + @param: allowed "&" for parameters passed by reference.
++ Documentation, corrected misspelled "phpDocumentator" into "phpDocumentor".
++ BUG FIX: fake "missing ;" error raised after "$o = new UndefinedClass();".
+
+Version 0.6-20070126:
+====================
++ isset($v): now $v is parsed as LHS (BUG FIX).
++ Implemented `static' attribute for methods of interfaces (BUG FIX).
++ DocBlock: @licence URL DESC: now properly rendered as HTML (BUG FIX).
++ DocBlock: implemented multiple type returned, ex. resource|FALSE (BUG FIX).
++ DocBlock: implemented structured array type, ex. array[int]string
+  (PHPLint extension to the DocBlock type syntax).
++ Fixed modules: curl, dom, fdf, ftp, informix, posix, standard, tidy.
++ Added modules: hash, simplexml.
+
+Version 0.6-20070112:
+====================
++ Standard functions raising warnings are now reported to trigger E_WARNING,
+  not E_USER_WARNING as before (BUG FIX).
++ DocBlock: the @licence tag not properly rendered, now it is (BUG FIX).
++ DocBlock: the @see and @since line tags are now implemented.
++ DocBlock: the @abstract line tag for classes and methods now implemented
+  for PHP 4.
+
+Version 0.6-20070108:
+====================
++ Extension modules:
+  + added: filter, json, pdo, soap, xmlreader, xmlwriter, xsl, zip.
+  + updated to PHP 5.2.0: curl, dom, gd, openssl, pcre, pgsql, posix, snmp,
+    standard.
+  + completed: dom, libxml.
+  + added <@deprecated DESCR> to all the modules and items that are
+    deprecated by the PHP manual and should not be used anymore.
++ Guessed signature of functions and methods used before their declaration:
+  now it is compared with the signature of the declaration once found.
++ Warning on functions and methods whose name begins with "__".
++ Special methods __sleep() and __wakeup() now available also in PHP 4.
++ Interfaces can declare constants (BUG FIX).
+
+Version 0.6-20061225:
+====================
++ phpDocumentor comments now are parsed and their declarations merged
+  with those of the PHPLint meta-code and PHPLint Documentator.
++ A constructor can be called explicitly only inside the overridding
+  constructor of the extended class; gives error elsewhere.
++ Raises error if the constructor/destructor misses to call the overridded
+  parent constructor/destructor.
++ Checks signature of special methods __destruct, __clone, __set_static,
+  __sleep, __wakeup, __toString, __set, __get, __isset, __unset.
++ Defined missing macro TEMP_FAILURE_RETRY required under Cygwin/Windows,
+  patch for M2 provided by Markus Kuehni (BUG FIX).
++ Allows for empty entries in list(,$x,,$y) (PHP conformity).
++ Using deprecated packages, modules and items raises a warning message.
++ Variable inside here-doc are now accounted.
++ Documentation provided along the package.
++ Under Cygwin, the resulting executable phplint.exe now is stripped (BUG FIX).
++ Value conversion operators (aka "PHP typecast") and type conversion
+  operators (aka "PHPLint meta-code typecast): fixed conformity to the
+  PHPLint manual (BUG FIX).
++ Type hinting in function arguments: added `object' (BUG FIX).
++ M2 v. 1.3 is now required in order to compile PHPLint from the source.
+
+Version 0.5-20061204:
+====================
+* Documentator: now shows the default value of default arguments (BUG FIX).
+* Documentator: now shows the initial value of properties (BUG FIX).
+* Documentator: now shows inherithed constructor (BUG FIX).
+* `self' and `parent' as type hinting in method arguments now allowed (BUG FIX).
+* Added PHPLint meta-code keyword `double' as synonym of `float' (BUG FIX).
+* `new self()' and `new parent()' now allowed (BUG FIX).
+* `mysqli' extension module: added missing OO-style interface (BUG FIX).
+* `standard' module:
+   - added E_RECOVERABLE_ERROR error code (PHP 5.2)
+   - added ErrorException class (undocumented by official PHP manual)
+* `standard_reflection' module: several corrections (BUG FIX).
+
+Version 0.5-20060806:
+====================
+* Some changes to the EBNF to comply with the Yacc definition of PHP (see the
+  detailed list of the changes below).
+* directive() statement: now parse properly raising a warning for values
+  different from "ticks", the only one currently defined by PHP.
+* Function declaration, default value for formal arg: must be a static
+  expression.
+* Initial value for "static" variable: must be a static expression.
+* switch() statement: every "case" value must be a static expression.
+* Class constant: its value must be a static expression, excluding arrays.
+* Initial value for class variable: must be a static expression.
+* Class constants and class variables: now parse properly list of decls:
+  public $a, $b, $c;
+* Constants used two or more times but not declared weren't listed in
+  the final report -- now they are.
+* Minor source cleaning to comply with gcc 4 -Wall. The current version
+  of M2 is still not compliant, but it compile apart from some warnings.
+* Variable-variables $$x: raises a warning and continue anyway.
+* Now "print" is a proper unary operator.
+* mysql module, mysql_fetch_field(): now returns an object of a well defined
+  (dummy) class so that its fields can be dereferenced.
+* standard module, added missing UPLOAD_ERR_* constants.
+* standard module, dir() function: now returns an object of a well defined
+  "dir" class so that its fields and methods can be dereferenced.
+
+Version 0.5-20060612:
+====================
+* Misspelled case in keywords now reported as "Warning" and continue parsing:
+  Echo "hello";  ==> Warning
+  ForEach($a as $b){...} ==> Warning
+
+Version 0.5-20060510:
+====================
+* Bug fix: now parse properly the "do ... while()" instruction.
+
+Version 0.5-20060125:
+====================
+* New meta-code attribute /*.private.*/ for constants, global variables,
+  functions and classes that are private to the package.
+* Pathfiles shown into error messages: now are made relative to the current
+  working directory from which the program started.
+* Guess array structure from array($k=>$e, ...): revised.
+* Guess array structure from assignment. For example, from  $a[1][2]="ab";
+  it guess the type of $a as array[int][int]string.
+* Reports modules required but not used.
+* Reports packages required but not used.
+* String character selector $s{$i}: support soon dropped, raise warning.
+* Now allows ?> as instruction terminator in place of ";", but raise warning.
+* Dropped unimplemented meta-code type "function".
+* Track the propagation of the triggered errors and raise warning if not
+  handled.
+* Now handle the "declare()" statement.
+* Documentator: now it reports items inherited from parent classes.
+* Documentator: now args are allowed in items tag referring to functions and
+  methods, for example <@item MyFunc(NULL)> <@item MyClass::MyMethod("", 2)>.
+* Documentator: now it reports triggered errors and inherited unhandled errors.
+* PHP 4: object returned by method can't be dereferenced. Now raise error.
+* PHP 4: new meta-code attributes /*. public|protected|private static final .*/
+  for class variables and class functions.
+* PHP 4: methods not using $this were assumed to be 'static'. Feature
+  removed after the introduction of the /*. static .*/ meta-code.
+* PHP 4: `&' in foreach($a as &$v) isn't allowed. Now raise error.
+* PHP 4: default value isn't allowed for arguments passed by reference.
+  Now raise error.
+* PHP 5: abstract classes.
+* PHP 5: interface classes.
+* PHP 5: new meta-code attribute /*.private.*/ for class constants.
+* PHP 5: standard_reflection module declaring the reflection classes.
+* PHP 5: now handle properly the priority of "instanceof", for ex.
+  if( ! $obj instanceof CLASS ); works as expected.
+* PHP 5: now handles "clone".
+* PHP 5: track the propagation of the thrown exceptions and raise warning if
+  not handled.
+* PHP 5, Documentator: now it reports thrown exceptions and inherited
+  unhandled exceptions.
+
+Version 0.4-20051106:
+====================
+* Introduced the PHPLint Documentator.
+* The 'require_module' imports a PHP built-it module (aka extension).
+* The new option --modules-path gives the path of the modules dir.
+* The new dir. "modules/" contains the decl.s of the PHP built-in modules.
+* The new option --recursive enable recursive parsing of require_once.
+* PHP 4: Methods that do not use $this becomes `static'.
+* PHP 5: Implemented type hinting in function arguments.
+* Meta-code: missing_break, missing_default in "switch".
+* Meta-code: if_php_ver_4, if_php_ver_5, else, end_if_php_ver.
+* Formal type-cast from mixed to bool, int, float, string now allowed.
+* Support function/method argument passed by reference.
+* Implemented here-document strings echo <<< EOT ...
+
+Version 0.3-20050929:
+====================
+* New license BSD-like.
+* Comparison between strings: only === and !== are now allowed.
+* Formal type-cast for the NULL value now allowed.
+* Fixed accounting for classes/consts/properties/methods used/not-used.
+* Now differentiate between PHP-typecast and PHPLint formal typecast.
+
+Version 0.2-20050724:
+====================
+* Support for classes.
+* New extended type using the class name.
+* New extended type to describe array structure.
+* Extended parsing of expressions with type checking.
+* Variables now take a type.
+* Superglobals.
+* Support the tag <?php.
+* New options: --php-version 4|5, --print-source, --errors, --warnings.
+  notices, --mark-used, --report-unused, --no-report-unused.
+
+Version 0.1-20050303:
+====================
+* First release.
+
+
