@@ -16,19 +16,18 @@ class Thinkphp
 {
     private static $ignore_dirs = array('public','runtime','theme','view');
     private static $map = array();
+    private static $used = array();
     private static $thinkRoot = '';
     private static $functionFiles = array();
     private static $runName = null;
     private static $runCwd = null;
     private static $namespace = null;
-    private static $phplRoot = null;
 
     /**
      * @param $globals
      */
     public static function bootstrap($arg,GlobalsImplementation $globals){
-        self::getPhplRoot();
-        //πÿ¡™√¸√˚ø’º‰”Îƒø¬º
+        //ÂÖ≥ËÅîÂëΩÂêçÁ©∫Èó¥‰∏éÁõÆÂΩï
         self::$runCwd  = getcwd();
         self::$runName = $arg;
        // $rawPath = self::getRawFilePath();
@@ -36,11 +35,13 @@ class Thinkphp
         $root = FileName::encode($globals->project_root->getBaseName());
         $root = str_replace('/',DIRECTORY_SEPARATOR,$root);
         self::buildMap($root);
-        //…˙≥…∑÷ŒˆŒƒº˛
+        //self::parseContent();
+        //ÁîüÊàêÂàÜÊûêÊñá‰ª∂
         return  self::createRunFile();
     }
 
     public static function destruct(){
+        die;
         $path = self::getRunFilePath();
         if(file_exists($path)){
             try{
@@ -51,8 +52,41 @@ class Thinkphp
         }
     }
     private static function getPhplRoot(){
-        die(__DIR__);
+        return substr(__DIR__,0,strpos(__DIR__,'phplint')+7);
+    }
 
+    private static  function parseContent($content){
+        $content = self::parseDfunction($content);
+        $content = self::parseUseDeclared($content);
+        return $content;
+    }
+
+    private static function parseDfunction($content){
+        $pattern = "#D\(['\"]([a-zA-Z,'\"]+)['\"]\)#";
+        if(preg_match_all($pattern,$content,$matches) != false){
+            if(!empty($matches[1])){
+                $models = array_unique($matches[1]);
+                $relations = array();
+                foreach($models as $model){
+                    $model_array = explode(',',$model);
+                    $model_string = '';
+                    if(count($model_array)>1){
+                        $model_string = str_replace("','",'',$model);
+                    }else{
+                        $model_string = current($model_array).'Model';
+                    }
+                    $search = "D('".$model."')";
+                    $replace = "new ".$model_string."()";
+                    $content = str_replace($search,$replace,$content);
+                    foreach(self::$map as $k=>$v){
+                        if(strpos($k,$model_string) !== false){
+                            self::$used[$k]=$v;
+                        }
+                    }
+                }
+            }
+        }
+        return $content;
     }
 
     public static function parseThinkFunction(){
@@ -72,7 +106,7 @@ class Thinkphp
     private static function createRunFile(){
 
         //$rawPath = self::getRawFilePath();
-        //…˙≥…∑÷ŒˆŒƒº˛
+        //ÁîüÊàêÂàÜÊûêÊñá‰ª∂
 //        if(file_exists($rawPath)){
 //            try{
 //                $content = file_get_contents($rawPath);
@@ -80,21 +114,31 @@ class Thinkphp
 //                exit("can not get {$rawPath}");
 //            }
 
-            //ÃÊªªµÙ<?php
-            $content = self::removeHeaderBlock();
+            //ÊõøÊç¢Êéâ<?php
+
+            $content = self::getRawContent();
+            $content = self::removeHeaderBlock($content);
+            $content = self::parseContent($content);
             $help = '';
 
-            //º”‘ÿphplintƒ£øÈ
+            //Âä†ËΩΩphplintÊ®°Âùó
             $help .= self::attachLintModules();
+//            $help .= self::attachThinkClass();
+            $help .=self::attachSelfClass();
 
-            //º”‘ÿthinkphp∫Ø ˝
-            $help .= self::attachThinkFunctions();
+            //Âä†ËΩΩthinkphpÂáΩÊï∞
+             //self::attachThinkFunctions();
 
-            //º”‘ÿ”√ªß◊‘∂®∫Ø ˝
-            //$help .= self::attachDeveloperFunctions();
+            //Âä†ËΩΩÁî®Êà∑Ëá™ÂÆöÂáΩÊï∞
+             //self::attachDeveloperFunctions();
 
-            //º”‘ÿ“™useµƒŒƒº˛
+            //Âä†ËΩΩthink model
+             //self::attachThinkModel();
+
+            //Âä†ËΩΩË¶ÅuseÁöÑÊñá‰ª∂
             //$help .= self::attachUseClass();
+        //
+            //$help .= self::attachUseDeclared();
             $header = self::getHeaderBlock();
             $content = $header.$help.$content;
             $path = self::getRunFilePath();
@@ -105,14 +149,152 @@ class Thinkphp
             }
         return self::buildRunName();
     }
+    private static function attachThinkClass(){
+        $modelModule = self::getPhplRoot()
+            . DIRECTORY_SEPARATOR
+            .'modules'
+            .DIRECTORY_SEPARATOR.'thinkmodel.php';
+        $controllerModule = self::getPhplRoot()
+            .DIRECTORY_SEPARATOR
+            .'modules'
+            .DIRECTORY_SEPARATOR
+            .'thinkcontroller.php';
+        $content = str_replace('<?php','',self::getFileContent($modelModule));
+        $content .= str_replace('<?php','',self::getFileContent($controllerModule));
+        return $content;
+
+    }
+    private static function attachSelfClass(){
+//        $selfModule = self::getPhplRoot().DIRECTORY_SEPARATOR.'modules'.DIRECTORY_SEPARATOR.'self.php';
+//        if(file_exists($selfModule)){
+//            try{
+//                unlink($selfModule);
+//            }catch(\Exception $e){
+//               exit("can not delete exits {$selfModule}");
+//            }
+//        }
+        $class = '';
+        if(!empty(self::$used)){
+            self::$used = array_unique(self::$used);
+            foreach(self::$used as $use){
+                $class .=self::makeClass($use);
+            }
+//            $selfModule = self::getPhplRoot().DIRECTORY_SEPARATOR.'modules'.DIRECTORY_SEPARATOR.'self.php';
+//            try{
+//                $content = "<?php\r\n".$class;
+//                file_put_contents($selfModule,$content);
+//            }catch (\Exception $e){
+//                exit("can not write file : {$selfModule}");
+//            }
+        }
+        return $class;
+    }
+    private static function makeClass($use){
+        $parent = '';
+        if(file_exists($use)){
+            if(strpos($use,'Controller')){
+                $parent .= 'Controller';
+            }elseif(strpos($use,'Model')){
+                $parent .= 'Model';
+            }
+            $content = self::getFileContent($use);
+            $className = self::getClassName($content);
+            if(empty($className)){
+                exit("read {$use} class name error");
+            }
+            $methods  = self::getClassMethods($content);
+            if(empty($methods)){
+                exit("read {$use} class methods error");
+            }
+           // $extend = empty($parent) ? '' : ' extends '.$parent;
+             $extend = '';
+            return "class ".$className.$extend."{\r\n".$methods."\r\n}\r\n";
+        }
+        return '';
+    }
+
+    private static function getFileContent($file){
+
+        try {
+            $content = file_get_contents($file);
+        }catch (\Exception $e){
+            exit("can not read {$file}");
+        }
+        return $content;
+    }
+
+    private static function getClassName($content){
+        $className = '';
+       $pattern = '#class\s+([a-zA-Z0-9]+)\s+(extends|})#';
+        if(preg_match($pattern,$content,$matches)!== false){
+            if(!empty($matches)){
+               $className = $matches[1];
+            }
+        }
+        return $className;
+    }
+    private static function getClassMethods($content){
+        $methods = '';
+        $pattern ='#(/\*{2}[^/]+/)?\s+(protected|public)\s+function\s+(\w+)\(([^{]+)?\)#';
+        if(preg_match_all($pattern,$content,$matches)){
+            if(!empty($matches)){
+                foreach($matches[0] as $v){
+                    $methods .= $v.'{}'."\r\n";
+                }
+            }
+        }
+        return $methods;
+    }
+    /*
+   private static function attachThinkModel(){
+       return;
+       $thinkModelFile = self::$thinkRoot.DIRECTORY_SEPARATOR.'Library'.DIRECTORY_SEPARATOR.'Think'.DIRECTORY_SEPARATOR.'Model.class.php';
+       try{
+           $content = file_get_contents($thinkModelFile);
+           $pattern ='#(/\*{2}[^/]+/)\s+function\s+(\w+)\([^{]+\)#';
+           $pattern ='#(/\*{2}[^/]+/)\s+(protected|public)\s+function\s+(\w+)\([^{]+\)#';
+           if(preg_match_all($pattern,$content,$matches)){
+               $module = "<?php\r\n";
+               foreach($matches[0] as $v){
+                   $module .= $v.'{}'."\r\n";
+               }
+               $modelModule = self::getPhplRoot().DIRECTORY_SEPARATOR.'modules'.DIRECTORY_SEPARATOR.'model.php';
+               file_put_contents($modelModule,$module);
+           }
+       }catch(\Exception $e){
+           die($e->getMessage());
+       }
+   }
+   */
+
+    private  static function makeControllerClass($use){
+        $content = self::getFileContent($use);
+        $className = self::getClassName($content);
+        if(empty($className)){
+            exit("read {$use} class name error");
+        }
+        $methods  = self::getClassMethods($content);
+        if(empty($methods)){
+            exit("read {$use} class methods error");
+        }
+        $controllerModule = self::getPhplRoot().DIRECTORY_SEPARATOR.'modules'.DIRECTORY_SEPARATOR.'thinkcontroller.phplint';
+        try{
+            $controller = file_get_contents($controllerModule);
+        }catch(\Exception $e){
+            exit("can not read {$controllerModule}");
+        }
+        return "class ".$className."{\r\n".$methods.$controller."\r\n}\r\n";
+
+    }
+
 
     private static function getHeaderBlock(){
 
         return "<?php\r\n"."namespace\t".self::$namespace.";\r\n";
     }
 
-    private static function removeHeaderBlock(){
-        $content = self::getRawContent();
+    private static function removeHeaderBlock($content){
+        //$content = self::getRawContent();
         $content = str_replace("<?php",'',$content);
         $pattern = '#namespace\s+(.*?);#';
         if(preg_match($pattern,$content,$matches) != false){
@@ -123,21 +305,32 @@ class Thinkphp
 
     }
     //use Common\Controller\RestBaseController;
-    private static function attachUseClass(){
-        $content = self::getRawContent();
+    private static function parseUseDeclared($content){
         $pattern = "#use\s+(.*)?;#";
-        $uses = '';
+        //Âä†ËΩΩuseÂ£∞Êòé‰∏≠ÁöÑuseÊñá‰ª∂
         if(preg_match_all($pattern,$content,$matches) != false){
             if(!empty($matches[1])){
                 foreach($matches[1] as $use){
                     if(isset(self::$map[$use])){
-                        $_use = str_replace('\\','/',self::$map[$use]);
-                        $uses .= "require_once '".$_use."';\r\n";
+                        self::$used[$use] = self::$map[$use];
                     }
                 }
             }
         }
-        return $uses;
+        //Èô§ÂéªuseÊ†áÁ≠æ
+        $pattern = "#use\s+(.*)?;#";
+        if(($content = preg_replace($pattern,'',$content)) ==null){
+            exit('error to remove use tag');
+        }
+        return $content;
+//        //Âä†ËΩΩÈöêÂê´Áî®Âà∞ÁöÑÊñá‰ª∂
+//        if(!empty(self::$used)){
+//            foreach(self::$used as $v){
+//                $v = str_replace('\\','/',$v);
+//                $uses .= "require_once '".$v."';\r\n";
+//            }
+//        }
+//        return $uses;
     }
     private static function getRawContent(){
         $content = '';
@@ -184,7 +377,8 @@ class Thinkphp
             'session','shmop','simplexml','snmp','soap','sockets','spl','sqlite','sqlite3',
             'standard','standard_reflection','streams','sybase','sysvmsg','sysvsem','sysvshm',
             'tidy','tokenizer','variant','wddx','xdebug','xml','xmlreader','xmlrpc','xmlwriter',
-            'xsl','yp','zip','zlib','think','developer');
+            'xsl','yp','zip','zlib','thinkfunctions','developer');
+        $modules = array('thinkfunctions','thinkclass','self');
         $comment ="/*.\r\n";
         foreach($modules as $module){
             $comment .= "\trequire_module '".$module."';\r\n";
@@ -193,9 +387,10 @@ class Thinkphp
         return $comment;
     }
 
+    /*
     private static function attachThinkFunctions(){
 
-        return '';
+        return;
         $thinkFunctionFile = self::$thinkRoot.DIRECTORY_SEPARATOR.'Common'.DIRECTORY_SEPARATOR.'functions.php';
         try{
             $content = file_get_contents($thinkFunctionFile);
@@ -205,18 +400,81 @@ class Thinkphp
                foreach($matches[0] as $v){
                    $module .= $v.'{}'."\r\n";
                }
-               $file = self::$runCwd.DIRECTORY_SEPARATOR.'think.php';
+               $file = self::$runCwd.DIRECTORY_SEPARATOR.'thinkfunctions.php';
                file_put_contents($file,$module);
            }
-            die;
         }catch(\Exception $e){
             die($e->getMessage());
         }
     }
+    */
+    /*
+    private static function attachThinkModel(){
+        return;
+        $thinkModelFile = self::$thinkRoot.DIRECTORY_SEPARATOR.'Library'.DIRECTORY_SEPARATOR.'Think'.DIRECTORY_SEPARATOR.'Model.class.php';
+        try{
+            $content = file_get_contents($thinkModelFile);
+            $pattern ='#(/\*{2}[^/]+/)\s+function\s+(\w+)\([^{]+\)#';
+            $pattern ='#(/\*{2}[^/]+/)\s+(protected|public)\s+function\s+(\w+)\([^{]+\)#';
+            if(preg_match_all($pattern,$content,$matches)){
+                $module = "<?php\r\n";
+                foreach($matches[0] as $v){
+                    $module .= $v.'{}'."\r\n";
+                }
+                $modelModule = self::getPhplRoot().DIRECTORY_SEPARATOR.'modules'.DIRECTORY_SEPARATOR.'model.php';
+                file_put_contents($modelModule,$module);
+            }
+        }catch(\Exception $e){
+            die($e->getMessage());
+        }
+    }
+    */
 
+    /*
+    private static function attachThinkController(){
+        return ;
+        $thinkModelFile = self::$thinkRoot.DIRECTORY_SEPARATOR.'Library'.DIRECTORY_SEPARATOR.'Think'.DIRECTORY_SEPARATOR.'Model.class.php';
+        try{
+            $content = file_get_contents($thinkModelFile);
+            $pattern ='#(/\*{2}[^/]+/)\s+function\s+(\w+)\([^{]+\)#';
+            $pattern ='#(/\*{2}[^/]+/)\s+(protected|public)\s+function\s+(\w+)\([^{]+\)#';
+            if(preg_match_all($pattern,$content,$matches)){
+                $module = "<?php\r\n";
+                foreach($matches[0] as $v){
+                    $module .= $v.'{}'."\r\n";
+                }
+                $modelModule = self::getPhplRoot().DIRECTORY_SEPARATOR.'modules'.DIRECTORY_SEPARATOR.'model.php';
+                file_put_contents($modelModule,$module);
+            }
+        }catch(\Exception $e){
+            die($e->getMessage());
+        }
+    }
+    */
+
+    //Â∫üÂºÉuse Â∞ÜÁîüÊàê‰∏Ä‰∏™Â§ßÁöÑÂàÜÊûêÊñá‰ª∂ÈáåÈù¢ÂåÖÊã¨‰∫ÜuseÂà∞ÁöÑÁ±ªÔºåDÂä†ËΩΩÁöÑ...Á≠âÁ≠â
+    /*
+    private static function  attachUseDeclared(){
+        $content = '';
+        if(!empty(self::$used)){
+            foreach(self::$used as $use=>$file){
+                $content .= "use ".$use.";\r\n";
+            }
+        }
+        return $content;
+    }
+    */
     private static function attachDeveloperFunctions(){
 
-        $requires = '';
+        $developerModule = self::getPhplRoot().DIRECTORY_SEPARATOR.'modules'.DIRECTORY_SEPARATOR.'developer.php';
+        if(file_exists($developerModule)){
+            try{
+                unlink($developerModule);
+            }catch(\Exception $e){
+                exit("can not delete {$developerModule}");
+            }
+        }
+        $module = "<?php\r\n";
         if(!empty(self::$functionFiles)){
             foreach(self::$functionFiles as $file){
                 $file = str_replace('\\','/',$file);
@@ -224,19 +482,20 @@ class Thinkphp
                     $content = file_get_contents($file);
                     $pattern ='#(/\*{2}[^/]+/)\s+function\s+(\w+)\([^{]+\)#';
                     if(preg_match_all($pattern,$content,$matches)){
-                        $module = "<?php\r\n";
                         foreach($matches[0] as $v){
                             $module .= $v.'{}'."\r\n";
                         }
-                        $file = self::$runCwd.DIRECTORY_SEPARATOR.'developer.php';
-                        file_put_contents($file,$module,FILE_APPEND | LOCK_EX);
                     }
                 }catch(\Exception $e){
                     die($e->getMessage());
                 }
             }
+            try{
+                file_put_contents($developerModule,$module,FILE_APPEND | LOCK_EX);
+            }catch(\Exception $e){
+                exit("can not write {$developerModule}");
+            }
         }
-        return $requires;
     }
 
 
@@ -276,35 +535,7 @@ class Thinkphp
         }
     }
 
-    /**
-     * @param $funcName
-     */
-    public static function searchFunc($funcName,GlobalsImplementation $globals){
-        if(isset(self::$functions[$funcName])){
-            $pkg = $globals->curr_pkg;
-            $scanner = $pkg->scanner;
-            try {
-                $fn = File::fromLocaleEncoded(self::$functions[$funcName]);
-            } catch (InvalidArgumentException $e) {
-                $globals->logger->error($scanner->here(),
-                    "invalid file \"" . self::$functions[$funcName] . "\": "
-                    . $e->getMessage() . "\nHint: expected absolute path (PHPLint safety restriction); under PHP5 the magic constant __DIR__ gives the directory of the current source.");
-                $fn = NULL;
-            }
-            if( $fn != NULL ){
-                if($globals->logger->main_file_name == $globals->logger->current_file_name) {
-                    $globals->loadPackage($fn, FALSE);
-                    $pkg = $globals->getPackage($fn);
-                    if ($pkg !== NULL && !$pkg->is_library) {
-                        $globals->logger->error($scanner->here(),
-                            "package " . $globals->logger->formatFileName($fn)
-                            . " is not a library:\n" . $pkg->why_not_library);
-                    }
-                }
-            }
-        }
 
-    }
 
     /**
      * @param $path
@@ -349,7 +580,7 @@ class Thinkphp
 //        }else{
             self ::dir($root);
 //            self::generateCacheFile($cacheFile);
-            //µ±”√ªß¥˙¬Î÷–µ˜”√µΩthink∫Ø ˝ ±£¨º”‘⁄think∫Ø ˝Œƒº˛
+            //ÂΩìÁî®Êà∑‰ª£Á†Å‰∏≠Ë∞ÉÁî®Âà∞thinkÂáΩÊï∞Êó∂ÔºåÂä†Âú®thinkÂáΩÊï∞Êñá‰ª∂
             //$thinkFunctionFile = self::$thinkRoot.DIRECTORY_SEPARATOR.'Common'.DIRECTORY_SEPARATOR.'functions.php';
           //  array_push(self::$functionFiles,$thinkFunctionFile);
 //        }
@@ -365,4 +596,9 @@ class Thinkphp
         $mapContent .= ');';
         file_put_contents($path,$mapContent);
     }
+
+
+
+
+
 }
