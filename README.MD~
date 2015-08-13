@@ -1,6 +1,6 @@
 ## 简介
 
-thinkphpLint 是基于php强制类型验证框架[phplint](http://www.icosaedro.it/phplint/ "phplint")为ThinkPHP开发的一个扩展，为了使在ThinkPHP框架下使用phplint更加方便而开发。
+thinkphpLint 是基于php强制类型验证框架[url](http://www.icosaedro.it/phplint/ "phplint")为ThinkPHP开发的一个扩展，为了使在ThinkPHP框架下使用phplint更加方便而开发。
 
 ## 为更加安全，健壮的代码而生
 
